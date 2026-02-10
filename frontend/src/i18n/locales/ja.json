@@ -1,0 +1,122 @@
+{
+  "nav": {
+    "dashboard": "ダッシュボード",
+    "items": "商品",
+    "customers": "顧客",
+    "rentals": "レンタル",
+    "sales": "売上",
+    "categories": "カテゴリ",
+    "users": "ユーザー"
+  },
+  "status": {
+    "in_stock": "在庫",
+    "listed": "出品中",
+    "reserved": "予約中",
+    "rented": "レンタル中",
+    "sold": "売却済",
+    "disposed": "廃棄",
+    "active": "レンタル中",
+    "ended": "終了"
+  },
+  "dashboard": {
+    "title": "ダッシュボード",
+    "recentItems": "最近追加した商品",
+    "overdue": "延滞",
+    "upcomingReturns": "返却予定",
+    "reserved": "予約中",
+    "noItems": "商品がありません。",
+    "loading": "読み込み中…",
+    "failed": "読み込みに失敗しました。バックエンドは起動していますか？"
+  },
+  "actions": {
+    "add": "追加",
+    "edit": "編集",
+    "delete": "削除",
+    "startRental": "レンタル開始",
+    "endRental": "レンタル終了",
+    "sell": "売却",
+    "list": "出品",
+    "reserve": "予約",
+    "dispose": "廃棄"
+  },
+  "common": {
+    "save": "保存",
+    "cancel": "キャンセル",
+    "back": "戻る",
+    "search": "検索",
+    "allStatus": "すべての状態",
+    "yes": "はい",
+    "na": "—"
+  },
+  "table": {
+    "item": "商品",
+    "customer": "顧客",
+    "name": "名前",
+    "phone": "電話",
+    "email": "メール",
+    "title": "タイトル",
+    "category": "カテゴリ",
+    "status": "状態",
+    "location": "保管場所",
+    "start": "開始日",
+    "expectedEnd": "返却予定",
+    "overdue": "延滞",
+    "saleDate": "売却日",
+    "price": "価格"
+  },
+  "itemDetail": {
+    "missingId": "商品IDがありません",
+    "statusLabel": "状態",
+    "categoryLabel": "カテゴリ",
+    "conditionLabel": "コンディション",
+    "locationLabel": "保管場所",
+    "acquisitionLabel": "取得",
+    "notesLabel": "備考"
+  },
+  "empty": {
+    "noRentals": "レンタルがありません。",
+    "noCustomers": "顧客がまだいません。",
+    "noSales": "売上はまだありません。",
+    "noUsers": "ユーザーがまだいません。"
+  },
+  "category": {
+    "nameEn": "名前（英語）",
+    "nameJa": "名前（日本語）",
+    "mainCategory": "メインカテゴリ",
+    "subcategory": "サブカテゴリ",
+    "newMain": "新規メインカテゴリ",
+    "editMain": "メインカテゴリを編集",
+    "newSub": "新規サブカテゴリ",
+    "editSub": "サブカテゴリを編集",
+    "noMains": "メインカテゴリがまだありません。",
+    "noSubs": "サブカテゴリがまだありません。",
+    "deleteMainFirst": "先にサブカテゴリを削除してください。",
+    "hasItems": "削除できません：商品が紐づいています。"
+  },
+  "form": {
+    "newItem": "新規商品",
+    "editItem": "商品を編集",
+    "newCustomer": "新規顧客",
+    "editCustomer": "顧客を編集",
+    "startRental": "レンタル開始",
+    "endRental": "レンタル終了",
+    "newSale": "新規売却",
+    "editSale": "売却を編集",
+    "newUser": "新規ユーザー",
+    "editUser": "ユーザーを編集",
+    "confirmDelete": "削除してもよろしいですか？",
+    "role": "権限"
+  },
+  "role": {
+    "owner": "オーナー",
+    "staff": "スタッフ"
+  },
+  "auth": {
+    "signIn": "サインイン",
+    "signingIn": "サインイン中…",
+    "email": "メール",
+    "password": "パスワード",
+    "loginFailed": "ログインに失敗しました。",
+    "logout": "ログアウト"
+  }
+}

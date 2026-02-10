@@ -1,14 +1,15 @@
 {
   "name": "roomi",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "scripts": {
-    "dev": "npm run dev --prefix roomi-system/backend",
-    "start": "npm start --prefix roomi-system/backend",
-    "install:backend": "npm install --prefix roomi-system/backend",
-    "setup-db": "npm run setup-db --prefix roomi-system/backend",
-    "migrate-datetime": "npm run migrate-datetime --prefix roomi-system/backend",
-    "migrate-date-only": "npm run migrate-date-only --prefix roomi-system/backend",
-    "migrate-exact-location": "npm run migrate-exact-location --prefix roomi-system/backend"
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "build": "npm run build --prefix backend && npm run build --prefix frontend",
+    "install:all": "npm install && npm install --prefix backend && npm install --prefix frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
   }
 }

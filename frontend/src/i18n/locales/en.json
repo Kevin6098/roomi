@@ -1,0 +1,122 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "items": "Items",
+    "customers": "Customers",
+    "rentals": "Rentals",
+    "sales": "Sales",
+    "categories": "Categories",
+    "users": "Users"
+  },
+  "status": {
+    "in_stock": "In Stock",
+    "listed": "Listed",
+    "reserved": "Reserved",
+    "rented": "Rented",
+    "sold": "Sold",
+    "disposed": "Disposed",
+    "active": "Active",
+    "ended": "Ended"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "recentItems": "Recently added items",
+    "overdue": "Overdue",
+    "upcomingReturns": "Upcoming returns",
+    "reserved": "Reserved",
+    "noItems": "No items yet.",
+    "loading": "Loading…",
+    "failed": "Failed to load. Is the backend running?"
+  },
+  "actions": {
+    "add": "Add",
+    "edit": "Edit",
+    "delete": "Delete",
+    "startRental": "Start rental",
+    "endRental": "End rental",
+    "sell": "Sell",
+    "list": "List",
+    "reserve": "Reserve",
+    "dispose": "Dispose"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "back": "Back",
+    "search": "Search",
+    "allStatus": "All status",
+    "yes": "Yes",
+    "na": "—"
+  },
+  "table": {
+    "item": "Item",
+    "customer": "Customer",
+    "name": "Name",
+    "phone": "Phone",
+    "email": "Email",
+    "title": "Title",
+    "category": "Category",
+    "status": "Status",
+    "location": "Location",
+    "start": "Start",
+    "expectedEnd": "Expected end",
+    "overdue": "Overdue",
+    "saleDate": "Sale date",
+    "price": "Price"
+  },
+  "itemDetail": {
+    "missingId": "Missing item ID",
+    "statusLabel": "Status",
+    "categoryLabel": "Category",
+    "conditionLabel": "Condition",
+    "locationLabel": "Location",
+    "acquisitionLabel": "Acquisition",
+    "notesLabel": "Notes"
+  },
+  "empty": {
+    "noRentals": "No rentals.",
+    "noCustomers": "No customers yet.",
+    "noSales": "No sales yet.",
+    "noUsers": "No users yet."
+  },
+  "category": {
+    "nameEn": "Name (English)",
+    "nameJa": "Name (Japanese)",
+    "mainCategory": "Main category",
+    "subcategory": "Subcategory",
+    "newMain": "New main category",
+    "editMain": "Edit main category",
+    "newSub": "New subcategory",
+    "editSub": "Edit subcategory",
+    "noMains": "No main categories yet.",
+    "noSubs": "No subcategories yet.",
+    "deleteMainFirst": "Delete subcategories first.",
+    "hasItems": "Cannot delete: has items."
+  },
+  "form": {
+    "newItem": "New item",
+    "editItem": "Edit item",
+    "newCustomer": "New customer",
+    "editCustomer": "Edit customer",
+    "startRental": "Start rental",
+    "endRental": "End rental",
+    "newSale": "New sale",
+    "editSale": "Edit sale",
+    "newUser": "New user",
+    "editUser": "Edit user",
+    "confirmDelete": "Are you sure you want to delete this?",
+    "role": "Role"
+  },
+  "role": {
+    "owner": "Owner",
+    "staff": "Staff"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signingIn": "Signing in…",
+    "email": "Email",
+    "password": "Password",
+    "loginFailed": "Login failed.",
+    "logout": "Log out"
+  }
+}
