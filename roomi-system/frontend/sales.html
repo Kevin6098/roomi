@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ROOMI — Sales</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <a href="index.html" class="logo-link">
+        <img src="images/logo.png" alt="ROOMI" class="logo-img">
+        <span class="logo-text">ROOMI</span>
+      </a>
+      <div class="header-right">
+        <button type="button" class="nav-toggle" aria-label="Menu" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg></button>
+        <nav class="nav-links">
+          <a href="index.html" data-i18n="nav_home">Home</a>
+          <a href="stock.html" data-i18n="nav_stock">Stock</a>
+          <a href="items.html" data-i18n="nav_items">Items</a>
+          <a href="customers.html" data-i18n="nav_customers">Customers</a>
+        </nav>
+        <span class="lang-switcher">
+          <a href="#" class="lang-switch" data-lang="en">EN</a> <span class="lang-sep">|</span> <a href="#" class="lang-switch" data-lang="ja">日本語</a>
+        </span>
+      </div>
+    </div>
+  </header>
+  <main>
+    <h2 class="page-title" data-i18n="sales_title">Sales</h2>
+    <div id="alert" class="alert hidden"></div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
+        <h3 style="margin:0;" data-i18n="all_sales">All sales</h3>
+        <button type="button" class="btn btn-primary" id="btn-new-sale" data-i18n="new_sale">New sale</button>
+      </div>
+      <div id="sales-list" class="loading" data-i18n="loading">Loading…</div>
+    </div>
+  </main>
+  <div id="modal-overlay" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modal-title" data-i18n="modal_new_sale">New sale</h3>
+        <button type="button" class="modal-close" id="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="sale-form">
+          <div class="form-group">
+            <label data-i18n="customer_required">Customer *</label>
+            <select id="sale-customer_id" required></select>
+          </div>
+          <div class="form-group">
+            <label data-i18n="item_available_sell">Item (available to sell) *</label>
+            <select id="sale-item_id" required></select>
+          </div>
+          <div class="form-row form-row-2">
+            <div class="form-group">
+              <label data-i18n="sale_price_required">Sale price (¥) *</label>
+              <input type="number" id="sale-sale_price" min="0" step="0.01" required>
+            </div>
+            <div class="form-group">
+              <label data-i18n="sale_date_required">Sale date *</label>
+              <input type="date" id="sale-sale_date" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <a href="#" id="sale-toggle-exact-location" class="link-secondary" data-i18n="add_exact_location_where">+ Add exact location — where item will go (optional)</a>
+            <div id="sale-exact-location-wrap" class="hidden" style="margin-top:0.35rem;">
+              <label data-i18n="exact_location">Exact location</label>
+              <input type="text" id="sale-exact_location" data-i18n-placeholder="placeholder_delivery" placeholder="e.g. address or delivery spot">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="modal-cancel" data-i18n="cancel">Cancel</button>
+        <button type="submit" form="sale-form" class="btn btn-primary" id="modal-save" data-i18n="create_sale">Create sale</button>
+      </div>
+    </div>
+  </div>
+  <script src="js/header.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/i18n.js"></script>
+  <script>document.querySelectorAll('.lang-switch').forEach(function(a){ a.addEventListener('click', function(e){ e.preventDefault(); setRoomiLang(this.dataset.lang); }); }); applyI18n();</script>
+  <script src="js/sales.js"></script>
+</body>
+</html>

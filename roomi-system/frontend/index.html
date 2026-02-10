@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ROOMI / SecondLife Japan — Home</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <a href="index.html" class="logo-link">
+        <img src="images/logo.png" alt="ROOMI" class="logo-img">
+        <span class="logo-text">ROOMI</span>
+      </a>
+      <div class="header-right">
+        <button type="button" class="nav-toggle" aria-label="Menu" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg></button>
+        <nav class="nav-links">
+          <a href="index.html" data-i18n="nav_home">Home</a>
+          <a href="stock.html" data-i18n="nav_stock">Stock</a>
+          <a href="items.html" data-i18n="nav_items">Items</a>
+          <a href="customers.html" data-i18n="nav_customers">Customers</a>
+        </nav>
+        <span class="lang-switcher">
+          <a href="#" class="lang-switch" data-lang="en">EN</a> <span class="lang-sep">|</span> <a href="#" class="lang-switch" data-lang="ja">日本語</a>
+        </span>
+      </div>
+    </div>
+  </header>
+  <main>
+    <h2 class="page-title" data-i18n="dashboard">Dashboard</h2>
+    <div id="alert" class="alert hidden"></div>
+
+    <div class="stats-grid" id="stats-grid">
+      <a href="items.html?status=in_stock" class="stat-card stat-card-link"><span class="value" id="count-in_stock">—</span><span class="label" data-i18n="in_stock">In Stock</span></a>
+      <a href="items.html?status=listed" class="stat-card stat-card-link"><span class="value" id="count-listed">—</span><span class="label" data-i18n="listed">Listed</span></a>
+      <a href="items.html?status=rented" class="stat-card stat-card-link"><span class="value" id="count-rented">—</span><span class="label" data-i18n="rented">Rented</span></a>
+      <a href="items.html?status=sold" class="stat-card stat-card-link"><span class="value" id="count-sold">—</span><span class="label" data-i18n="sold">Sold</span></a>
+    </div>
+    <div class="card">
+      <h3 data-i18n="recently_added">Recently added items</h3>
+      <div id="recent-items" class="loading" data-i18n="loading">Loading…</div>
+    </div>
+  </main>
+  <div id="toast-container" class="toast-container"></div>
+  <script src="js/header.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/i18n.js"></script>
+  <script>
+    document.querySelectorAll('.lang-switch').forEach(function(a){ a.addEventListener('click', function(e){ e.preventDefault(); setRoomiLang(this.dataset.lang); }); });
+    applyI18n();
+  </script>
+  <script>
+    (function () {
+      const alertEl = document.getElementById('alert');
+      const recentEl = document.getElementById('recent-items');
+
+      function showAlert(msg, type) {
+        alertEl.textContent = msg;
+        alertEl.className = 'alert alert-' + (type || 'info');
+        alertEl.classList.remove('hidden');
+      }
+
+      async function loadDashboard() {
+        try {
+          const [counts, recent] = await Promise.all([api.getItemCounts(), api.getRecentItems()]);
+          document.getElementById('count-in_stock').textContent = counts.in_stock || 0;
+          document.getElementById('count-listed').textContent = counts.listed || 0;
+          document.getElementById('count-rented').textContent = counts.rented || 0;
+          document.getElementById('count-sold').textContent = counts.sold || 0;
+          if (recent.length === 0) {
+            recentEl.innerHTML = '<p class="empty-state">' + t('no_items_yet') + ' <a href="stock.html#section-input">' + t('acquire_first') + '</a>.</p>';
+          } else {
+            var locLabel = typeof t !== 'undefined' ? t('undecided_yet') : 'Undecided yet';
+            recentEl.innerHTML = '<div class="item-list">' + recent.map(function (i) {
+              var loc = (i.effective_location != null && i.effective_location !== '') ? i.effective_location : locLabel;
+              return '<a href="items.html?id=' + i.id + '" class="item-list-item">' +
+                '<span class="item-list-item-title">' + escapeHtml(i.title) + '</span>' +
+                '<span class="item-list-item-meta">' +
+                  '<span class="item-list-item-category">' + escapeHtml((i.main_category_name && i.sub_category_name) ? (i.main_category_name + ' → ' + i.sub_category_name) : (i.sub_category_name || i.category || '—')) + '</span>' +
+                  '<span class="badge badge-' + i.status + '">' + i.status + '</span>' +
+                  '<span class="item-list-item-location">' + escapeHtml(loc) + '</span>' +
+                '</span></a>';
+            }).join('') + '</div>';
+          }
+        } catch (e) {
+          showAlert((typeof t !== 'undefined' ? t('failed_load_dashboard') : 'Could not load dashboard: ') + e.message, 'error');
+          recentEl.innerHTML = '<p class="empty-state">' + (typeof t !== 'undefined' ? t('failed_load_backend') : 'Failed to load. Is the backend running?') + '</p>';
+        }
+      }
+
+      function escapeHtml(s) {
+        if (s == null) return '';
+        var div = document.createElement('div');
+        div.textContent = s;
+        return div.innerHTML;
+      }
+
+      loadDashboard();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "roomi",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm run dev --prefix roomi-system/backend",
+    "start": "npm start --prefix roomi-system/backend",
+    "install:backend": "npm install --prefix roomi-system/backend",
+    "setup-db": "npm run setup-db --prefix roomi-system/backend",
+    "migrate-datetime": "npm run migrate-datetime --prefix roomi-system/backend",
+    "migrate-date-only": "npm run migrate-date-only --prefix roomi-system/backend",
+    "migrate-exact-location": "npm run migrate-exact-location --prefix roomi-system/backend"
+  }
+}
