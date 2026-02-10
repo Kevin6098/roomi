@@ -1,0 +1,23 @@
+# Dependencies
+node_modules
+
+# Build outputs
+dist
+build
+*.local
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs and debug
+logs
+*.log
+npm-debug.log*
+
+# OS and editors
+.DS_Store
+.idea
+.vscode/*
+!.vscode/extensions.json
