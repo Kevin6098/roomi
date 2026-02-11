@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api, type MainCategory, type SubCategory } from '../api/client';
+import { api, type MainCategory } from '../api/client';
 
 export default function Categories() {
   const { t } = useTranslation();
