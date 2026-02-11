@@ -122,7 +122,7 @@ export default function Categories() {
   const displayMainName = (m: MainCategory) => m.nameEn || m.nameJa || m.name;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 w-full max-w-full min-w-0">
       {error && (
         <CenteredToast message={error} variant="error" onDismiss={() => setError('')} />
       )}

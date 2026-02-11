@@ -413,7 +413,7 @@ export default function Records() {
   }
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto">
+    <div className="space-y-8 max-w-4xl mx-auto w-full max-w-full min-w-0">
       <header className="text-center lg:text-left">
         <h1 className="text-2xl sm:text-3xl font-bold text-roomi-brown">{t('records.title')}</h1>
         <p className="text-roomi-brownLight mt-1">{t('records.intro')}</p>

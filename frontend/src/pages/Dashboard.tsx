@@ -12,11 +12,15 @@ export default function Dashboard() {
   });
 
   if (isLoading) {
-    return <p className="text-roomi-brownLight">{t('dashboard.loading')}</p>;
+    return (
+      <div className="flex items-center justify-center py-12">
+        <p className="text-roomi-brownLight text-base">{t('dashboard.loading')}</p>
+      </div>
+    );
   }
   if (error) {
     return (
-      <div className="card p-4 text-red-600 bg-red-50 border-red-200">
+      <div className="card-stat p-4 text-red-600 bg-red-50 border-red-200 max-w-full">
         {t('dashboard.failed')} {(error as Error).message}
       </div>
     );
@@ -25,58 +29,81 @@ export default function Dashboard() {
 
   const { counts, overdueCount, upcomingReturnsCount, recentItems } = data;
 
+  const statCards = [
+    { value: counts.in_stock ?? 0, label: t('status.in_stock'), href: '/items?status=in_stock' },
+    { value: counts.listed ?? 0, label: t('status.listed'), href: '/items?status=listed' },
+    { value: counts.rented ?? 0, label: t('status.rented'), href: '/items?status=rented' },
+    { value: counts.sold ?? 0, label: t('status.sold'), href: '/items?status=sold' },
+  ];
+
+  const alertCards = [
+    { value: overdueCount, label: t('dashboard.overdue') },
+    { value: upcomingReturnsCount, label: t('dashboard.upcomingReturns') },
+  ];
+
   return (
-    <div className="space-y-5 sm:space-y-8 max-w-full min-w-0">
-      <h1 className="text-2xl font-bold text-roomi-brown">{t('dashboard.title')}</h1>
+    <div className="space-y-7 sm:space-y-9 w-full max-w-full min-w-0">
+      <h1 className="text-2xl sm:text-3xl font-bold text-roomi-brown tracking-tight pb-0.5">
+        {t('dashboard.title')}
+      </h1>
 
-      {/* Mobile: single column for readability; desktop: 4 cols then 2 cols */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4 sm:gap-4">
-        <Link to="/items?status=in_stock" className="card p-5 md:p-5 min-h-0 flex flex-col justify-center hover:shadow-roomiMd active:scale-[0.99] transition-all touch-manipulation">
-          <span className="block text-3xl md:text-2xl font-bold text-roomi-orange">{counts.in_stock ?? 0}</span>
-          <span className="text-base md:text-sm text-roomi-brownLight mt-0.5">{t('status.in_stock')}</span>
-        </Link>
-        <Link to="/items?status=listed" className="card p-5 md:p-5 min-h-0 flex flex-col justify-center hover:shadow-roomiMd active:scale-[0.99] transition-all touch-manipulation">
-          <span className="block text-3xl md:text-2xl font-bold text-roomi-orange">{counts.listed ?? 0}</span>
-          <span className="text-base md:text-sm text-roomi-brownLight mt-0.5">{t('status.listed')}</span>
-        </Link>
-        <Link to="/items?status=rented" className="card p-5 md:p-5 min-h-0 flex flex-col justify-center hover:shadow-roomiMd active:scale-[0.99] transition-all touch-manipulation">
-          <span className="block text-3xl md:text-2xl font-bold text-roomi-orange">{counts.rented ?? 0}</span>
-          <span className="text-base md:text-sm text-roomi-brownLight mt-0.5">{t('status.rented')}</span>
-        </Link>
-        <Link to="/items?status=sold" className="card p-5 md:p-5 min-h-0 flex flex-col justify-center hover:shadow-roomiMd active:scale-[0.99] transition-all touch-manipulation">
-          <span className="block text-3xl md:text-2xl font-bold text-roomi-orange">{counts.sold ?? 0}</span>
-          <span className="text-base md:text-sm text-roomi-brownLight mt-0.5">{t('status.sold')}</span>
-        </Link>
+      {/* Status counts: same layout for all — number on top, label below */}
+      <div className="grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        {statCards.map(({ value, label, href }) => (
+          <Link
+            key={label}
+            to={href}
+            className="card-stat flex flex-col justify-center border-l-4 border-l-roomi-orange/60 hover:border-l-roomi-orange touch-manipulation py-5"
+          >
+            <span className="text-3xl sm:text-4xl font-extrabold text-roomi-orange tabular-nums">
+              {value}
+            </span>
+            <span className="text-sm sm:text-base font-semibold text-roomi-brownLight mt-1">
+              {label}
+            </span>
+          </Link>
+        ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 sm:gap-4">
-        <div className="card p-5 md:p-5 min-h-0 flex flex-col justify-center">
-          <h3 className="text-base md:text-sm font-semibold text-roomi-brown">{t('dashboard.overdue')}</h3>
-          <p className="text-3xl md:text-2xl font-bold text-roomi-orange mt-0.5">{overdueCount}</p>
-        </div>
-        <div className="card p-5 md:p-5 min-h-0 flex flex-col justify-center">
-          <h3 className="text-base md:text-sm font-semibold text-roomi-brown">{t('dashboard.upcomingReturns')}</h3>
-          <p className="text-3xl md:text-2xl font-bold text-roomi-brown mt-0.5">{upcomingReturnsCount}</p>
-        </div>
+      {/* Overdue & Upcoming: same pattern — number on top, label below */}
+      <div className="grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2">
+        {alertCards.map(({ value, label }) => (
+          <div
+            key={label}
+            className="card-stat flex flex-col justify-center border-l-4 border-l-roomi-mint/80 py-5"
+          >
+            <span className="text-3xl sm:text-4xl font-extrabold text-roomi-brown tabular-nums">
+              {value}
+            </span>
+            <span className="text-sm sm:text-base font-semibold text-roomi-brownLight mt-1">
+              {label}
+            </span>
+          </div>
+        ))}
       </div>
 
-      <div className="card p-5 md:p-5 max-w-full min-w-0">
-        <h3 className="text-lg md:text-base font-semibold text-roomi-brown mb-4">{t('dashboard.recentItems')}</h3>
+      {/* Recent items */}
+      <div className="card p-5 sm:p-6 w-full max-w-full min-w-0">
+        <h3 className="text-lg font-semibold text-roomi-brown mb-5">
+          {t('dashboard.recentItems')}
+        </h3>
         {recentItems.length === 0 ? (
-          <p className="text-roomi-brownLight py-2 text-base">{t('dashboard.noItems')}</p>
+          <p className="text-roomi-brownLight py-4 text-base">{t('dashboard.noItems')}</p>
         ) : (
-          <ul className="divide-y divide-roomi-peach/60">
+          <ul className="divide-y divide-roomi-peach/50 -mx-1">
             {recentItems.map((item) => (
               <li key={item.id} className="min-w-0">
                 <Link
                   to={`/items/${item.id}`}
-                  className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-1 sm:gap-x-2 py-4 sm:py-3 rounded-roomi text-roomi-orange font-medium hover:bg-roomi-peach/40 active:bg-roomi-peach/60 transition-colors touch-manipulation min-h-[48px]"
+                  className="flex flex-col gap-0.5 sm:flex-row sm:flex-wrap sm:items-center gap-x-2 py-4 px-2 rounded-roomi font-medium text-roomi-orange hover:bg-roomi-peach/40 active:bg-roomi-peach/60 transition-colors touch-manipulation min-h-[48px]"
                 >
                   <span className="text-base truncate min-w-0">{item.title}</span>
                   <span className="text-sm text-roomi-brownLight font-normal truncate min-w-0">
                     {item.displaySubCategory ?? item.subCategory?.name ?? item.subCategory?.mainCategory?.name ?? ''}
                   </span>
-                  <span className={`${getStatusBadgeClass(item.status)} text-sm inline-flex w-fit`}>{item.status}</span>
+                  <span className={`${getStatusBadgeClass(item.status)} text-xs sm:text-sm inline-flex w-fit shrink-0`}>
+                    {item.status}
+                  </span>
                 </Link>
               </li>
             ))}

@@ -39,7 +39,7 @@ export default function Rentals() {
   if (error) return <div className="card p-4 text-red-600 bg-red-50 border-red-200">{(error as Error).message}</div>;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 w-full max-w-full min-w-0">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="text-2xl font-bold text-roomi-brown">{t('nav.rentals')}</h1>
         <Link to="/rentals/new" className="btn-primary shrink-0">
@@ -73,8 +73,8 @@ export default function Rentals() {
       </div>
 
       {status === 'active' && (
-        <div className="card overflow-hidden">
-          <table className="min-w-full divide-y divide-roomi-peach/60">
+        <div className="card overflow-hidden max-w-full min-w-0">
+          <table className="min-w-full divide-y divide-roomi-peach/60 table-fixed sm:table-auto">
             <thead className="bg-roomi-cream/80">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.item')}</th>
@@ -88,10 +88,10 @@ export default function Rentals() {
             <tbody className="divide-y divide-roomi-peach/60 bg-white">
               {(rentals ?? []).map((r) => (
                 <tr key={r.id} className="hover:bg-roomi-cream/40">
-                  <td className="px-4 py-3 font-medium text-roomi-brown">{r.item?.title ?? r.itemId}</td>
-                  <td className="px-4 py-3 text-sm text-roomi-brownLight">{r.customer?.name ?? r.customerId}</td>
-                  <td className="px-4 py-3 text-sm text-roomi-brownLight">{(r.startDate || '').slice(0, 10)}</td>
-                  <td className="px-4 py-3 text-sm text-roomi-brownLight">{(r.expectedEndDate || '').slice(0, 10)}</td>
+                  <td className="px-4 py-3 font-medium text-roomi-brown min-w-0 truncate" title={r.item?.title ?? r.itemId}>{r.item?.title ?? r.itemId}</td>
+                  <td className="px-4 py-3 text-sm text-roomi-brownLight min-w-0 truncate" title={r.customer?.name ?? r.customerId}>{r.customer?.name ?? r.customerId}</td>
+                  <td className="px-4 py-3 text-sm text-roomi-brownLight shrink-0">{(r.startDate || '').slice(0, 10)}</td>
+                  <td className="px-4 py-3 text-sm text-roomi-brownLight shrink-0">{(r.expectedEndDate || '').slice(0, 10)}</td>
                   <td className="px-4 py-3">
                     {r.isOverdue ? <span className="text-orange-600 font-medium">{t('common.yes')}</span> : <span className="text-roomi-brownLight">—</span>}
                   </td>

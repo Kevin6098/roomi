@@ -73,7 +73,7 @@ export default function Sales() {
   if (error) return <div className="card p-4 text-red-600 bg-red-50 border-red-200">{(error as Error).message}</div>;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 w-full max-w-full min-w-0">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="text-2xl font-bold text-roomi-brown">{t('nav.sales')}</h1>
         <Link to="/sales/new" className="btn-primary shrink-0">
@@ -206,9 +206,9 @@ export default function Sales() {
       )}
 
       {/* Sales table */}
-      <div className="card overflow-hidden">
+      <div className="card overflow-hidden max-w-full min-w-0">
         <h2 className="text-lg font-semibold text-roomi-brown px-4 pt-4 pb-2">{t('salesAnalytics.allSales')}</h2>
-        <table className="min-w-full divide-y divide-roomi-peach/60">
+        <table className="min-w-full divide-y divide-roomi-peach/60 table-fixed sm:table-auto">
           <thead className="bg-roomi-cream/80">
             <tr>
               <th className="px-4 py-2 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.item')}</th>
@@ -221,9 +221,9 @@ export default function Sales() {
           <tbody className="divide-y divide-roomi-peach/60 bg-white">
             {(sales ?? []).map((s) => (
               <tr key={s.id} className="hover:bg-roomi-cream/40">
-                <td className="px-4 py-2 font-medium text-roomi-brown">{s.item?.title ?? s.itemId}</td>
-                <td className="px-4 py-2 text-sm text-roomi-brownLight">{s.customer?.name ?? s.customerId}</td>
-                <td className="px-4 py-2 text-sm text-roomi-brownLight">{(s.saleDate || '').slice(0, 10)}</td>
+                <td className="px-4 py-2 font-medium text-roomi-brown min-w-0 truncate" title={s.item?.title ?? s.itemId}>{s.item?.title ?? s.itemId}</td>
+                <td className="px-4 py-2 text-sm text-roomi-brownLight min-w-0 truncate" title={s.customer?.name ?? s.customerId}>{s.customer?.name ?? s.customerId}</td>
+                <td className="px-4 py-2 text-sm text-roomi-brownLight shrink-0">{(s.saleDate || '').slice(0, 10)}</td>
                 <td className="px-4 py-2 text-sm text-roomi-brown">{s.salePrice != null ? Number(s.salePrice).toLocaleString() : t('common.na')}</td>
                 <td className="px-4 py-2 text-right text-sm">
                   {deleteId === s.id ? (

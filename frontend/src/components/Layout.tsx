@@ -118,7 +118,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="min-h-screen bg-roomi-cream font-roomi">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-roomi-cream font-roomi">
       {/* Mobile: overlay when drawer open (starts right of sidebar so X button is never covered) */}
       {drawerOpen && (
         <button
@@ -140,10 +140,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         {sidebar}
       </div>
 
-      {/* Main content: no horizontal scroll on mobile */}
-      <div className="min-h-screen lg:ml-[260px] overflow-x-hidden min-w-0">
-        {/* Top bar: only on mobile — proper touch targets and alignment */}
-        <header className="lg:hidden sticky top-0 z-20 flex items-center gap-2 h-[56px] pl-2 pr-4 py-2 bg-white/95 backdrop-blur-sm border-b border-roomi-peach/60 shadow-roomi safe-area-inset-top flex-shrink-0">
+      {/* Main content: full width of viewport, no horizontal scroll */}
+      <div className="min-h-screen w-full max-w-full min-w-0 overflow-x-hidden lg:ml-[260px]">
+        {/* Top bar: only on mobile */}
+        <header className="lg:hidden sticky top-0 z-20 flex items-center gap-2 h-[56px] px-4 sm:px-6 py-2 bg-white/95 backdrop-blur-sm border-b border-roomi-peach/60 shadow-roomi safe-area-inset-top flex-shrink-0">
           <button
             type="button"
             onClick={() => setDrawerOpen(true)}
@@ -160,7 +160,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </Link>
         </header>
 
-        <main className="max-w-5xl mx-auto w-full min-w-0 px-4 sm:px-6 pt-5 pb-8 lg:py-8">{children}</main>
+        <main className="w-full max-w-full min-w-0 box-border px-4 py-5 sm:px-6 sm:py-6 md:px-8 md:py-8 lg:max-w-5xl lg:mx-auto lg:px-10 lg:py-8">
+          {children}
+        </main>
       </div>
     </div>
   );

@@ -55,8 +55,40 @@ export default function Items() {
     });
   }, [itemsRaw]);
 
+  function getItemCustomerDisplay(item: Item) {
+    if (item.status === 'disposed') return '—';
+    if (item.status === 'sold' && item.sale?.customer) {
+      const c = item.sale.customer;
+      return `${c.name}${c.sourcePlatform ? ` (${c.sourcePlatform})` : ''}`;
+    }
+    if (item.status === 'rented' && item.rentals?.[0]?.customer) {
+      const c = item.rentals[0].customer;
+      return `${c.name}${c.sourcePlatform ? ` (${c.sourcePlatform})` : ''}`;
+    }
+    if (item.acquisitionContact) {
+      const c = item.acquisitionContact;
+      return `${c.name}${c.sourcePlatform ? ` (${c.sourcePlatform})` : ''}`;
+    }
+    return '—';
+  }
+
+  function getItemStatusDate(item: Item): string | null {
+    const d =
+      item.status === 'in_stock'
+        ? (item.acquisitionDate || item.createdAt)
+        : item.status === 'sold'
+          ? item.sale?.saleDate
+          : item.status === 'rented'
+            ? item.rentals?.[0]?.startDate
+            : (item.status === 'disposed' || item.status === 'reserved')
+              ? item.updatedAt
+              : null;
+    if (!d) return null;
+    return typeof d === 'string' ? d.slice(0, 10) : new Date(d).toISOString().slice(0, 10);
+  }
+
   return (
-    <div className="space-y-4 sm:space-y-6 max-w-full min-w-0">
+    <div className="space-y-4 sm:space-y-6 w-full max-w-full min-w-0">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl sm:text-2xl font-bold text-roomi-brown">{t('nav.items')}</h1>
         <Link to="/items/new" className="btn-primary w-full sm:w-auto text-center">
@@ -102,84 +134,117 @@ export default function Items() {
         </div>
       )}
       {items && (
-        <div className="card overflow-hidden max-w-full min-w-0 lg:overflow-x-auto">
-          <table className="min-w-full divide-y divide-roomi-peach/60 table-fixed lg:table-auto">
-            <thead className="bg-roomi-cream/80">
-              <tr>
-                <th className="px-3 py-3 text-left text-xs font-semibold text-roomi-brown uppercase w-[28%] lg:w-auto">{t('table.title')}</th>
-                <th className="px-2 py-3 text-left text-xs font-semibold text-roomi-brown uppercase w-[18%] lg:w-auto">{t('table.category')}</th>
-                <th className="px-2 py-3 text-left text-xs font-semibold text-roomi-brown uppercase w-[22%] lg:w-auto">{t('table.customer')}</th>
-                <th className="px-2 py-3 text-left text-xs font-semibold text-roomi-brown uppercase w-[20%] lg:w-auto">{t('table.status')}</th>
-                <th className="px-2 py-3 text-left text-xs font-semibold text-roomi-brown uppercase w-[8%] lg:w-auto">{t('listings.listed')}</th>
-                <th className="px-2 py-3 text-left text-xs font-semibold text-roomi-brown uppercase w-[12%] lg:w-auto">{t('table.location')}</th>
-                <th className="px-2 py-3 text-left text-xs font-semibold text-roomi-brown uppercase w-[10%] lg:w-auto">{t('common.actions')}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-roomi-peach/60 bg-white">
-              {items.map((item) => (
-                <tr key={item.id} className="hover:bg-roomi-cream/40">
-                  <td className="px-3 py-3 min-w-0">
-                    <Link to={`/items/${item.id}`} className="text-roomi-orange font-medium hover:underline block truncate">
-                      {item.title}
-                    </Link>
-                  </td>
-                  <td className="px-2 py-3 text-sm text-roomi-brownLight min-w-0 truncate">
-                    {item.displaySubCategory ?? item.subCategory?.name ?? '—'}
-                  </td>
-                  <td className="px-2 py-3 text-sm text-roomi-brownLight min-w-0 truncate">
-                    {item.status === 'disposed'
-                      ? '—'
-                      : item.status === 'sold' && item.sale?.customer
-                        ? `${item.sale.customer.name}${item.sale.customer.sourcePlatform ? ` (${item.sale.customer.sourcePlatform})` : ''}`
-                        : item.status === 'rented' && item.rentals?.[0]?.customer
-                          ? `${item.rentals[0].customer.name}${item.rentals[0].customer.sourcePlatform ? ` (${item.rentals[0].customer.sourcePlatform})` : ''}`
-                          : item.acquisitionContact
-                            ? `${item.acquisitionContact.name}${item.acquisitionContact.sourcePlatform ? ` (${item.acquisitionContact.sourcePlatform})` : ''}`
-                            : '—'}
-                  </td>
-                  <td className="px-2 py-3 min-w-0">
-                    <div className="flex flex-col gap-0.5">
-                      <span className={`${getStatusBadgeClass(item.status)} text-xs lg:text-sm w-fit`}>{item.status}</span>
-                      {(() => {
-                        const d = item.status === 'in_stock'
-                          ? (item.acquisitionDate || item.createdAt)
-                          : item.status === 'sold'
-                            ? item.sale?.saleDate
-                            : item.status === 'rented'
-                              ? item.rentals?.[0]?.startDate
-                              : (item.status === 'disposed' || item.status === 'reserved')
-                                ? item.updatedAt
-                                : null;
-                        if (!d) return null;
-                        const dateStr = typeof d === 'string' ? d.slice(0, 10) : new Date(d).toISOString().slice(0, 10);
-                        return <span className="text-xs text-roomi-brownLight">{dateStr}</span>;
-                      })()}
-                    </div>
-                  </td>
-                  <td className="px-2 py-3 text-sm text-roomi-brownLight min-w-0 truncate">{getDisplayLocation(item.prefecture, item.city) === UNDECIDED ? t('input.undecided') : getDisplayLocation(item.prefecture, item.city)}</td>
-                  <td className="px-2 py-3">
+        <>
+          {/* Mobile: card list — no horizontal scroll */}
+          <div className="lg:hidden space-y-3 w-full max-w-full min-w-0">
+            {items.length === 0 ? (
+              <div className="card p-6 text-center text-roomi-brownLight">{t('dashboard.noItems')}</div>
+            ) : (
+              items.map((item) => (
+                <div
+                  key={item.id}
+                  className="card p-4 w-full max-w-full min-w-0 flex flex-col gap-3"
+                >
+                  <Link
+                    to={`/items/${item.id}`}
+                    className="text-base font-semibold text-roomi-orange hover:underline block truncate min-w-0"
+                  >
+                    {item.title}
+                  </Link>
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-roomi-brownLight">
+                    <span className="truncate min-w-0">{item.displaySubCategory ?? item.subCategory?.name ?? '—'}</span>
+                    <span>·</span>
+                    <span className={`${getStatusBadgeClass(item.status)} text-xs shrink-0`}>{item.status}</span>
+                    {getItemStatusDate(item) && (
+                      <>
+                        <span>·</span>
+                        <span className="shrink-0">{getItemStatusDate(item)}</span>
+                      </>
+                    )}
+                  </div>
+                  <div className="text-sm text-roomi-brownLight truncate min-w-0">
+                    {t('table.customer')}: {getItemCustomerDisplay(item)}
+                  </div>
+                  <div className="text-sm text-roomi-brownLight truncate min-w-0">
+                    {t('table.location')}: {getDisplayLocation(item.prefecture, item.city) === UNDECIDED ? t('input.undecided') : getDisplayLocation(item.prefecture, item.city)}
+                  </div>
+                  <div className="flex flex-wrap gap-2 pt-1">
                     {(item.status === 'in_stock' || item.status === 'reserved') && (
                       <ListedCheckbox item={item} onOpenModal={() => setListedModalItem(item)} onRefresh={() => queryClient.invalidateQueries({ queryKey: ['items'] })} />
                     )}
-                    {(item.status === 'sold' || item.status === 'rented' || item.status === 'disposed') && (
-                      <span className="text-roomi-brownLight">—</span>
-                    )}
-                  </td>
-                  <td className="px-2 py-3">
                     {item.status === 'in_stock' && (
-                      <button type="button" onClick={() => setReserveModalItem(item)} className="btn-secondary text-xs py-1.5 px-2 min-h-0">
+                      <button
+                        type="button"
+                        onClick={() => setReserveModalItem(item)}
+                        className="btn-secondary text-sm py-2 px-3 min-h-[40px]"
+                      >
                         {t('actions.reserve')}
                       </button>
                     )}
-                  </td>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Desktop: table */}
+          <div className="hidden lg:block card overflow-hidden max-w-full min-w-0 overflow-x-auto">
+            <table className="min-w-full divide-y divide-roomi-peach/60 table-auto">
+              <thead className="bg-roomi-cream/80">
+                <tr>
+                  <th className="px-3 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.title')}</th>
+                  <th className="px-2 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.category')}</th>
+                  <th className="px-2 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.customer')}</th>
+                  <th className="px-2 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.status')}</th>
+                  <th className="px-2 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('listings.listed')}</th>
+                  <th className="px-2 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.location')}</th>
+                  <th className="px-2 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('common.actions')}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          {items.length === 0 && (
-            <p className="px-4 py-8 text-center text-roomi-brownLight">{t('dashboard.noItems')}</p>
-          )}
-        </div>
+              </thead>
+              <tbody className="divide-y divide-roomi-peach/60 bg-white">
+                {items.map((item) => (
+                  <tr key={item.id} className="hover:bg-roomi-cream/40">
+                    <td className="px-3 py-3 min-w-0">
+                      <Link to={`/items/${item.id}`} className="text-roomi-orange font-medium hover:underline block truncate">
+                        {item.title}
+                      </Link>
+                    </td>
+                    <td className="px-2 py-3 text-sm text-roomi-brownLight min-w-0 truncate">
+                      {item.displaySubCategory ?? item.subCategory?.name ?? '—'}
+                    </td>
+                    <td className="px-2 py-3 text-sm text-roomi-brownLight min-w-0 truncate">
+                      {getItemCustomerDisplay(item)}
+                    </td>
+                    <td className="px-2 py-3 min-w-0">
+                      <div className="flex flex-col gap-0.5">
+                        <span className={`${getStatusBadgeClass(item.status)} text-xs lg:text-sm w-fit`}>{item.status}</span>
+                        {getItemStatusDate(item) && (
+                          <span className="text-xs text-roomi-brownLight">{getItemStatusDate(item)}</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-2 py-3 text-sm text-roomi-brownLight min-w-0 truncate">{getDisplayLocation(item.prefecture, item.city) === UNDECIDED ? t('input.undecided') : getDisplayLocation(item.prefecture, item.city)}</td>
+                    <td className="px-2 py-3">
+                      {(item.status === 'in_stock' || item.status === 'reserved') && (
+                        <ListedCheckbox item={item} onOpenModal={() => setListedModalItem(item)} onRefresh={() => queryClient.invalidateQueries({ queryKey: ['items'] })} />
+                      )}
+                      {(item.status === 'sold' || item.status === 'rented' || item.status === 'disposed') && (
+                        <span className="text-roomi-brownLight">—</span>
+                      )}
+                    </td>
+                    <td className="px-2 py-3">
+                      {item.status === 'in_stock' && (
+                        <button type="button" onClick={() => setReserveModalItem(item)} className="btn-secondary text-xs py-1.5 px-2 min-h-0">
+                          {t('actions.reserve')}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {listedModalItem && (
