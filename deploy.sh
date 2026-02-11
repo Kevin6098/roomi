@@ -11,7 +11,7 @@ echo "==> Deploying ROOMI from $ROOT"
 
 echo "==> Backend: install, prisma, build"
 cd "$ROOT/backend"
-npm ci --omit=dev
+npm ci
 npx prisma generate
 npx prisma migrate deploy
 npm run build
