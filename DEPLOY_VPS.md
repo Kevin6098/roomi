@@ -274,13 +274,17 @@ and in code use `import.meta.env.VITE_API_BASE` for the API base (you’d need a
 
 ## 10) Updates (redeploy)
 
+From the server (e.g. `/root/projects/roomi`):
+
 ```bash
-cd /var/www/roomi
+cd /root/projects/roomi
 git pull
-cd backend && npm ci --omit=dev && npx prisma migrate deploy && npm run build && pm2 restart roomi-api
-cd ../frontend && npm ci && npm run build
-sudo systemctl reload nginx
+./deploy.sh
 ```
+
+The **deploy script** (`deploy.sh`) does: backend `npm ci --omit=dev`, `prisma generate`, `prisma migrate deploy`, `npm run build`; frontend `npm ci`, `npm run build`; `pm2 restart roomi-backend`; `pm2 save`; and `sudo systemctl reload nginx` if Nginx is running.
+
+First time, make it executable: `chmod +x deploy.sh`
 
 ---
 
