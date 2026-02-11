@@ -685,7 +685,7 @@ export default function Records() {
                       type="number"
                       min={0}
                       step={0.01}
-                      value={acquireForm.acquisition_type === 'free' ? 0 : (acquireForm.acquisition_cost === undefined || acquireForm.acquisition_cost === '' ? '' : acquireForm.acquisition_cost)}
+                      value={acquireForm.acquisition_type === 'free' ? 0 : (acquireForm.acquisition_cost === undefined ? '' : acquireForm.acquisition_cost)}
                       onChange={(e) => setAcquireForm((f) => ({ ...f, acquisition_cost: e.target.value === '' ? undefined : Number(e.target.value) }))}
                       className="input-field"
                       disabled={acquireForm.acquisition_type === 'free'}

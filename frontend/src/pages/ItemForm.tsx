@@ -236,7 +236,7 @@ export default function ItemForm() {
               type="number"
               min={0}
               step={0.01}
-              value={form.acquisition_cost === undefined || form.acquisition_cost === '' ? '' : form.acquisition_cost}
+              value={form.acquisition_cost === undefined ? '' : form.acquisition_cost}
               onChange={(e) => setForm((f) => ({ ...f, acquisition_cost: e.target.value === '' ? undefined : Number(e.target.value) }))}
               className="input-field"
             />
