@@ -1,6 +1,7 @@
 import { prisma } from '../db.js';
 import { conflict, notFound } from '../utils/errors.js';
 import type { CreateSaleBody, UpdateSaleBody } from '../validators/sales.js';
+import { customerService } from './customer.service.js';
 
 export const saleService = {
   async getMany() {
@@ -20,6 +21,11 @@ export const saleService = {
   },
 
   async create(body: CreateSaleBody) {
+    const customerId = body.customer_id
+      ? (await prisma.customer.findUnique({ where: { id: body.customer_id } }))?.id
+      : (await customerService.getOrCreateCustomerFromContact(body.contact_id ?? undefined, body.contact)).id;
+    if (!customerId) throw notFound('Customer not found');
+
     return prisma.$transaction(async (tx) => {
       const item = await tx.item.findUnique({
         where: { id: body.item_id },
@@ -28,17 +34,18 @@ export const saleService = {
       if (!item) throw notFound('Item not found');
       if (item.status === 'sold' || item.sale) throw conflict('Item is already sold');
       if (item.status === 'rented' || item.rentals.length > 0) throw conflict('Item is currently rented');
-      const customer = await tx.customer.findUnique({ where: { id: body.customer_id } });
-      if (!customer) throw notFound('Customer not found');
 
       const sale = await tx.sale.create({
         data: {
           itemId: body.item_id,
-          customerId: body.customer_id,
-          salePrice: body.sale_price ?? undefined,
+          customerId,
+          salePrice: body.sale_price,
           saleDate: new Date(body.sale_date),
           platformSold: body.platform_sold ?? undefined,
           handoverLocation: body.handover_location ?? undefined,
+          handoverPrefecture: body.handover_prefecture ?? undefined,
+          handoverCity: body.handover_city ?? undefined,
+          handoverExactLocation: body.handover_exact_location ?? undefined,
           notes: body.notes ?? undefined,
         },
         include: { item: true, customer: true },
@@ -54,11 +61,14 @@ export const saleService = {
   async update(id: string, body: UpdateSaleBody) {
     const sale = await prisma.sale.findUnique({ where: { id } });
     if (!sale) throw notFound('Sale not found');
-    const data: { salePrice?: number | null; saleDate?: Date; platformSold?: string | null; handoverLocation?: string | null; notes?: string | null } = {};
+    const data: Record<string, unknown> = {};
     if (body.sale_price !== undefined) data.salePrice = body.sale_price;
     if (body.sale_date !== undefined) data.saleDate = new Date(body.sale_date);
     if (body.platform_sold !== undefined) data.platformSold = body.platform_sold;
     if (body.handover_location !== undefined) data.handoverLocation = body.handover_location;
+    if (body.handover_prefecture !== undefined) data.handoverPrefecture = body.handover_prefecture;
+    if (body.handover_city !== undefined) data.handoverCity = body.handover_city;
+    if (body.handover_exact_location !== undefined) data.handoverExactLocation = body.handover_exact_location;
     if (body.notes !== undefined) data.notes = body.notes;
     return prisma.sale.update({
       where: { id },

@@ -66,18 +66,18 @@ export default function Users() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900">{t('nav.users')}</h1>
+        <h1 className="text-2xl font-bold text-roomi-brown">{t('nav.users')}</h1>
         <button
           type="button"
           onClick={() => { setAdding(true); setEditing(null); setForm({ email: '', password: '', role: 'STAFF' }); setError(''); }}
-          className="rounded bg-gray-900 text-white px-4 py-2 text-sm font-medium hover:bg-gray-800"
+          className="btn-primary"
         >
           {t('form.newUser')}
         </button>
       </div>
 
       {(adding || editing) && (
-        <form onSubmit={handleSubmitUser} className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm space-y-4 max-w-xl">
+        <form onSubmit={handleSubmitUser} className="card p-6 space-y-4 max-w-xl">
           <h2 className="font-medium text-gray-900">{editing ? t('form.editUser') : t('form.newUser')}</h2>
           {error && <div className="rounded bg-red-50 text-red-700 text-sm px-3 py-2">{error}</div>}
           <div>
@@ -86,7 +86,7 @@ export default function Users() {
               type="email"
               value={form.email}
               onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+              className="input-field"
               required={!editing}
               disabled={!!editing}
             />
@@ -97,7 +97,7 @@ export default function Users() {
               type="password"
               value={form.password}
               onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+              className="input-field"
               required={!editing}
               minLength={editing ? undefined : 6}
               placeholder={editing ? '••••••••' : ''}
@@ -108,7 +108,7 @@ export default function Users() {
             <select
               value={form.role ?? 'STAFF'}
               onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+              className="input-field"
             >
               <option value="OWNER">{t('role.owner')}</option>
               <option value="STAFF">{t('role.staff')}</option>
@@ -118,14 +118,14 @@ export default function Users() {
             <button
               type="submit"
               disabled={createMutation.isPending || updateMutation.isPending}
-              className="rounded bg-gray-900 text-white px-4 py-2 text-sm font-medium hover:bg-gray-800 disabled:opacity-50"
+              className="btn-primary"
             >
               {t('common.save')}
             </button>
             <button
               type="button"
               onClick={() => { setAdding(false); setEditing(null); setError(''); }}
-              className="rounded border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="btn-ghost"
             >
               {t('common.cancel')}
             </button>
@@ -133,7 +133,7 @@ export default function Users() {
         </form>
       )}
 
-      <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+      <div className="card overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -145,7 +145,7 @@ export default function Users() {
           <tbody className="divide-y divide-gray-200">
             {(users ?? []).map((u) => (
               <tr key={u.id} className="hover:bg-gray-50">
-                <td className="px-4 py-2 font-medium text-gray-900">{u.email}</td>
+                <td className="px-4 py-2 font-semibold text-roomi-brown">{u.email}</td>
                 <td className="px-4 py-2 text-sm text-gray-600">{u.role === 'OWNER' ? t('role.owner') : t('role.staff')}</td>
                 <td className="px-4 py-2 text-right text-sm">
                   {deleteId === u.id ? (
@@ -168,7 +168,7 @@ export default function Users() {
                       <button
                         type="button"
                         onClick={() => { setEditing(u); setAdding(false); setForm({ email: u.email, password: '', role: u.role }); setError(''); }}
-                        className="text-blue-600 hover:underline mr-3"
+                        className="text-roomi-orange hover:underline font-medium mr-3"
                       >
                         {t('actions.edit')}
                       </button>

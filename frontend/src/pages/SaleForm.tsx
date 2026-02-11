@@ -15,6 +15,7 @@ export default function SaleForm() {
   const [form, setForm] = useState<CreateSaleBody & UpdateSaleBody>({
     item_id: '',
     customer_id: '',
+    sale_price: 0,
     sale_date: today,
   });
   const [error, setError] = useState('');
@@ -46,7 +47,7 @@ export default function SaleForm() {
       setForm({
         item_id: sale.itemId,
         customer_id: sale.customerId,
-        sale_price: sale.salePrice != null ? Number(sale.salePrice) : null,
+        sale_price: sale.salePrice != null ? Number(sale.salePrice) : 0,
         sale_date: sale.saleDate.slice(0, 10),
         platform_sold: sale.platformSold ?? null,
         handover_location: sale.handoverLocation ?? null,
@@ -92,8 +93,8 @@ export default function SaleForm() {
       }
       createMutation.mutate({
         item_id: form.item_id,
-        customer_id: form.customer_id,
-        sale_price: form.sale_price,
+        customer_id: form.customer_id ?? undefined,
+        sale_price: form.sale_price != null ? form.sale_price : 0,
         sale_date: form.sale_date!,
         platform_sold: form.platform_sold,
         handover_location: form.handover_location,
@@ -107,13 +108,13 @@ export default function SaleForm() {
 
   return (
     <div className="space-y-6">
-      <Link to="/sales" className="text-sm text-blue-600 hover:underline">
+      <Link to="/sales" className="nav-link text-sm">
         ← {t('common.back')}
       </Link>
-      <h1 className="text-2xl font-semibold text-gray-900">
+      <h1 className="text-2xl font-bold text-roomi-brown">
         {isEdit ? t('form.editSale') : t('form.newSale')}
       </h1>
-      <form onSubmit={handleSubmit} className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm space-y-4 max-w-xl">
+      <form onSubmit={handleSubmit} className="card p-6 space-y-4 max-w-xl">
         {error && (
           <div className="rounded bg-red-50 text-red-700 text-sm px-3 py-2">{error}</div>
         )}
@@ -124,7 +125,7 @@ export default function SaleForm() {
               <select
                 value={form.item_id}
                 onChange={(e) => setForm((f) => ({ ...f, item_id: e.target.value }))}
-                className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                className="input-field"
                 required
               >
                 <option value="">—</option>
@@ -136,9 +137,9 @@ export default function SaleForm() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">{t('table.customer')} *</label>
               <select
-                value={form.customer_id}
+                value={form.customer_id ?? ''}
                 onChange={(e) => setForm((f) => ({ ...f, customer_id: e.target.value }))}
-                className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                className="input-field"
                 required
               >
                 <option value="">—</option>
@@ -161,7 +162,7 @@ export default function SaleForm() {
               type="date"
               value={form.sale_date ?? ''}
               onChange={(e) => setForm((f) => ({ ...f, sale_date: e.target.value }))}
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+              className="input-field"
               required
             />
           </div>
@@ -172,8 +173,8 @@ export default function SaleForm() {
               min={0}
               step={0.01}
               value={form.sale_price ?? ''}
-              onChange={(e) => setForm((f) => ({ ...f, sale_price: e.target.value ? Number(e.target.value) : null }))}
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+              onChange={(e) => setForm((f) => ({ ...f, sale_price: e.target.value ? Number(e.target.value) : 0 }))}
+              className="input-field"
             />
           </div>
         </div>
@@ -182,7 +183,7 @@ export default function SaleForm() {
           <textarea
             value={form.notes ?? ''}
             onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value || null }))}
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+            className="input-field"
             rows={2}
           />
         </div>
@@ -190,11 +191,11 @@ export default function SaleForm() {
           <button
             type="submit"
             disabled={createMutation.isPending || updateMutation.isPending}
-            className="rounded bg-gray-900 text-white px-4 py-2 text-sm font-medium hover:bg-gray-800 disabled:opacity-50"
+            className="btn-primary"
           >
             {t('common.save')}
           </button>
-          <Link to="/sales" className="rounded border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+          <Link to="/sales" className="btn-ghost">
             {t('common.cancel')}
           </Link>
         </div>

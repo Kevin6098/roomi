@@ -6,7 +6,11 @@
     "rentals": "Rentals",
     "sales": "Sales",
     "categories": "Categories",
-    "users": "Users"
+    "users": "Users",
+    "settings": "Settings",
+    "input": "Input (Buy)",
+    "output": "Output (Sell/Rent)",
+    "records": "Records"
   },
   "status": {
     "in_stock": "In Stock",
@@ -26,7 +30,11 @@
     "reserved": "Reserved",
     "noItems": "No items yet.",
     "loading": "Loading…",
-    "failed": "Failed to load. Is the backend running?"
+    "failed": "Failed to load. Is the backend running?",
+    "flowTitle": "Workflow",
+    "flowInput": "Input (Buy/Acquire)",
+    "flowInventory": "Inventory",
+    "flowOutput": "Output (Sell/Rent)"
   },
   "actions": {
     "add": "Add",
@@ -50,7 +58,11 @@
   },
   "table": {
     "item": "Item",
+    "platform": "Platform",
     "customer": "Customer",
+    "seller": "Seller",
+    "buyer": "Buyer",
+    "renter": "Renter",
     "name": "Name",
     "phone": "Phone",
     "email": "Email",
@@ -71,7 +83,9 @@
     "conditionLabel": "Condition",
     "locationLabel": "Location",
     "acquisitionLabel": "Acquisition",
-    "notesLabel": "Notes"
+    "notesLabel": "Notes",
+    "rentInfo": "Rent info",
+    "rentPeriod": "Period"
   },
   "empty": {
     "noRentals": "No rentals.",
@@ -105,6 +119,7 @@
     "newUser": "New user",
     "editUser": "Edit user",
     "confirmDelete": "Are you sure you want to delete this?",
+    "confirmDispose": "Are you sure you want to dispose the item instead?",
     "role": "Role"
   },
   "role": {
@@ -118,5 +133,121 @@
     "password": "Password",
     "loginFailed": "Login failed.",
     "logout": "Log out"
+  },
+  "input": {
+    "title": "Buy / Acquire Stock",
+    "intro": "Record any item you obtain from anywhere (Rednote, Facebook, friends, etc.).",
+    "newAcquisition": "New acquisition",
+    "acquisitionDate": "Acquisition date",
+    "sourcePlatform": "Source platform",
+    "sourcePlatformOther": "Other",
+    "acquisitionType": "Acquisition type",
+    "acquisitionTypeFreeItem": "Free item",
+    "acquisitionTypeSecondHand": "Second hand item",
+    "acquisitionTypeNewItem": "New item",
+    "acquisitionCost": "Acquisition cost",
+    "originalPrice": "Original price",
+    "locationArea": "Location area",
+    "prefecture": "Prefecture",
+    "city": "City / Ward",
+    "undecided": "Undecided",
+    "addExactLocation": "Add exact location (optional)",
+    "addExactLocationRequired": "Exact location *",
+    "customSubCategory": "Custom sub category",
+    "customSubCategoryRequired": "Please enter a custom sub category (min 2 characters) when \"other\" is selected.",
+    "decideLocation": "Decide the location",
+    "saveAcquisition": "Save acquisition",
+    "recentlyAcquired": "Recently acquired",
+    "noAcquisitions": "No acquisitions yet.",
+    "saved": "Item saved.",
+    "selectCategory": "Please select a category.",
+    "selectSourcePlatform": "Please select a source platform.",
+    "selectAcquisitionType": "Please select an acquisition type.",
+    "selectCondition": "Please select a condition.",
+    "customerDetails": "Customer details (seller)",
+    "selectExistingContact": "Select existing contact",
+    "createNewContact": "Create new contact",
+    "contactSearch": "Search contacts",
+    "selectContact": "Select contact",
+    "selectContactRequired": "Please select a contact.",
+    "customerDetailsRequired": "Source platform and name are required.",
+    "customerDetailsNameRequired": "Name is required.",
+    "platformId": "Platform ID / username",
+    "platformIdPlaceholder": "Seller's username or listing ID"
+  },
+  "output": {
+    "title": "Sell / Rent",
+    "intro": "Pick an item from inventory and record a sale or start a rental.",
+    "sell": "Sell",
+    "rent": "Rent",
+    "createSale": "Create sale",
+    "createRental": "Create rental",
+    "sellBtn": "Sell item",
+    "confirmSell": "Confirm: this will mark the item as sold.",
+    "confirmSellBtn": "Confirm sell",
+    "saleSaved": "Sale recorded.",
+    "rentalSaved": "Rental started.",
+    "rentalEnded": "Rental ended.",
+    "platformSold": "Platform sold",
+    "itemStatusAfter": "Item status after return",
+    "endRentalBtn": "End rental",
+    "noActiveRentals": "No active rentals.",
+    "startRentalBtn": "Start rental",
+    "salePrice": "Sale price",
+    "salePriceRequired": "Please enter a sale price (0 or more).",
+    "handoverLocationRequired": "Handover location is required: select prefecture, city, and enter exact location.",
+    "rentPeriod": "Rent period",
+    "rentPeriodMonthly": "Per month",
+    "rentPeriodAnnually": "Per year",
+    "rentPriceMonthly": "Rent (per month)",
+    "rentPriceAnnually": "Rent (per year)",
+    "deposit": "Deposit (if damaged, renter pays this)",
+    "depositPlaceholder": "Amount",
+    "buyPrice": "Buy price"
+  },
+  "rentalAnalytics": {
+    "filters": "Filter by end date",
+    "endedFrom": "Ended from",
+    "endedTo": "Ended to",
+    "totalEarnings": "Total rental earnings",
+    "endedCount": "Ended rentals",
+    "endedList": "Ended rentals",
+    "endedOn": "Ended",
+    "noEndedInPeriod": "No ended rentals in this period."
+  },
+  "salesAnalytics": {
+    "filters": "Filters",
+    "category": "Category",
+    "allCategories": "All categories",
+    "dateFrom": "Date from",
+    "dateTo": "Date to",
+    "totalRevenue": "Total revenue",
+    "totalCost": "Total cost (buy)",
+    "totalProfit": "Total profit",
+    "soldByCategory": "Sales by category",
+    "profitList": "Profit per sale",
+    "noDataForPeriod": "No sales in this period.",
+    "allSales": "All sales"
+  },
+  "customers": {
+    "searchPlaceholder": "Search by name or platform…",
+    "allPlatforms": "All platforms",
+    "of": "of",
+    "noResults": "No customers match your search or filter."
+  },
+  "records": {
+    "title": "Records",
+    "intro": "Add new stock or record sales and rentals.",
+    "inTitle": "Add to inventory",
+    "inDesc": "Record new items you've bought or received.",
+    "outTitle": "Out of inventory",
+    "outDesc": "Sell or rent items from your inventory.",
+    "tab": {
+      "acquire": "Acquire",
+      "sell": "Sell",
+      "rent": "Rent"
+    },
+    "in": "In",
+    "out": "Out"
   }
 }

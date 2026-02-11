@@ -51,6 +51,15 @@ export const api = {
   items: {
     getCounts: () => request<Record<string, number>>('/items/counts'),
     getRecent: () => request<Item[]>('/items/recent'),
+    getRecentlyAcquired: () => request<Item[]>('/items/recently-acquired'),
+    getAvailable: (params?: { search?: string; sub_category_id?: string; location?: string }) => {
+      const q = new URLSearchParams();
+      if (params?.search) q.set('search', params.search);
+      if (params?.sub_category_id) q.set('sub_category_id', params.sub_category_id);
+      if (params?.location) q.set('location', params.location);
+      const query = q.toString();
+      return request<Item[]>(`/items/available${query ? `?${query}` : ''}`);
+    },
     getMany: (params?: { status?: string; sub_category_id?: string; search?: string }) => {
       const q = new URLSearchParams();
       if (params?.status) q.set('status', params.status);
@@ -72,6 +81,19 @@ export const api = {
     create: (body: CreateCustomerBody) => request<Customer>('/customers', { method: 'POST', body: JSON.stringify(body) }),
     update: (id: string, body: Partial<CreateCustomerBody>) => request<Customer>(`/customers/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
     delete: (id: string) => request<void>(`/customers/${id}`, { method: 'DELETE' }),
+  },
+
+  contacts: {
+    getMany: (params?: { search?: string }) => {
+      const q = new URLSearchParams();
+      if (params?.search) q.set('search', params.search);
+      const query = q.toString();
+      return request<Contact[]>(`/contacts${query ? `?${query}` : ''}`);
+    },
+    getById: (id: string) => request<Contact>(`/contacts/${id}`),
+    create: (body: CreateContactBody) => request<Contact>('/contacts', { method: 'POST', body: JSON.stringify(body) }),
+    update: (id: string, body: Partial<CreateContactBody>) => request<Contact>(`/contacts/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+    delete: (id: string) => request<void>(`/contacts/${id}`, { method: 'DELETE' }),
   },
 
   rentals: {
@@ -132,34 +154,70 @@ export interface SubCategory {
   createdAt?: string;
 }
 
+export interface Contact {
+  id: string;
+  sourcePlatform: string;
+  platformUserId?: string | null;
+  name: string;
+  phone?: string | null;
+  email?: string | null;
+  notes?: string | null;
+  createdAt: string;
+  acquisitionItems?: { id: string; title: string }[];
+}
+
 export interface Item {
   id: string;
   title: string;
   subCategoryId: string;
+  customSubCategory?: string | null;
+  displaySubCategory?: string;
+  acquisitionContactId?: string | null;
   status: string;
   condition: string;
   acquisitionType: string;
   acquisitionCost: number;
   originalPrice?: number | null;
-  locationArea?: string | null;
+  prefecture?: string;
+  city?: string;
   exactLocation?: string | null;
+  locationVisibility?: string;
+  locationArea?: string | null;
   notes?: string | null;
   acquisitionDate?: string | null;
   createdAt: string;
   updatedAt: string;
   subCategory?: { id: string; name: string; mainCategory?: { id: string; name: string } };
+  acquisitionContact?: Contact | null;
+  sale?: Sale | null;
+  rentals?: Rental[];
+}
+
+export interface CreateContactBody {
+  source_platform: string;
+  name: string;
+  platform_user_id?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  notes?: string | null;
 }
 
 export interface CreateItemBody {
   title: string;
   sub_category_id: string;
+  custom_sub_category?: string | null;
+  acquisition_contact_id?: string | null;
+  contact?: CreateContactBody;
   source_platform?: string | null;
   acquisition_type?: string;
   acquisition_cost?: number;
   original_price?: number | null;
   condition?: string;
-  location_area?: string | null;
+  prefecture?: string;
+  city?: string;
   exact_location?: string | null;
+  location_visibility?: string;
+  location_area?: string | null;
   status?: string;
   acquisition_date?: string | null;
   notes?: string | null;
@@ -167,6 +225,7 @@ export interface CreateItemBody {
 
 export interface Customer {
   id: string;
+  contactId?: string | null;
   name: string;
   phone?: string | null;
   email?: string | null;
@@ -174,6 +233,8 @@ export interface Customer {
   sourcePlatform?: string | null;
   appId?: string | null;
   createdAt: string;
+  sales?: { item?: { id: string; title: string } }[];
+  rentals?: { item?: { id: string; title: string } }[];
 }
 
 export interface CreateCustomerBody {
@@ -189,15 +250,20 @@ export interface Rental {
   id: string;
   itemId: string;
   customerId: string;
+  rentPeriod?: string;
+  rentPriceMonthly?: number | null;
+  rentPriceAnnually?: number | null;
+  deposit?: number | null;
+  damageFee?: number | null;
   startDate: string;
   expectedEndDate: string;
   actualEndDate?: string | null;
   status: string;
-  rentPriceMonthly?: number | null;
-  deposit?: number | null;
-  damageFee?: number | null;
   notes?: string | null;
   handoverLocation?: string | null;
+  handoverPrefecture?: string | null;
+  handoverCity?: string | null;
+  handoverExactLocation?: string | null;
   isOverdue?: boolean;
   item?: Item;
   customer?: Customer;
@@ -206,12 +272,19 @@ export interface Rental {
 
 export interface StartRentalBody {
   item_id: string;
-  customer_id: string;
+  customer_id?: string | null;
+  contact_id?: string | null;
+  contact?: CreateContactBody;
+  rent_period?: 'monthly' | 'annually';
   rent_price_monthly?: number | null;
+  rent_price_annually?: number | null;
   deposit?: number | null;
   start_date: string;
   expected_end_date: string;
   handover_location?: string | null;
+  handover_prefecture?: string | null;
+  handover_city?: string | null;
+  handover_exact_location?: string | null;
   notes?: string | null;
 }
 
@@ -238,11 +311,16 @@ export interface Sale {
 
 export interface CreateSaleBody {
   item_id: string;
-  customer_id: string;
-  sale_price?: number | null;
+  customer_id?: string | null;
+  contact_id?: string | null;
+  contact?: CreateContactBody;
+  sale_price: number;
   sale_date: string;
   platform_sold?: string | null;
   handover_location?: string | null;
+  handover_prefecture?: string | null;
+  handover_city?: string | null;
+  handover_exact_location?: string | null;
   notes?: string | null;
 }
 

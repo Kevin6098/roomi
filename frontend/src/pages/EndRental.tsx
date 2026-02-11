@@ -46,14 +46,14 @@ export default function EndRental() {
 
   return (
     <div className="space-y-6">
-      <Link to="/rentals" className="text-sm text-blue-600 hover:underline">
+      <Link to="/rentals" className="nav-link text-sm">
         ← {t('common.back')}
       </Link>
-      <h1 className="text-2xl font-semibold text-gray-900">{t('form.endRental')}</h1>
+      <h1 className="text-2xl font-bold text-roomi-brown">{t('form.endRental')}</h1>
       <p className="text-gray-600">
         {rental.item?.title} — {rental.customer?.name} (expected end: {rental.expectedEndDate.slice(0, 10)})
       </p>
-      <form onSubmit={handleSubmit} className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm space-y-4 max-w-xl">
+      <form onSubmit={handleSubmit} className="card p-6 space-y-4 max-w-xl">
         {error && (
           <div className="rounded bg-red-50 text-red-700 text-sm px-3 py-2">{error}</div>
         )}
@@ -63,7 +63,7 @@ export default function EndRental() {
             type="date"
             value={form.actual_end_date ?? ''}
             onChange={(e) => setForm((f) => ({ ...f, actual_end_date: e.target.value || null }))}
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+            className="input-field"
           />
         </div>
         <div>
@@ -71,7 +71,7 @@ export default function EndRental() {
           <select
             value={form.next_item_status}
             onChange={(e) => setForm((f) => ({ ...f, next_item_status: e.target.value as EndRentalBody['next_item_status'] }))}
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+            className="input-field"
           >
             <option value="in_stock">{t('status.in_stock')}</option>
             <option value="listed">{t('status.listed')}</option>
@@ -86,7 +86,7 @@ export default function EndRental() {
             step={0.01}
             value={form.damage_fee ?? ''}
             onChange={(e) => setForm((f) => ({ ...f, damage_fee: e.target.value ? Number(e.target.value) : null }))}
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+            className="input-field"
           />
         </div>
         <div>
@@ -94,7 +94,7 @@ export default function EndRental() {
           <textarea
             value={form.notes ?? ''}
             onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value || null }))}
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+            className="input-field"
             rows={2}
           />
         </div>
@@ -102,11 +102,11 @@ export default function EndRental() {
           <button
             type="submit"
             disabled={endMutation.isPending}
-            className="rounded bg-gray-900 text-white px-4 py-2 text-sm font-medium hover:bg-gray-800 disabled:opacity-50"
+            className="btn-primary"
           >
             {t('common.save')}
           </button>
-          <Link to="/rentals" className="rounded border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+          <Link to="/rentals" className="btn-ghost">
             {t('common.cancel')}
           </Link>
         </div>

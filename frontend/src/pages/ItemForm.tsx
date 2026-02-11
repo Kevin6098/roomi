@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, type CreateItemBody } from '../api/client';
+import { PREFECTURES, UNDECIDED, getCitiesForPrefecture } from '../data/locationData';
 
 const STATUS_OPTIONS = ['in_stock', 'listed', 'reserved', 'rented', 'sold', 'disposed'] as const;
 const CONDITION_OPTIONS = ['new', 'good', 'fair', 'poor'] as const;
@@ -33,14 +34,20 @@ export default function ItemForm() {
     enabled: !!mainId,
   });
 
-  const [form, setForm] = useState<CreateItemBody>({
+  const [form, setForm] = useState<CreateItemBody & { custom_sub_category?: string | null }>({
     title: '',
     sub_category_id: '',
+    custom_sub_category: null,
     acquisition_type: 'bought',
     acquisition_cost: 0,
     condition: 'good',
+    prefecture: UNDECIDED,
+    city: UNDECIDED,
+    exact_location: null,
+    location_visibility: 'hidden',
     status: 'in_stock',
   });
+  const [showLocationFields, setShowLocationFields] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -48,17 +55,25 @@ export default function ItemForm() {
       setForm({
         title: item.title,
         sub_category_id: item.subCategoryId,
-        source_platform: item.subCategory?.mainCategory?.name ?? null,
+        custom_sub_category: item.customSubCategory ?? null,
+        acquisition_contact_id: item.acquisitionContactId ?? undefined,
         acquisition_type: item.acquisitionType as CreateItemBody['acquisition_type'],
         acquisition_cost: Number(item.acquisitionCost),
         original_price: item.originalPrice != null ? Number(item.originalPrice) : null,
         condition: item.condition as CreateItemBody['condition'],
-        location_area: item.locationArea ?? null,
+        prefecture: item.prefecture ?? UNDECIDED,
+        city: item.city ?? UNDECIDED,
         exact_location: item.exactLocation ?? null,
+        location_visibility: item.locationVisibility ?? 'hidden',
         status: item.status as CreateItemBody['status'],
         acquisition_date: item.acquisitionDate?.slice(0, 10) ?? null,
         notes: item.notes ?? null,
       });
+      setShowLocationFields(
+        (item.prefecture && item.prefecture !== UNDECIDED) ||
+          (item.city && item.city !== UNDECIDED) ||
+          !!item.exactLocation
+      );
       setMainId(item.subCategory?.mainCategory?.id ?? '');
     }
   }, [item]);
@@ -93,38 +108,48 @@ export default function ItemForm() {
       setError('Please select a category');
       return;
     }
-    const body = { ...form, sub_category_id: subId };
+    const isOther = subCategories.find((c) => c.id === subId)?.name?.toLowerCase() === 'other';
+    if (isOther && (!form.custom_sub_category?.trim() || form.custom_sub_category.trim().length < 2)) {
+      setError(t('input.customSubCategoryRequired'));
+      return;
+    }
+    const body = {
+      ...form,
+      sub_category_id: subId,
+      acquisition_cost: Number(form.acquisition_cost) || 0,
+      custom_sub_category: isOther ? (form.custom_sub_category ?? null) : null,
+    };
     if (isEdit) updateMutation.mutate(body);
     else createMutation.mutate(body as CreateItemBody);
   }
 
-  if (isEdit && loadingItem) return <p className="text-gray-500">{t('dashboard.loading')}</p>;
-  if (isEdit && !item) return <p className="text-gray-500">Item not found</p>;
+  if (isEdit && loadingItem) return <p className="text-roomi-brownLight">{t('dashboard.loading')}</p>;
+  if (isEdit && !item) return <p className="text-roomi-brownLight">Item not found</p>;
 
   return (
     <div className="space-y-6">
-      <Link to={isEdit ? `/items/${id}` : '/items'} className="text-sm text-blue-600 hover:underline">
+      <Link to={isEdit ? `/items/${id}` : '/items'} className="nav-link text-sm">
         ← {t('common.back')}
       </Link>
-      <h1 className="text-2xl font-semibold text-gray-900">
+      <h1 className="text-2xl font-bold text-roomi-brown">
         {isEdit ? t('form.editItem') : t('form.newItem')}
       </h1>
-      <form onSubmit={handleSubmit} className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm space-y-4 max-w-xl">
+      <form onSubmit={handleSubmit} className="card p-6 space-y-4 max-w-xl">
         {error && (
-          <div className="rounded bg-red-50 text-red-700 text-sm px-3 py-2">{error}</div>
+          <div className="rounded-roomi bg-red-50 text-red-700 text-sm px-3 py-2">{error}</div>
         )}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t('table.title')} *</label>
+          <label className="label">{t('table.title')} *</label>
           <input
             type="text"
             value={form.title}
             onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+            className="input-field"
             required
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t('table.category')} *</label>
+          <label className="label">{t('table.category')} *</label>
           <div className="flex gap-2">
             <select
               value={mainId}
@@ -132,7 +157,7 @@ export default function ItemForm() {
                 setMainId(e.target.value);
                 setForm((f) => ({ ...f, sub_category_id: '' }));
               }}
-              className="rounded border border-gray-300 px-3 py-2 text-sm flex-1"
+              className="input-field flex-1"
             >
               <option value="">—</option>
               {mainCategories.map((c) => (
@@ -141,8 +166,8 @@ export default function ItemForm() {
             </select>
             <select
               value={form.sub_category_id}
-              onChange={(e) => setForm((f) => ({ ...f, sub_category_id: e.target.value }))}
-              className="rounded border border-gray-300 px-3 py-2 text-sm flex-1"
+              onChange={(e) => setForm((f) => ({ ...f, sub_category_id: e.target.value, custom_sub_category: null }))}
+              className="input-field flex-1"
               required
             >
               <option value="">—</option>
@@ -151,14 +176,27 @@ export default function ItemForm() {
               ))}
             </select>
           </div>
+          {subCategories.find((c) => c.id === form.sub_category_id)?.name?.toLowerCase() === 'other' && (
+            <div className="mt-2">
+              <label className="label">{t('input.customSubCategory')} *</label>
+              <input
+                type="text"
+                value={form.custom_sub_category ?? ''}
+                onChange={(e) => setForm((f) => ({ ...f, custom_sub_category: e.target.value.trim() || null }))}
+                className="input-field mt-1"
+                placeholder="e.g. gaming_chair, coffee_machine"
+                maxLength={120}
+              />
+            </div>
+          )}
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t('itemDetail.conditionLabel')}</label>
+            <label className="label">{t('itemDetail.conditionLabel')}</label>
             <select
               value={form.condition}
               onChange={(e) => setForm((f) => ({ ...f, condition: e.target.value as CreateItemBody['condition'] }))}
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+              className="input-field"
             >
               {CONDITION_OPTIONS.map((c) => (
                 <option key={c} value={c}>{c}</option>
@@ -166,11 +204,11 @@ export default function ItemForm() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t('table.status')}</label>
+            <label className="label">{t('table.status')}</label>
             <select
               value={form.status}
               onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as CreateItemBody['status'] }))}
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+              className="input-field"
             >
               {STATUS_OPTIONS.map((s) => (
                 <option key={s} value={s}>{t(`status.${s}`)}</option>
@@ -180,11 +218,11 @@ export default function ItemForm() {
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t('itemDetail.acquisitionLabel')}</label>
+            <label className="label">{t('itemDetail.acquisitionLabel')}</label>
             <select
               value={form.acquisition_type}
               onChange={(e) => setForm((f) => ({ ...f, acquisition_type: e.target.value as CreateItemBody['acquisition_type'] }))}
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+              className="input-field"
             >
               {ACQUISITION_OPTIONS.map((a) => (
                 <option key={a} value={a}>{a}</option>
@@ -192,47 +230,66 @@ export default function ItemForm() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Cost</label>
+            <label className="label">Cost</label>
             <input
               type="number"
               min={0}
               step={0.01}
-              value={form.acquisition_cost ?? ''}
-              onChange={(e) => setForm((f) => ({ ...f, acquisition_cost: Number(e.target.value) || 0 }))}
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+              value={form.acquisition_cost === undefined || form.acquisition_cost === '' ? '' : form.acquisition_cost}
+              onChange={(e) => setForm((f) => ({ ...f, acquisition_cost: e.target.value === '' ? undefined : Number(e.target.value) }))}
+              className="input-field"
             />
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t('itemDetail.locationLabel')}</label>
-          <input
-            type="text"
-            value={form.exact_location ?? ''}
-            onChange={(e) => setForm((f) => ({ ...f, exact_location: e.target.value || null }))}
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
-          />
+          <button type="button" onClick={() => setShowLocationFields((v) => !v)} className="text-sm font-semibold text-roomi-orange hover:underline">
+            {showLocationFields ? '− ' : '+ '}{t('input.decideLocation')}
+          </button>
+          {showLocationFields && (
+            <div className="mt-3 space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="label">{t('input.prefecture')}</label>
+                  <select
+                    value={form.prefecture ?? UNDECIDED}
+                    onChange={(e) => {
+                      const p = e.target.value;
+                      const cities = getCitiesForPrefecture(p);
+                      setForm((f) => ({ ...f, prefecture: p, city: cities[0] ?? UNDECIDED }));
+                    }}
+                    className="input-field"
+                  >
+                    {PREFECTURES.map((pref) => <option key={pref} value={pref}>{pref === UNDECIDED ? t('input.undecided') : pref}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="label">{t('input.city')}</label>
+                  <select value={form.city ?? UNDECIDED} onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))} className="input-field">
+                    {getCitiesForPrefecture(form.prefecture ?? UNDECIDED).map((c) => <option key={c} value={c}>{c === UNDECIDED ? t('input.undecided') : c}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="label">{t('input.addExactLocation')}</label>
+                <input type="text" value={form.exact_location ?? ''} onChange={(e) => setForm((f) => ({ ...f, exact_location: e.target.value.trim() || null }))} className="input-field" placeholder={t('input.addExactLocation')} />
+              </div>
+            </div>
+          )}
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t('itemDetail.notesLabel')}</label>
+          <label className="label">{t('itemDetail.notesLabel')}</label>
           <textarea
             value={form.notes ?? ''}
             onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value || null }))}
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+            className="input-field"
             rows={2}
           />
         </div>
         <div className="flex gap-2">
-          <button
-            type="submit"
-            disabled={createMutation.isPending || updateMutation.isPending}
-            className="rounded bg-gray-900 text-white px-4 py-2 text-sm font-medium hover:bg-gray-800 disabled:opacity-50"
-          >
+          <button type="submit" disabled={createMutation.isPending || updateMutation.isPending} className="btn-primary">
             {t('common.save')}
           </button>
-          <Link
-            to={isEdit ? `/items/${id}` : '/items'}
-            className="rounded border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
+          <Link to={isEdit ? `/items/${id}` : '/items'} className="btn-ghost">
             {t('common.cancel')}
           </Link>
         </div>

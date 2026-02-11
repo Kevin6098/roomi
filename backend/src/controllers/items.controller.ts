@@ -30,6 +30,16 @@ export async function getRecentlyAcquired(_req: Request, res: Response, next: Ne
   }
 }
 
+export async function getAvailable(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { search, sub_category_id, location } = req.query as Record<string, string | undefined>;
+    const items = await itemService.getAvailable({ search, sub_category_id, location });
+    res.json(items);
+  } catch (e) {
+    next(e);
+  }
+}
+
 export async function getMany(req: Request, res: Response, next: NextFunction) {
   try {
     const { status, sub_category_id, search } = req.query as Record<string, string | undefined>;

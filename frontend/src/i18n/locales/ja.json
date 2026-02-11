@@ -6,7 +6,11 @@
     "rentals": "レンタル",
     "sales": "売上",
     "categories": "カテゴリ",
-    "users": "ユーザー"
+    "users": "ユーザー",
+    "settings": "設定",
+    "input": "入力（購入）",
+    "output": "出力（売却/レンタル）",
+    "records": "記録"
   },
   "status": {
     "in_stock": "在庫",
@@ -26,7 +30,11 @@
     "reserved": "予約中",
     "noItems": "商品がありません。",
     "loading": "読み込み中…",
-    "failed": "読み込みに失敗しました。バックエンドは起動していますか？"
+    "failed": "読み込みに失敗しました。バックエンドは起動していますか？",
+    "flowTitle": "ワークフロー",
+    "flowInput": "入力（購入・取得）",
+    "flowInventory": "在庫",
+    "flowOutput": "出力（売却・レンタル）"
   },
   "actions": {
     "add": "追加",
@@ -50,7 +58,11 @@
   },
   "table": {
     "item": "商品",
+    "platform": "プラットフォーム",
     "customer": "顧客",
+    "seller": "売り手",
+    "buyer": "買い手",
+    "renter": "借り手",
     "name": "名前",
     "phone": "電話",
     "email": "メール",
@@ -71,7 +83,9 @@
     "conditionLabel": "コンディション",
     "locationLabel": "保管場所",
     "acquisitionLabel": "取得",
-    "notesLabel": "備考"
+    "notesLabel": "備考",
+    "rentInfo": "レンタル情報",
+    "rentPeriod": "期間"
   },
   "empty": {
     "noRentals": "レンタルがありません。",
@@ -105,6 +119,7 @@
     "newUser": "新規ユーザー",
     "editUser": "ユーザーを編集",
     "confirmDelete": "削除してもよろしいですか？",
+    "confirmDispose": "この商品を廃棄してもよろしいですか？",
     "role": "権限"
   },
   "role": {
@@ -118,5 +133,121 @@
     "password": "パスワード",
     "loginFailed": "ログインに失敗しました。",
     "logout": "ログアウト"
+  },
+  "input": {
+    "title": "購入・取得",
+    "intro": "Rednote、Facebook、知人など、どこからでも取得した商品を記録します。",
+    "newAcquisition": "新規取得",
+    "acquisitionDate": "取得日",
+    "sourcePlatform": "取得元",
+    "sourcePlatformOther": "その他",
+    "acquisitionType": "取得タイプ",
+    "acquisitionTypeFreeItem": "無料品",
+    "acquisitionTypeSecondHand": "中古品",
+    "acquisitionTypeNewItem": "新品",
+    "acquisitionCost": "取得コスト",
+    "originalPrice": "定価",
+    "locationArea": "保管エリア",
+    "prefecture": "都道府県",
+    "city": "市区町村",
+    "undecided": "未定",
+    "addExactLocation": "詳細住所を追加（任意）",
+    "addExactLocationRequired": "詳細住所 *",
+    "customSubCategory": "カスタムサブカテゴリ",
+    "customSubCategoryRequired": "「その他」を選択した場合は、カスタムサブカテゴリを2文字以上入力してください。",
+    "decideLocation": "保管場所を決める",
+    "saveAcquisition": "保存",
+    "recentlyAcquired": "最近取得",
+    "noAcquisitions": "まだ取得履歴がありません。",
+    "saved": "保存しました。",
+    "selectCategory": "カテゴリを選択してください。",
+    "selectSourcePlatform": "取得元を選択してください。",
+    "selectAcquisitionType": "取得タイプを選択してください。",
+    "selectCondition": "状態を選択してください。",
+    "customerDetails": "取引先（売り手）",
+    "selectExistingContact": "既存の取引先を選択",
+    "createNewContact": "新規取引先を作成",
+    "contactSearch": "取引先を検索",
+    "selectContact": "取引先を選択",
+    "selectContactRequired": "取引先を選択してください。",
+    "customerDetailsRequired": "取得元と名前は必須です。",
+    "customerDetailsNameRequired": "名前は必須です。",
+    "platformId": "プラットフォームID / ユーザー名",
+    "platformIdPlaceholder": "売り手のユーザー名または出品ID"
+  },
+  "output": {
+    "title": "売却 / レンタル",
+    "intro": "在庫から商品を選び、売却またはレンタルを記録します。",
+    "sell": "売却",
+    "rent": "レンタル",
+    "createSale": "売却を作成",
+    "createRental": "レンタルを作成",
+    "sellBtn": "売却する",
+    "confirmSell": "この操作で商品は売却済みになります。",
+    "confirmSellBtn": "売却を確定",
+    "saleSaved": "売却を記録しました。",
+    "rentalSaved": "レンタルを開始しました。",
+    "rentalEnded": "レンタルを終了しました。",
+    "platformSold": "販売プラットフォーム",
+    "itemStatusAfter": "返却後の商品状態",
+    "endRentalBtn": "レンタル終了",
+    "noActiveRentals": "アクティブなレンタルはありません。",
+    "startRentalBtn": "レンタル開始",
+    "salePrice": "売却価格",
+    "salePriceRequired": "売却価格を入力してください（0以上）。",
+    "handoverLocationRequired": "売却・レンタルには手渡し場所が必須です。都道府県・市区町村を選び、詳細住所を入力してください。",
+    "rentPeriod": "賃料単位",
+    "rentPeriodMonthly": "月額",
+    "rentPeriodAnnually": "年額",
+    "rentPriceMonthly": "賃料（月額）",
+    "rentPriceAnnually": "賃料（年額）",
+    "deposit": "敷金（破損時はこの金額を請求）",
+    "depositPlaceholder": "金額",
+    "buyPrice": "購入価格"
+  },
+  "rentalAnalytics": {
+    "filters": "終了日でフィルター",
+    "endedFrom": "終了日（から）",
+    "endedTo": "終了日（まで）",
+    "totalEarnings": "レンタル収入合計",
+    "endedCount": "終了したレンタル数",
+    "endedList": "終了したレンタル",
+    "endedOn": "終了日",
+    "noEndedInPeriod": "この期間に終了したレンタルはありません。"
+  },
+  "salesAnalytics": {
+    "filters": "フィルター",
+    "category": "カテゴリ",
+    "allCategories": "すべてのカテゴリ",
+    "dateFrom": "開始日",
+    "dateTo": "終了日",
+    "totalRevenue": "売上合計",
+    "totalCost": "仕入合計",
+    "totalProfit": "利益合計",
+    "soldByCategory": "カテゴリ別売上",
+    "profitList": "売上ごとの利益",
+    "noDataForPeriod": "この期間の売上はありません。",
+    "allSales": "すべての売上"
+  },
+  "customers": {
+    "searchPlaceholder": "名前またはプラットフォームで検索…",
+    "allPlatforms": "すべてのプラットフォーム",
+    "of": "/",
+    "noResults": "検索またはフィルターに一致する顧客がいません。"
+  },
+  "records": {
+    "title": "記録",
+    "intro": "在庫の追加、売却・レンタルの記録をします。",
+    "inTitle": "在庫に入れる",
+    "inDesc": "購入または取得した新品目を記録します。",
+    "outTitle": "在庫から出す",
+    "outDesc": "在庫の商品を売却またはレンタルします。",
+    "tab": {
+      "acquire": "取得",
+      "sell": "売却",
+      "rent": "レンタル"
+    },
+    "in": "入",
+    "out": "出"
   }
 }

@@ -122,7 +122,7 @@ export default function Categories() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-semibold text-gray-900">{t('nav.categories')}</h1>
+      <h1 className="text-2xl font-bold text-roomi-brown">{t('nav.categories')}</h1>
 
       {error && (
         <div className="rounded-lg bg-red-50 p-3 text-red-700 text-sm" role="alert">
@@ -133,18 +133,18 @@ export default function Categories() {
       {/* Main categories */}
       <section>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-medium text-gray-900">{t('category.mainCategory')}</h2>
+          <h2 className="text-lg font-semibold text-roomi-brown">{t('category.mainCategory')}</h2>
           <button
             type="button"
             onClick={() => setMainForm({ name_en: '', name_ja: '' })}
-            className="rounded bg-gray-900 text-white px-3 py-1.5 text-sm font-medium hover:bg-gray-800"
+            className="btn-primary py-1.5 px-3 text-sm"
           >
             {t('category.newMain')}
           </button>
         </div>
 
         {mainForm && (
-          <form onSubmit={handleSubmitMain} className="rounded-lg border border-gray-200 bg-white p-4 mb-4 space-y-3 max-w-md">
+          <form onSubmit={handleSubmitMain} className="card p-4 mb-4 space-y-3 max-w-md">
             <h3 className="text-sm font-medium text-gray-700">
               {mainForm.id ? t('category.editMain') : t('category.newMain')}
             </h3>
@@ -154,7 +154,7 @@ export default function Categories() {
                 type="text"
                 value={mainForm.name_en}
                 onChange={(e) => setMainForm((f) => f && { ...f, name_en: e.target.value })}
-                className="w-full rounded border border-gray-300 px-2 py-1.5 text-sm"
+                className="input-field py-1.5 px-2 text-sm"
                 required
               />
             </div>
@@ -164,21 +164,21 @@ export default function Categories() {
                 type="text"
                 value={mainForm.name_ja}
                 onChange={(e) => setMainForm((f) => f && { ...f, name_ja: e.target.value })}
-                className="w-full rounded border border-gray-300 px-2 py-1.5 text-sm"
+                className="input-field py-1.5 px-2 text-sm"
               />
             </div>
             <div className="flex gap-2">
               <button
                 type="submit"
                 disabled={createMainMutation.isPending || updateMainMutation.isPending}
-                className="rounded bg-gray-900 text-white px-3 py-1.5 text-sm font-medium hover:bg-gray-800 disabled:opacity-50"
+                className="btn-primary py-1.5 px-3 text-sm disabled:opacity-50"
               >
                 {t('common.save')}
               </button>
               <button
                 type="button"
                 onClick={() => setMainForm(null)}
-                className="rounded border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className="btn-ghost py-1.5 px-3 text-sm"
               >
                 {t('common.cancel')}
               </button>
@@ -186,7 +186,7 @@ export default function Categories() {
           </form>
         )}
 
-        <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+        <div className="card overflow-hidden">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -198,7 +198,7 @@ export default function Categories() {
             <tbody className="divide-y divide-gray-200">
               {mains.map((m) => (
                 <tr key={m.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-2 text-sm text-gray-900">{m.nameEn || m.name || '—'}</td>
+                  <td className="px-4 py-2 text-sm font-medium text-roomi-brown">{m.nameEn || m.name || '—'}</td>
                   <td className="px-4 py-2 text-sm text-gray-600">{m.nameJa || '—'}</td>
                   <td className="px-4 py-2 text-right text-sm">
                     {deleteMainId === m.id ? (
@@ -221,7 +221,7 @@ export default function Categories() {
                         <button
                           type="button"
                           onClick={() => setMainForm({ id: m.id, name_en: m.nameEn || m.name || '', name_ja: m.nameJa || '' })}
-                          className="text-blue-600 hover:underline mr-3"
+                          className="text-roomi-orange hover:underline font-medium mr-3"
                         >
                           {t('actions.edit')}
                         </button>
@@ -244,18 +244,18 @@ export default function Categories() {
       {/* Subcategories */}
       <section>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-medium text-gray-900">{t('category.subcategory')}</h2>
+          <h2 className="text-lg font-semibold text-roomi-brown">{t('category.subcategory')}</h2>
           <button
             type="button"
             onClick={() => setSubForm({ main_category_id: mains[0]?.id || '', name_en: '', name_ja: '' })}
-            className="rounded bg-gray-900 text-white px-3 py-1.5 text-sm font-medium hover:bg-gray-800"
+            className="btn-primary py-1.5 px-3 text-sm"
           >
             {t('category.newSub')}
           </button>
         </div>
 
         {subForm && (
-          <form onSubmit={handleSubmitSub} className="rounded-lg border border-gray-200 bg-white p-4 mb-4 space-y-3 max-w-md">
+          <form onSubmit={handleSubmitSub} className="card p-4 mb-4 space-y-3 max-w-md">
             <h3 className="text-sm font-medium text-gray-700">
               {subForm.id ? t('category.editSub') : t('category.newSub')}
             </h3>
@@ -265,7 +265,7 @@ export default function Categories() {
                 <select
                   value={subForm.main_category_id}
                   onChange={(e) => setSubForm((f) => f && { ...f, main_category_id: e.target.value })}
-                  className="w-full rounded border border-gray-300 px-2 py-1.5 text-sm"
+                  className="input-field py-1.5 px-2 text-sm"
                   required
                 >
                   <option value="">—</option>
@@ -281,7 +281,7 @@ export default function Categories() {
                 type="text"
                 value={subForm.name_en}
                 onChange={(e) => setSubForm((f) => f && { ...f, name_en: e.target.value })}
-                className="w-full rounded border border-gray-300 px-2 py-1.5 text-sm"
+                className="input-field py-1.5 px-2 text-sm"
                 required
               />
             </div>
@@ -291,21 +291,21 @@ export default function Categories() {
                 type="text"
                 value={subForm.name_ja}
                 onChange={(e) => setSubForm((f) => f && { ...f, name_ja: e.target.value })}
-                className="w-full rounded border border-gray-300 px-2 py-1.5 text-sm"
+                className="input-field py-1.5 px-2 text-sm"
               />
             </div>
             <div className="flex gap-2">
               <button
                 type="submit"
                 disabled={createSubMutation.isPending || updateSubMutation.isPending}
-                className="rounded bg-gray-900 text-white px-3 py-1.5 text-sm font-medium hover:bg-gray-800 disabled:opacity-50"
+                className="btn-primary py-1.5 px-3 text-sm disabled:opacity-50"
               >
                 {t('common.save')}
               </button>
               <button
                 type="button"
                 onClick={() => setSubForm(null)}
-                className="rounded border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className="btn-ghost py-1.5 px-3 text-sm"
               >
                 {t('common.cancel')}
               </button>
@@ -313,7 +313,7 @@ export default function Categories() {
           </form>
         )}
 
-        <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+        <div className="card overflow-hidden">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -329,7 +329,7 @@ export default function Categories() {
                   <td className="px-4 py-2 text-sm text-gray-600">
                     {s.mainCategory ? displayMainName(s.mainCategory) : s.mainCategoryId}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-900">{s.nameEn || s.name || '—'}</td>
+                  <td className="px-4 py-2 text-sm font-medium text-roomi-brown">{s.nameEn || s.name || '—'}</td>
                   <td className="px-4 py-2 text-sm text-gray-600">{s.nameJa || '—'}</td>
                   <td className="px-4 py-2 text-right text-sm">
                     {deleteSubId === s.id ? (
@@ -359,7 +359,7 @@ export default function Categories() {
                               name_ja: s.nameJa || '',
                             })
                           }
-                          className="text-blue-600 hover:underline mr-3"
+                          className="text-roomi-orange hover:underline font-medium mr-3"
                         >
                           {t('actions.edit')}
                         </button>

@@ -1,8 +1,52 @@
 import { prisma } from '../db.js';
-import { notFound } from '../utils/errors.js';
+import { notFound, validationError } from '../utils/errors.js';
 import type { CreateCustomerBody, UpdateCustomerBody } from '../validators/customers.js';
+import type { CreateContactBody } from '../validators/contacts.js';
 
 export const customerService = {
+  /** Resolve contact_id or contact payload to a Customer (find by contactId or create from contact). */
+  async getOrCreateCustomerFromContact(contactId?: string | null, contactPayload?: CreateContactBody | null) {
+    if (contactId) {
+      const existing = await prisma.customer.findFirst({ where: { contactId } });
+      if (existing) return existing;
+      const contact = await prisma.contact.findUnique({ where: { id: contactId } });
+      if (!contact) throw validationError('Invalid contact_id');
+      return prisma.customer.create({
+        data: {
+          contactId: contact.id,
+          name: contact.name,
+          phone: contact.phone ?? undefined,
+          email: contact.email ?? undefined,
+          sourcePlatform: contact.sourcePlatform,
+          appId: contact.platformUserId ?? undefined,
+        },
+      });
+    }
+    if (contactPayload) {
+      const contact = await prisma.contact.create({
+        data: {
+          sourcePlatform: contactPayload.source_platform,
+          name: contactPayload.name,
+          platformUserId: contactPayload.platform_user_id ?? undefined,
+          phone: contactPayload.phone ?? undefined,
+          email: contactPayload.email ?? undefined,
+          notes: contactPayload.notes ?? undefined,
+        },
+      });
+      return prisma.customer.create({
+        data: {
+          contactId: contact.id,
+          name: contact.name,
+          phone: contact.phone ?? undefined,
+          email: contact.email ?? undefined,
+          sourcePlatform: contact.sourcePlatform,
+          appId: contact.platformUserId ?? undefined,
+        },
+      });
+    }
+    throw validationError('Either contact_id or contact payload is required');
+  },
+
   async getMany() {
     return prisma.customer.findMany({ orderBy: { name: 'asc' } });
   },

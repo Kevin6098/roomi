@@ -5,6 +5,7 @@ const router = Router();
 router.get('/counts', c.getCounts);
 router.get('/recent', c.getRecent);
 router.get('/recently-acquired', c.getRecentlyAcquired);
+router.get('/available', c.getAvailable);
 router.get('/', c.getMany);
 router.get('/:id', c.getById);
 router.post('/', ...c.create);

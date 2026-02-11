@@ -51,11 +51,11 @@ export default function StartRental() {
 
   return (
     <div className="space-y-6">
-      <Link to="/rentals" className="text-sm text-blue-600 hover:underline">
+      <Link to="/rentals" className="nav-link text-sm">
         ← {t('common.back')}
       </Link>
-      <h1 className="text-2xl font-semibold text-gray-900">{t('form.startRental')}</h1>
-      <form onSubmit={handleSubmit} className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm space-y-4 max-w-xl">
+      <h1 className="text-2xl font-bold text-roomi-brown">{t('form.startRental')}</h1>
+      <form onSubmit={handleSubmit} className="card p-6 space-y-4 max-w-xl">
         {error && (
           <div className="rounded bg-red-50 text-red-700 text-sm px-3 py-2">{error}</div>
         )}
@@ -64,7 +64,7 @@ export default function StartRental() {
           <select
             value={form.item_id}
             onChange={(e) => setForm((f) => ({ ...f, item_id: e.target.value }))}
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+            className="input-field"
             required
           >
             <option value="">—</option>
@@ -76,9 +76,9 @@ export default function StartRental() {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">{t('table.customer')} *</label>
           <select
-            value={form.customer_id}
+            value={form.customer_id ?? ''}
             onChange={(e) => setForm((f) => ({ ...f, customer_id: e.target.value }))}
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+            className="input-field"
             required
           >
             <option value="">—</option>
@@ -94,7 +94,7 @@ export default function StartRental() {
               type="date"
               value={form.start_date}
               onChange={(e) => setForm((f) => ({ ...f, start_date: e.target.value }))}
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+              className="input-field"
               required
             />
           </div>
@@ -104,7 +104,7 @@ export default function StartRental() {
               type="date"
               value={form.expected_end_date}
               onChange={(e) => setForm((f) => ({ ...f, expected_end_date: e.target.value }))}
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+              className="input-field"
               required
             />
           </div>
@@ -118,7 +118,7 @@ export default function StartRental() {
               step={0.01}
               value={form.rent_price_monthly ?? ''}
               onChange={(e) => setForm((f) => ({ ...f, rent_price_monthly: e.target.value ? Number(e.target.value) : null }))}
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+              className="input-field"
             />
           </div>
           <div>
@@ -129,7 +129,7 @@ export default function StartRental() {
               step={0.01}
               value={form.deposit ?? ''}
               onChange={(e) => setForm((f) => ({ ...f, deposit: e.target.value ? Number(e.target.value) : null }))}
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+              className="input-field"
             />
           </div>
         </div>
@@ -138,7 +138,7 @@ export default function StartRental() {
           <textarea
             value={form.notes ?? ''}
             onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value || null }))}
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+            className="input-field"
             rows={2}
           />
         </div>
@@ -146,11 +146,11 @@ export default function StartRental() {
           <button
             type="submit"
             disabled={createMutation.isPending}
-            className="rounded bg-gray-900 text-white px-4 py-2 text-sm font-medium hover:bg-gray-800 disabled:opacity-50"
+            className="btn-primary"
           >
             {t('common.save')}
           </button>
-          <Link to="/rentals" className="rounded border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+          <Link to="/rentals" className="btn-ghost">
             {t('common.cancel')}
           </Link>
         </div>

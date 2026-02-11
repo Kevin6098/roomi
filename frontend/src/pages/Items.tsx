@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { api } from '../api/client';
+import { getDisplayLocation, UNDECIDED } from '../data/locationData';
+import { getStatusBadgeClass } from '../utils/statusStyles';
 
 export default function Items() {
   const { t } = useTranslation();
@@ -11,19 +13,25 @@ export default function Items() {
   const status = searchParams.get('status') ?? '';
   const [search, setSearch] = useState('');
 
-  const { data: items, isLoading, error } = useQuery({
+  const { data: itemsRaw, isLoading, error } = useQuery({
     queryKey: ['items', status, search],
     queryFn: () => api.items.getMany({ status: status || undefined, search: search || undefined }),
   });
 
+  const items = useMemo(() => {
+    if (!itemsRaw) return itemsRaw;
+    return [...itemsRaw].sort((a, b) => {
+      const aInStock = a.status === 'in_stock' ? 0 : 1;
+      const bInStock = b.status === 'in_stock' ? 0 : 1;
+      return aInStock - bInStock;
+    });
+  }, [itemsRaw]);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900">{t('nav.items')}</h1>
-        <Link
-          to="/items/new"
-          className="rounded bg-gray-900 text-white px-4 py-2 text-sm font-medium hover:bg-gray-800"
-        >
+        <h1 className="text-2xl font-bold text-roomi-brown">{t('nav.items')}</h1>
+        <Link to="/items/new" className="btn-primary">
           {t('actions.add')} {t('nav.items')}
         </Link>
       </div>
@@ -34,7 +42,7 @@ export default function Items() {
           placeholder={t('common.search')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="rounded border border-gray-300 px-3 py-2 text-sm"
+          className="input-field max-w-xs"
         />
         <select
           value={status}
@@ -47,7 +55,7 @@ export default function Items() {
               return next;
             });
           }}
-          className="rounded border border-gray-300 px-3 py-2 text-sm"
+          className="input-field max-w-[180px]"
         >
           <option value="">{t('common.allStatus')}</option>
           <option value="in_stock">{t('status.in_stock')}</option>
@@ -59,44 +67,48 @@ export default function Items() {
         </select>
       </div>
 
-      {isLoading && <p className="text-gray-500">{t('dashboard.loading')}</p>}
+      {isLoading && <p className="text-roomi-brownLight">{t('dashboard.loading')}</p>}
       {error && (
-        <div className="rounded-lg bg-red-50 p-4 text-red-700">
+        <div className="card p-4 text-red-600 bg-red-50 border-red-200">
           {(error as Error).message}
         </div>
       )}
       {items && (
-        <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="card overflow-hidden">
+          <table className="min-w-full divide-y divide-roomi-peach/60">
+            <thead className="bg-roomi-cream/80">
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">{t('table.title')}</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">{t('table.category')}</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">{t('table.status')}</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">{t('table.location')}</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.title')}</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.category')}</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.seller')}</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.status')}</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.location')}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-roomi-peach/60 bg-white">
               {items.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-2">
-                    <Link to={`/items/${item.id}`} className="text-blue-600 hover:underline">
+                <tr key={item.id} className="hover:bg-roomi-cream/40">
+                  <td className="px-4 py-3">
+                    <Link to={`/items/${item.id}`} className="text-roomi-orange font-medium hover:underline">
                       {item.title}
                     </Link>
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-600">
-                    {item.subCategory?.mainCategory?.name} → {item.subCategory?.name}
+                  <td className="px-4 py-3 text-sm text-roomi-brownLight">
+                    {item.subCategory?.mainCategory?.name} → {item.displaySubCategory ?? item.subCategory?.name}
                   </td>
-                  <td className="px-4 py-2">
-                    <span className="text-xs px-2 py-0.5 rounded bg-gray-100">{item.status}</span>
+                  <td className="px-4 py-3 text-sm text-roomi-brownLight">
+                    {item.acquisitionContact ? `${item.acquisitionContact.name} (${item.acquisitionContact.sourcePlatform})` : '—'}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-600">{item.exactLocation ?? t('common.na')}</td>
+                  <td className="px-4 py-3">
+                    <span className={getStatusBadgeClass(item.status)}>{item.status}</span>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-roomi-brownLight">{getDisplayLocation(item.prefecture, item.city) === UNDECIDED ? t('input.undecided') : getDisplayLocation(item.prefecture, item.city)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
           {items.length === 0 && (
-            <p className="px-4 py-8 text-center text-gray-500">{t('dashboard.noItems')}</p>
+            <p className="px-4 py-8 text-center text-roomi-brownLight">{t('dashboard.noItems')}</p>
           )}
         </div>
       )}

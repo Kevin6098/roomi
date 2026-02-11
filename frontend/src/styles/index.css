@@ -1,8 +1,57 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-body {
-  margin: 0;
-  font-family: system-ui, -apple-system, sans-serif;
+@layer base {
+  body {
+    @apply font-roomi text-roomi-brown bg-roomi-cream antialiased;
+  }
+}
+
+@layer components {
+  /* Primary button: warm orange from logo */
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-roomi px-4 py-2.5 text-sm font-semibold text-white bg-roomi-orange shadow-roomi transition-all hover:bg-roomi-orangeLight hover:shadow-roomiMd focus:outline-none focus:ring-2 focus:ring-roomi-orange focus:ring-offset-2 focus:ring-offset-roomi-cream disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  /* Secondary / outline button */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-roomi px-4 py-2.5 text-sm font-semibold text-roomi-brown bg-roomi-cream border-2 border-roomi-orange/40 transition-all hover:bg-roomi-peach hover:border-roomi-orange focus:outline-none focus:ring-2 focus:ring-roomi-orange focus:ring-offset-2 disabled:opacity-50;
+  }
+
+  /* Accent (mint) for secondary actions */
+  .btn-accent {
+    @apply inline-flex items-center justify-center rounded-roomi px-4 py-2.5 text-sm font-semibold text-white bg-roomi-mint transition-all hover:bg-roomi-mintDark focus:outline-none focus:ring-2 focus:ring-roomi-mint focus:ring-offset-2 disabled:opacity-50;
+  }
+
+  /* Ghost / text button */
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-roomi px-4 py-2.5 text-sm font-semibold text-roomi-brownLight transition-all hover:bg-roomi-peach/60 focus:outline-none;
+  }
+
+  /* Card: soft cream/white with subtle shadow */
+  .card {
+    @apply rounded-roomiLg border border-roomi-peach/60 bg-white shadow-roomi;
+  }
+
+  /* Input field */
+  .input-field {
+    @apply w-full rounded-roomi border border-roomi-peach/80 bg-roomi-cream/50 px-3 py-2 text-sm text-roomi-brown placeholder-roomi-brownLight/70 focus:border-roomi-orange focus:outline-none focus:ring-1 focus:ring-roomi-orange transition-colors;
+  }
+
+  .label {
+    @apply block text-sm font-semibold text-roomi-brown mb-1;
+  }
+
+  /* Ensure select uses same look as input */
+  select.input-field {
+    @apply appearance-none bg-roomi-cream/50;
+  }
+
+  /* Nav link */
+  .nav-link {
+    @apply text-sm font-semibold text-roomi-brownLight transition-colors hover:text-roomi-orange;
+  }
 }

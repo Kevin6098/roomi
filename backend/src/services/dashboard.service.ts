@@ -4,9 +4,27 @@ const today = () => new Date(new Date().toISOString().slice(0, 10));
 const startOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
 const endOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth() + 1, 0);
 
+/** Date 1 month ago (for in-stock "overdue" = in stock > 1 month) */
+const oneMonthAgo = () => {
+  const d = new Date();
+  d.setMonth(d.getMonth() - 1);
+  return d;
+};
+
+/** Date 1 month from now (for upcoming returns = ending within 1 month) */
+const oneMonthFromNow = () => {
+  const d = new Date();
+  d.setMonth(d.getMonth() + 1);
+  return d;
+};
+
 export const dashboardService = {
   async getOverview() {
-    const [counts, activeRentals, recentItems, reservedItems] = await Promise.all([
+    const now = today();
+    const cutoffStock = oneMonthAgo();
+    const cutoffUpcoming = oneMonthFromNow();
+
+    const [counts, activeRentals, recentItems, reservedItems, overdueInStockCount] = await Promise.all([
       prisma.item.groupBy({ by: ['status'], _count: { id: true } }),
       prisma.rental.findMany({
         where: { status: 'active' },
@@ -23,6 +41,16 @@ export const dashboardService = {
         orderBy: { updatedAt: 'desc' },
         include: { subCategory: { include: { mainCategory: true } } },
       }),
+      // Overdue = in-stock items that have been in stock for more than 1 month (by acquisitionDate or createdAt)
+      prisma.item.count({
+        where: {
+          status: 'in_stock',
+          OR: [
+            { acquisitionDate: { lt: cutoffStock } },
+            { acquisitionDate: null, createdAt: { lt: cutoffStock } },
+          ],
+        },
+      }),
     ]);
 
     const countMap: Record<string, number> = {};
@@ -30,23 +58,20 @@ export const dashboardService = {
       countMap[s] = counts.find((c) => c.status === s)?._count.id ?? 0;
     }
 
-    const now = today();
-    const inSevenDays = new Date(now);
-    inSevenDays.setDate(inSevenDays.getDate() + 7);
-    const overdueRentals = activeRentals.filter((r) => new Date(r.expectedEndDate) < now);
+    // Upcoming returns = active rentals ending within 1 month (expectedEndDate between today and today+1 month)
     const upcomingRentals = activeRentals.filter((r) => {
       const exp = new Date(r.expectedEndDate);
-      return exp >= now && exp <= inSevenDays;
+      return exp >= now && exp <= cutoffUpcoming;
     });
 
     return {
       counts: countMap,
       activeRentalsCount: activeRentals.length,
-      overdueCount: overdueRentals.length,
+      overdueCount: overdueInStockCount,
       upcomingReturnsCount: upcomingRentals.length,
       recentItems,
       reservedItems,
-      overdueRentals: overdueRentals.map((r) => ({ ...r, isOverdue: true })),
+      overdueRentals: [], // kept for API shape; overdue is now in-stock > 1 month, not rental past due
     };
   },
 

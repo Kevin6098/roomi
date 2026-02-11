@@ -9,6 +9,7 @@ import ItemDetail from './pages/ItemDetail';
 import ItemForm from './pages/ItemForm';
 import Customers from './pages/Customers';
 import CustomerForm from './pages/CustomerForm';
+import ContactForm from './pages/ContactForm';
 import Rentals from './pages/Rentals';
 import StartRental from './pages/StartRental';
 import EndRental from './pages/EndRental';
@@ -16,6 +17,7 @@ import Sales from './pages/Sales';
 import SaleForm from './pages/SaleForm';
 import Users from './pages/Users';
 import Categories from './pages/Categories';
+import Records from './pages/Records';
 
 function AppRoutes() {
   return (
@@ -23,6 +25,7 @@ function AppRoutes() {
       <Layout>
         <Routes>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/records" element={<Records />} />
           <Route path="/items" element={<Items />} />
           <Route path="/items/new" element={<ItemForm />} />
           <Route path="/items/:id" element={<ItemDetail />} />
@@ -30,6 +33,7 @@ function AppRoutes() {
           <Route path="/customers" element={<Customers />} />
           <Route path="/customers/new" element={<CustomerForm />} />
           <Route path="/customers/:id/edit" element={<CustomerForm />} />
+          <Route path="/contacts/:id/edit" element={<ContactForm />} />
           <Route path="/rentals" element={<Rentals />} />
           <Route path="/rentals/new" element={<StartRental />} />
           <Route path="/rentals/:id/end" element={<EndRental />} />

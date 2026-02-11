@@ -1,6 +1,7 @@
 import { prisma } from '../db.js';
 import { conflict, notFound } from '../utils/errors.js';
 import type { EndRentalBody, StartRentalBody } from '../validators/rentals.js';
+import { customerService } from './customer.service.js';
 
 const today = () => new Date(new Date().toISOString().slice(0, 10));
 
@@ -37,23 +38,37 @@ export const rentalService = {
   },
 
   async start(body: StartRentalBody) {
+    const customerId = body.customer_id
+      ? (await prisma.customer.findUnique({ where: { id: body.customer_id } }))?.id
+      : (await customerService.getOrCreateCustomerFromContact(body.contact_id ?? undefined, body.contact)).id;
+    if (!customerId) throw notFound('Customer not found');
+
+    const rentPeriod = body.rent_period === 'annually' ? 'annually' : 'monthly';
+    const rentPriceMonthly = body.rent_period === 'annually' && body.rent_price_annually != null
+      ? body.rent_price_annually / 12
+      : (body.rent_price_monthly ?? undefined);
+    const rentPriceAnnually = body.rent_period === 'annually' ? (body.rent_price_annually ?? undefined) : undefined;
+
     return prisma.$transaction(async (tx) => {
       const item = await tx.item.findUnique({ where: { id: body.item_id }, include: { rentals: { where: { status: 'active' } } } });
       if (!item) throw notFound('Item not found');
       if (item.status === 'sold') throw conflict('Item is sold');
       if (item.rentals.length > 0) throw conflict('Item already has an active rental');
-      const customer = await tx.customer.findUnique({ where: { id: body.customer_id } });
-      if (!customer) throw notFound('Customer not found');
 
       const rental = await tx.rental.create({
         data: {
           itemId: body.item_id,
-          customerId: body.customer_id,
-          rentPriceMonthly: body.rent_price_monthly ?? undefined,
+          customerId,
+          rentPeriod,
+          rentPriceMonthly: rentPriceMonthly ?? undefined,
+          rentPriceAnnually: rentPriceAnnually ?? undefined,
           deposit: body.deposit ?? undefined,
           startDate: new Date(body.start_date),
           expectedEndDate: new Date(body.expected_end_date),
           handoverLocation: body.handover_location ?? undefined,
+          handoverPrefecture: body.handover_prefecture ?? undefined,
+          handoverCity: body.handover_city ?? undefined,
+          handoverExactLocation: body.handover_exact_location ?? undefined,
           notes: body.notes ?? undefined,
         },
         include: { item: true, customer: true },
