@@ -2,64 +2,79 @@
 
 Run the backend (API) and frontend (React app) on your machine with a local PostgreSQL database.
 
+## Quick start checklist
+
+1. Install **Node.js 18+** and **PostgreSQL**. Ensure PostgreSQL is running.
+2. Create a database: `createdb roomi_db` (or `CREATE DATABASE roomi_db;` in `psql`).
+3. Backend: `cd backend` → copy `.env.example` to `.env` → set `DATABASE_URL` and `JWT_SECRET` → `npm install` → `npx prisma generate` → `npx prisma migrate dev` → `npx prisma db seed` → `npm run dev`.
+4. Frontend (new terminal): `cd frontend` → `npm install` → `npm run dev`.
+5. Open **http://localhost:5173** and log in with `admin@roomi.local` / `admin123`.
+
+---
+
 ## Prerequisites
 
 - **Node.js** 18+ (with npm)
-- **PostgreSQL** (create a database for ROOMI)
+- **PostgreSQL** installed and running (e.g. start the service if you use one)
 
 ## 1. Database
 
-Create a PostgreSQL database:
+Create a PostgreSQL database. Use your actual PostgreSQL username and password when you set `DATABASE_URL` later.
 
 ```bash
-# Using psql or your DB tool
+# Option A: command line (uses your current OS user as DB user)
 createdb roomi_db
 ```
 
-Or in the PostgreSQL shell:
-
 ```sql
+-- Option B: in psql or any PostgreSQL client
 CREATE DATABASE roomi_db;
 ```
 
-Note the connection details: host (usually `localhost`), port (usually `5432`), username, and password. You’ll use them in the next step.
+Default connection: host `localhost`, port `5432`. Note your **username** and **password** for the next step.
 
 ## 2. Backend
 
 ### 2.1 Environment
 
-From the project root:
+From the **project root** (the folder that contains `backend` and `frontend`):
 
 ```bash
 cd backend
 cp .env.example .env
 ```
 
-Edit `backend/.env` and set at least:
+Edit `backend/.env` and set:
 
 | Variable       | Description                          | Example |
 |----------------|--------------------------------------|---------|
 | `DATABASE_URL` | PostgreSQL connection string         | `postgresql://USER:PASSWORD@localhost:5432/roomi_db?schema=public` |
-| `JWT_SECRET`   | Secret for JWT (use a long random string in production) | `your-secret-at-least-32-chars-long` |
+| `JWT_SECRET`   | Secret for JWT (min 32 chars in production) | `your-secret-at-least-32-chars-long` |
 
-Optional:
+Replace `USER` and `PASSWORD` with your PostgreSQL username and password. Example for user `postgres` and password `mypass`:
 
-- `PORT` — API port (default `3000`)
-- `NODE_ENV` — e.g. `development`
+```env
+DATABASE_URL="postgresql://postgres:mypass@localhost:5432/roomi_db?schema=public"
+JWT_SECRET=your-secret-at-least-32-chars-long
+```
+
+Optional: `PORT` (default `3000`), `NODE_ENV` (e.g. `development`).
 
 ### 2.2 Install, migrate, seed
+
+Run these **inside the `backend/` folder**:
 
 ```bash
 # Still in backend/
 npm install
 npx prisma generate
-npx prisma migrate dev --name init
+npx prisma migrate dev
 npx prisma db seed
 ```
 
-- **prisma generate** — generates the Prisma client  
-- **prisma migrate dev** — applies migrations and creates tables  
-- **prisma db seed** — seeds categories and a default admin user  
+- **prisma generate** — generates the Prisma client from `prisma/schema.prisma`.
+- **prisma migrate dev** — applies all existing migrations (creates/updates tables). No need to pass `--name init`; the repo already has an initial migration.
+- **prisma db seed** — seeds main/sub categories and the default admin user (`admin@roomi.local` / `admin123`).  
 
 ### 2.3 Start the API
 
@@ -130,13 +145,16 @@ Stop with `Ctrl+C` in that terminal.
 ## Troubleshooting
 
 - **“Failed to load” or API errors**  
-  Ensure the backend is running on port 3000 and `DATABASE_URL` in `backend/.env` is correct.
+  Ensure the backend is running on port 3000 and `DATABASE_URL` in `backend/.env` is correct. Open http://localhost:3000/api/health to confirm the API is up.
 
 - **Login fails with “Invalid email or password”**  
-  Run the seed: in `backend/` run `npx prisma db seed`. Use `admin@roomi.local` / `admin123`.
+  Run the seed: in `backend/` run `npx prisma db seed`. Use **Email:** `admin@roomi.local`, **Password:** `admin123`.
+
+- **Prisma: “Can’t reach database” / connection refused / authentication failed**  
+  Check that PostgreSQL is running, the database `roomi_db` exists, and `DATABASE_URL` uses the correct username, password, host, and port. Test with: `psql postgresql://USER:PASSWORD@localhost:5432/roomi_db` (replace USER and PASSWORD).
 
 - **Port already in use**  
   Change `PORT` in `backend/.env` or stop the process using that port. For the frontend, change `server.port` in `frontend/vite.config.ts` if 5173 is taken.
 
-- **Prisma / DB errors**  
-  Run `npx prisma generate` and `npx prisma migrate dev` again in `backend/`.
+- **Prisma / DB schema errors**  
+  From `backend/` run `npx prisma generate` and then `npx prisma migrate dev`. If you changed the schema, create a new migration with `npx prisma migrate dev --name your_change_name`.

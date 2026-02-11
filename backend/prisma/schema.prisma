@@ -2,7 +2,8 @@
 // Spec: ROOMI_DEVELOPER_PRO.md
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "darwin-arm64"]
 }
 
 datasource db {
