@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { itemService } from '../services/item.service.js';
-import { createItemSchema, updateItemSchema, reserveItemSchema } from '../validators/items.js';
+import { createItemSchema, updateItemSchema } from '../validators/items.js';
 import { validateBody } from '../middlewares/validate.middleware.js';
 
 export async function getCounts(_req: Request, res: Response, next: NextFunction) {
@@ -76,27 +76,6 @@ export const update = [
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const item = await itemService.update(req.params.id, req.body);
-      res.json(item);
-    } catch (e) {
-      next(e);
-    }
-  },
-];
-
-export async function setListed(req: Request, res: Response, next: NextFunction) {
-  try {
-    const item = await itemService.setListed(req.params.id);
-    res.json(item);
-  } catch (e) {
-    next(e);
-  }
-}
-
-export const setReserved = [
-  validateBody(reserveItemSchema),
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const item = await itemService.setReserved(req.params.id, req.body.customer_id, req.body.notes);
       res.json(item);
     } catch (e) {
       next(e);

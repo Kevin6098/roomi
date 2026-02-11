@@ -1,17 +1,45 @@
 import { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { api } from '../api/client';
+import { api, type Item, type CreateContactBody } from '../api/client';
 import { getDisplayLocation, UNDECIDED } from '../data/locationData';
 import { getStatusBadgeClass } from '../utils/statusStyles';
+import { LISTING_PLATFORMS } from '../data/listingPlatforms';
+import { CenteredToast } from '../components/CenteredToast';
+
+const SOURCE_PLATFORM_OPTIONS = [
+  'Facebook', 'WeChat', 'Xiaohongshu', 'LINE', 'Whatsapp', 'Telegram',
+  'Jimoty', 'Mercari', 'PayPayFlea', 'Rakuma', 'YahooAuction', 'Other',
+] as const;
+const SOURCE_PLATFORM_OTHER = 'Other';
+const SOURCE_PLATFORM_OTHER_SENTINEL = '__other__';
+
+const emptyReserveContact = (): {
+  source_platform: string;
+  source_platform_other: string;
+  name: string;
+  platform_user_id: string;
+  phone: string;
+  email: string;
+} => ({
+  source_platform: '',
+  source_platform_other: '',
+  name: '',
+  platform_user_id: '',
+  phone: '',
+  email: '',
+});
 
 export default function Items() {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const status = searchParams.get('status') ?? '';
   const [search, setSearch] = useState('');
+  const [listedModalItem, setListedModalItem] = useState<Item | null>(null);
+  const [reserveModalItem, setReserveModalItem] = useState<Item | null>(null);
 
   const { data: itemsRaw, isLoading, error } = useQuery({
     queryKey: ['items', status, search],
@@ -28,21 +56,21 @@ export default function Items() {
   }, [itemsRaw]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-roomi-brown">{t('nav.items')}</h1>
-        <Link to="/items/new" className="btn-primary">
+    <div className="space-y-4 sm:space-y-6 max-w-full min-w-0">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-xl sm:text-2xl font-bold text-roomi-brown">{t('nav.items')}</h1>
+        <Link to="/items/new" className="btn-primary w-full sm:w-auto text-center">
           {t('actions.add')} {t('nav.items')}
         </Link>
       </div>
 
-      <div className="flex flex-wrap gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
         <input
           type="text"
           placeholder={t('common.search')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="input-field max-w-xs"
+          className="input-field min-h-[44px] w-full sm:max-w-xs"
         />
         <select
           value={status}
@@ -55,7 +83,7 @@ export default function Items() {
               return next;
             });
           }}
-          className="input-field max-w-[180px]"
+          className="input-field min-h-[44px] w-full sm:max-w-[180px]"
         >
           <option value="">{t('common.allStatus')}</option>
           <option value="in_stock">{t('status.in_stock')}</option>
@@ -74,35 +102,76 @@ export default function Items() {
         </div>
       )}
       {items && (
-        <div className="card overflow-hidden">
-          <table className="min-w-full divide-y divide-roomi-peach/60">
+        <div className="card overflow-hidden max-w-full min-w-0 lg:overflow-x-auto">
+          <table className="min-w-full divide-y divide-roomi-peach/60 table-fixed lg:table-auto">
             <thead className="bg-roomi-cream/80">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.title')}</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.category')}</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.seller')}</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.status')}</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.location')}</th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-roomi-brown uppercase w-[28%] lg:w-auto">{t('table.title')}</th>
+                <th className="px-2 py-3 text-left text-xs font-semibold text-roomi-brown uppercase w-[18%] lg:w-auto">{t('table.category')}</th>
+                <th className="px-2 py-3 text-left text-xs font-semibold text-roomi-brown uppercase w-[22%] lg:w-auto">{t('table.customer')}</th>
+                <th className="px-2 py-3 text-left text-xs font-semibold text-roomi-brown uppercase w-[20%] lg:w-auto">{t('table.status')}</th>
+                <th className="px-2 py-3 text-left text-xs font-semibold text-roomi-brown uppercase w-[8%] lg:w-auto">{t('listings.listed')}</th>
+                <th className="px-2 py-3 text-left text-xs font-semibold text-roomi-brown uppercase w-[12%] lg:w-auto">{t('table.location')}</th>
+                <th className="px-2 py-3 text-left text-xs font-semibold text-roomi-brown uppercase w-[10%] lg:w-auto">{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-roomi-peach/60 bg-white">
               {items.map((item) => (
                 <tr key={item.id} className="hover:bg-roomi-cream/40">
-                  <td className="px-4 py-3">
-                    <Link to={`/items/${item.id}`} className="text-roomi-orange font-medium hover:underline">
+                  <td className="px-3 py-3 min-w-0">
+                    <Link to={`/items/${item.id}`} className="text-roomi-orange font-medium hover:underline block truncate">
                       {item.title}
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-sm text-roomi-brownLight">
-                    {item.subCategory?.mainCategory?.name} → {item.displaySubCategory ?? item.subCategory?.name}
+                  <td className="px-2 py-3 text-sm text-roomi-brownLight min-w-0 truncate">
+                    {item.displaySubCategory ?? item.subCategory?.name ?? '—'}
                   </td>
-                  <td className="px-4 py-3 text-sm text-roomi-brownLight">
-                    {item.acquisitionContact ? `${item.acquisitionContact.name} (${item.acquisitionContact.sourcePlatform})` : '—'}
+                  <td className="px-2 py-3 text-sm text-roomi-brownLight min-w-0 truncate">
+                    {item.status === 'disposed'
+                      ? '—'
+                      : item.status === 'sold' && item.sale?.customer
+                        ? `${item.sale.customer.name}${item.sale.customer.sourcePlatform ? ` (${item.sale.customer.sourcePlatform})` : ''}`
+                        : item.status === 'rented' && item.rentals?.[0]?.customer
+                          ? `${item.rentals[0].customer.name}${item.rentals[0].customer.sourcePlatform ? ` (${item.rentals[0].customer.sourcePlatform})` : ''}`
+                          : item.acquisitionContact
+                            ? `${item.acquisitionContact.name}${item.acquisitionContact.sourcePlatform ? ` (${item.acquisitionContact.sourcePlatform})` : ''}`
+                            : '—'}
                   </td>
-                  <td className="px-4 py-3">
-                    <span className={getStatusBadgeClass(item.status)}>{item.status}</span>
+                  <td className="px-2 py-3 min-w-0">
+                    <div className="flex flex-col gap-0.5">
+                      <span className={`${getStatusBadgeClass(item.status)} text-xs lg:text-sm w-fit`}>{item.status}</span>
+                      {(() => {
+                        const d = item.status === 'in_stock'
+                          ? (item.acquisitionDate || item.createdAt)
+                          : item.status === 'sold'
+                            ? item.sale?.saleDate
+                            : item.status === 'rented'
+                              ? item.rentals?.[0]?.startDate
+                              : (item.status === 'disposed' || item.status === 'reserved')
+                                ? item.updatedAt
+                                : null;
+                        if (!d) return null;
+                        const dateStr = typeof d === 'string' ? d.slice(0, 10) : new Date(d).toISOString().slice(0, 10);
+                        return <span className="text-xs text-roomi-brownLight">{dateStr}</span>;
+                      })()}
+                    </div>
                   </td>
-                  <td className="px-4 py-3 text-sm text-roomi-brownLight">{getDisplayLocation(item.prefecture, item.city) === UNDECIDED ? t('input.undecided') : getDisplayLocation(item.prefecture, item.city)}</td>
+                  <td className="px-2 py-3 text-sm text-roomi-brownLight min-w-0 truncate">{getDisplayLocation(item.prefecture, item.city) === UNDECIDED ? t('input.undecided') : getDisplayLocation(item.prefecture, item.city)}</td>
+                  <td className="px-2 py-3">
+                    {(item.status === 'in_stock' || item.status === 'reserved') && (
+                      <ListedCheckbox item={item} onOpenModal={() => setListedModalItem(item)} onRefresh={() => queryClient.invalidateQueries({ queryKey: ['items'] })} />
+                    )}
+                    {(item.status === 'sold' || item.status === 'rented' || item.status === 'disposed') && (
+                      <span className="text-roomi-brownLight">—</span>
+                    )}
+                  </td>
+                  <td className="px-2 py-3">
+                    {item.status === 'in_stock' && (
+                      <button type="button" onClick={() => setReserveModalItem(item)} className="btn-secondary text-xs py-1.5 px-2 min-h-0">
+                        {t('actions.reserve')}
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -112,6 +181,330 @@ export default function Items() {
           )}
         </div>
       )}
+
+      {listedModalItem && (
+        <ListedModal
+          item={listedModalItem}
+          onClose={() => setListedModalItem(null)}
+          onSaved={() => {
+            queryClient.invalidateQueries({ queryKey: ['items'] });
+            setListedModalItem(null);
+          }}
+        />
+      )}
+      {reserveModalItem && (
+        <ReserveModal
+          item={reserveModalItem}
+          onClose={() => setReserveModalItem(null)}
+          onSaved={() => {
+            queryClient.invalidateQueries({ queryKey: ['items'] });
+            setReserveModalItem(null);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function ListedCheckbox({ item, onOpenModal, onRefresh }: { item: Item; onOpenModal: () => void; onRefresh: () => void }) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const setListedMutation = useMutation({
+    mutationFn: (is_listed: boolean) => api.items.setListedFlag(item.id, is_listed),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['items'] });
+      onRefresh();
+    },
+  });
+  const isListed = !!item.isListed;
+  const handleChange = () => {
+    if (isListed) {
+      if (window.confirm(t('listings.confirmMarkClosed'))) {
+        setListedMutation.mutate(false);
+      }
+    } else {
+      onOpenModal();
+    }
+  };
+  return (
+    <label className="flex items-center gap-1 cursor-pointer">
+      <input type="checkbox" checked={isListed} onChange={handleChange} className="rounded border-roomi-brown/40" />
+      <span className="text-xs text-roomi-brownLight">{t('listings.listed')}</span>
+    </label>
+  );
+}
+
+function ListedModal({ item, onClose, onSaved }: { item: Item; onClose: () => void; onSaved: () => void }) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const [platforms, setPlatforms] = useState<{ platform: string; listing_url: string; listing_ref_id: string }[]>([{ platform: LISTING_PLATFORMS[0], listing_url: '', listing_ref_id: '' }]);
+  const createListingMutation = useMutation({
+    mutationFn: (body: { platform: string; listing_url?: string | null; listing_ref_id?: string | null }) =>
+      api.items.createListing(item.id, body),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['items'] }),
+  });
+  const setListedMutation = useMutation({
+    mutationFn: () => api.items.setListedFlag(item.id, true),
+    onSuccess: onSaved,
+  });
+  const handleAddRow = () => setPlatforms((p) => [...p, { platform: LISTING_PLATFORMS[0], listing_url: '', listing_ref_id: '' }]);
+  const handleSave = async () => {
+    for (const row of platforms) {
+      if (!row.platform.trim()) continue;
+      await createListingMutation.mutateAsync({
+        platform: row.platform,
+        listing_url: row.listing_url || null,
+        listing_ref_id: row.listing_ref_id || null,
+      });
+    }
+    await setListedMutation.mutateAsync();
+  };
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <div className="card p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <h3 className="font-semibold text-roomi-brown mb-2">{t('listings.addPlatforms')} — {item.title}</h3>
+        <p className="text-sm text-roomi-brownLight mb-4">{t('listings.addPlatformsHint')}</p>
+        <div className="space-y-3">
+          {platforms.map((row, i) => (
+            <div key={i} className="flex flex-wrap gap-2 items-center">
+              <select
+                value={row.platform}
+                onChange={(e) => setPlatforms((p) => p.map((r, j) => (j === i ? { ...r, platform: e.target.value } : r)))}
+                className="input-field flex-1 min-w-[120px]"
+              >
+                {LISTING_PLATFORMS.map((pl) => (
+                  <option key={pl} value={pl}>{pl}</option>
+                ))}
+              </select>
+              <input
+                type="url"
+                placeholder={t('listings.urlOptional')}
+                value={row.listing_url}
+                onChange={(e) => setPlatforms((p) => p.map((r, j) => (j === i ? { ...r, listing_url: e.target.value } : r)))}
+                className="input-field flex-1 min-w-[140px]"
+              />
+              <input
+                type="text"
+                placeholder={t('listings.refIdOptional')}
+                value={row.listing_ref_id}
+                onChange={(e) => setPlatforms((p) => p.map((r, j) => (j === i ? { ...r, listing_ref_id: e.target.value } : r)))}
+                className="input-field w-24"
+              />
+            </div>
+          ))}
+          <button type="button" onClick={handleAddRow} className="btn-ghost text-sm">{t('listings.addPlatform')}</button>
+        </div>
+        <div className="flex gap-2 mt-4">
+          <button type="button" onClick={handleSave} className="btn-primary" disabled={createListingMutation.isPending || setListedMutation.isPending}>
+            {createListingMutation.isPending || setListedMutation.isPending ? t('dashboard.loading') : t('common.save')}
+          </button>
+          <button type="button" onClick={onClose} className="btn-secondary">{t('common.cancel')}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ReserveModal({ item, onClose, onSaved }: { item: Item; onClose: () => void; onSaved: () => void }) {
+  const { t } = useTranslation();
+  const [reserveType, setReserveType] = useState<'sale' | 'rental'>('sale');
+  const [contactMode, setContactMode] = useState<'existing' | 'new'>('existing');
+  const [selectedContactId, setSelectedContactId] = useState('');
+  const [newContact, setNewContact] = useState(emptyReserveContact);
+  const [depositExpected, setDepositExpected] = useState<string>('');
+  const [expiresAt, setExpiresAt] = useState('');
+  const [note, setNote] = useState('');
+  const [error, setError] = useState('');
+  const { data: contacts = [] } = useQuery({ queryKey: ['contacts'], queryFn: () => api.contacts.getMany() });
+  const reserveMutation = useMutation({
+    mutationFn: (body: Parameters<typeof api.items.reserve>[1]) => api.items.reserve(item.id, body),
+    onSuccess: onSaved,
+    onError: (e) => setError((e as Error).message),
+  });
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    if (contactMode === 'existing') {
+      if (!selectedContactId) {
+        setError(t('input.selectContactRequired'));
+        return;
+      }
+      reserveMutation.mutate({
+        contact_id: selectedContactId,
+        reserve_type: reserveType,
+        deposit_expected: depositExpected ? Number(depositExpected) : null,
+        expires_at: expiresAt || null,
+        note: note || null,
+      });
+      return;
+    }
+    const platformVal = newContact.source_platform === SOURCE_PLATFORM_OTHER_SENTINEL
+      ? (newContact.source_platform_other?.trim() || SOURCE_PLATFORM_OTHER)
+      : newContact.source_platform;
+    if (!platformVal?.trim()) {
+      setError(t('input.customerDetailsRequired'));
+      return;
+    }
+    if (!newContact.name?.trim()) {
+      setError(t('input.customerDetailsNameRequired'));
+      return;
+    }
+    const contactPayload: CreateContactBody = {
+      source_platform: platformVal.trim(),
+      name: newContact.name.trim(),
+      platform_user_id: newContact.platform_user_id?.trim() || null,
+      phone: newContact.phone?.trim() || null,
+      email: newContact.email?.trim() || null,
+    };
+    reserveMutation.mutate({
+      contact: contactPayload,
+      reserve_type: reserveType,
+      deposit_expected: depositExpected ? Number(depositExpected) : null,
+      expires_at: expiresAt || null,
+      note: note || null,
+    });
+  };
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      {error && (
+        <CenteredToast message={error} variant="error" onDismiss={() => setError('')} />
+      )}
+      <div className="card p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <h3 className="font-semibold text-roomi-brown mb-4">{t('actions.reserve')} — {item.title}</h3>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="label">{t('listings.reserveType')}</label>
+            <select value={reserveType} onChange={(e) => setReserveType(e.target.value as 'sale' | 'rental')} className="input-field">
+              <option value="sale">{t('status.sold')} (reserve)</option>
+              <option value="rental">{t('status.rented')} (reserve)</option>
+            </select>
+          </div>
+
+          <div className="border border-roomi-peach/60 rounded-roomiLg p-5 space-y-4 bg-roomi-cream/40">
+            <h3 className="text-sm font-semibold text-roomi-brown">{t('input.customerDetailsOnly')}</h3>
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => setContactMode('existing')}
+                className={`rounded-roomi py-2.5 px-4 text-sm font-semibold border-2 transition-colors ${
+                  contactMode === 'existing' ? 'border-roomi-orange bg-roomi-orange text-white' : 'border-roomi-brown/30 text-roomi-brown bg-white hover:border-roomi-orange/60 hover:bg-roomi-peach/40'
+                }`}
+              >
+                {t('input.selectExistingContact')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setContactMode('new')}
+                className={`rounded-roomi py-2.5 px-4 text-sm font-semibold border-2 transition-colors ${
+                  contactMode === 'new' ? 'border-roomi-orange bg-roomi-orange text-white' : 'border-roomi-brown/30 text-roomi-brown bg-white hover:border-roomi-orange/60 hover:bg-roomi-peach/40'
+                }`}
+              >
+                {t('input.createNewContact')}
+              </button>
+            </div>
+            {contactMode === 'existing' ? (
+              <div>
+                <label className="label">{t('input.selectContact')}</label>
+                <select
+                  value={selectedContactId}
+                  onChange={(e) => setSelectedContactId(e.target.value)}
+                  className="input-field"
+                >
+                  <option value="">—</option>
+                  {contacts.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name} ({c.sourcePlatform})</option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <>
+                <div>
+                  <label className="label">{t('input.sourcePlatform')} *</label>
+                  <select
+                    value={newContact.source_platform === SOURCE_PLATFORM_OTHER_SENTINEL ? SOURCE_PLATFORM_OTHER : newContact.source_platform}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setNewContact((c) => ({ ...c, source_platform: v === SOURCE_PLATFORM_OTHER ? SOURCE_PLATFORM_OTHER_SENTINEL : v }));
+                    }}
+                    className="input-field"
+                  >
+                    <option value="">—</option>
+                    {SOURCE_PLATFORM_OPTIONS.map((opt) => (
+                      <option key={opt} value={opt}>{opt === SOURCE_PLATFORM_OTHER ? t('input.sourcePlatformOther') : opt}</option>
+                    ))}
+                  </select>
+                  {newContact.source_platform === SOURCE_PLATFORM_OTHER_SENTINEL && (
+                    <input
+                      type="text"
+                      value={newContact.source_platform_other}
+                      onChange={(e) => setNewContact((c) => ({ ...c, source_platform_other: e.target.value }))}
+                      className="input-field mt-2"
+                      placeholder={t('input.sourcePlatformOther')}
+                    />
+                  )}
+                </div>
+                <div>
+                  <label className="label">{t('table.name')} *</label>
+                  <input
+                    type="text"
+                    value={newContact.name}
+                    onChange={(e) => setNewContact((c) => ({ ...c, name: e.target.value }))}
+                    className="input-field"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="label">{t('input.platformId')}</label>
+                  <input
+                    type="text"
+                    value={newContact.platform_user_id}
+                    onChange={(e) => setNewContact((c) => ({ ...c, platform_user_id: e.target.value }))}
+                    className="input-field"
+                    placeholder={t('input.platformIdPlaceholder')}
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="label">{t('table.phone')}</label>
+                    <input
+                      type="text"
+                      value={newContact.phone}
+                      onChange={(e) => setNewContact((c) => ({ ...c, phone: e.target.value }))}
+                      className="input-field"
+                    />
+                  </div>
+                  <div>
+                    <label className="label">{t('table.email')}</label>
+                    <input
+                      type="email"
+                      value={newContact.email}
+                      onChange={(e) => setNewContact((c) => ({ ...c, email: e.target.value }))}
+                      className="input-field"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          <div>
+            <label className="label">{t('listings.depositExpected')} (optional)</label>
+            <input type="number" min={0} step={0.01} value={depositExpected} onChange={(e) => setDepositExpected(e.target.value)} className="input-field" />
+          </div>
+          <div>
+            <label className="label">{t('listings.expiresAt')} (optional)</label>
+            <input type="datetime-local" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} className="input-field" />
+          </div>
+          <div>
+            <label className="label">{t('common.notes')} (optional)</label>
+            <input type="text" value={note} onChange={(e) => setNote(e.target.value)} className="input-field" />
+          </div>
+          <div className="flex gap-2 mt-4">
+            <button type="submit" className="btn-primary" disabled={reserveMutation.isPending}>{reserveMutation.isPending ? t('dashboard.loading') : t('common.save')}</button>
+            <button type="button" onClick={onClose} className="btn-secondary">{t('common.cancel')}</button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

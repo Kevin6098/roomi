@@ -1,7 +1,8 @@
 import { prisma } from '../db.js';
-import { conflict, notFound } from '../utils/errors.js';
+import { conflict, notFound, validationError } from '../utils/errors.js';
 import type { CreateSaleBody, UpdateSaleBody } from '../validators/sales.js';
 import { customerService } from './customer.service.js';
+import { reservationService } from './reservation.service.js';
 
 export const saleService = {
   async getMany() {
@@ -21,20 +22,56 @@ export const saleService = {
   },
 
   async create(body: CreateSaleBody) {
-    const customerId = body.customer_id
-      ? (await prisma.customer.findUnique({ where: { id: body.customer_id } }))?.id
-      : (await customerService.getOrCreateCustomerFromContact(body.contact_id ?? undefined, body.contact)).id;
-    if (!customerId) throw notFound('Customer not found');
+    const item = await prisma.item.findUnique({
+      where: { id: body.item_id },
+      include: {
+        sale: true,
+        rentals: { where: { status: 'active' } },
+        reservations: { where: { status: 'active' }, take: 1, include: { contact: true } },
+        itemListings: { where: { status: { in: ['active', 'needs_update'] } } },
+      },
+    });
+    if (!item) throw notFound('Item not found');
+    if (item.status === 'sold' || item.sale) throw conflict('Item is already sold');
+    if (item.status === 'rented' || item.rentals.length > 0) throw conflict('Item is currently rented');
+
+    let customerId: string;
+    const activeReservation = item.reservations[0];
+    if (item.status === 'reserved' && activeReservation) {
+      if (body.payment_received !== true) throw validationError('Payment/deposit must be confirmed when completing a reserved item sale');
+      if (activeReservation.contactId) {
+        const customer = await customerService.getOrCreateCustomerFromContact(activeReservation.contactId, undefined);
+        customerId = customer.id;
+      } else {
+        const cid = body.customer_id
+          ? (await prisma.customer.findUnique({ where: { id: body.customer_id } }))?.id
+          : (await customerService.getOrCreateCustomerFromContact(body.contact_id ?? undefined, body.contact)).id;
+        if (!cid) throw notFound('Customer not found');
+        customerId = cid;
+      }
+    } else {
+      customerId = body.customer_id
+        ? (await prisma.customer.findUnique({ where: { id: body.customer_id } }))?.id!
+        : (await customerService.getOrCreateCustomerFromContact(body.contact_id ?? undefined, body.contact)).id;
+      if (!customerId) throw notFound('Customer not found');
+    }
+
+    if (item.itemListings.length > 0) {
+      const listingIds = body.listing_ids ?? [];
+      const idsSet = new Set(listingIds);
+      const allMatch = item.itemListings.every((l) => idsSet.has(l.id));
+      if (!allMatch || listingIds.length !== item.itemListings.length) {
+        throw validationError('Please confirm all listing updates (SNS posts) before finalizing sale');
+      }
+    }
 
     return prisma.$transaction(async (tx) => {
-      const item = await tx.item.findUnique({
-        where: { id: body.item_id },
-        include: { sale: true, rentals: { where: { status: 'active' } } },
-      });
-      if (!item) throw notFound('Item not found');
-      if (item.status === 'sold' || item.sale) throw conflict('Item is already sold');
-      if (item.status === 'rented' || item.rentals.length > 0) throw conflict('Item is currently rented');
-
+      if (body.listing_ids?.length) {
+        await tx.itemListing.updateMany({
+          where: { id: { in: body.listing_ids }, itemId: body.item_id },
+          data: { status: 'closed' },
+        });
+      }
       const sale = await tx.sale.create({
         data: {
           itemId: body.item_id,
@@ -54,6 +91,12 @@ export const saleService = {
         where: { id: body.item_id },
         data: { status: 'sold' },
       });
+      if (activeReservation) {
+        await tx.reservation.update({
+          where: { id: activeReservation.id },
+          data: { status: 'converted' },
+        });
+      }
       return sale;
     });
   },

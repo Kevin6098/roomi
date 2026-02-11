@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, type EndRentalBody } from '../api/client';
+import { CenteredToast } from '../components/CenteredToast';
 
 export default function EndRental() {
   const { id } = useParams<{ id: string }>();
@@ -46,6 +47,9 @@ export default function EndRental() {
 
   return (
     <div className="space-y-6">
+      {error && (
+        <CenteredToast message={error} variant="error" onDismiss={() => setError('')} />
+      )}
       <Link to="/rentals" className="nav-link text-sm">
         ← {t('common.back')}
       </Link>
@@ -54,9 +58,6 @@ export default function EndRental() {
         {rental.item?.title} — {rental.customer?.name} (expected end: {rental.expectedEndDate.slice(0, 10)})
       </p>
       <form onSubmit={handleSubmit} className="card p-6 space-y-4 max-w-xl">
-        {error && (
-          <div className="rounded bg-red-50 text-red-700 text-sm px-3 py-2">{error}</div>
-        )}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Actual end date *</label>
           <input
@@ -74,7 +75,6 @@ export default function EndRental() {
             className="input-field"
           >
             <option value="in_stock">{t('status.in_stock')}</option>
-            <option value="listed">{t('status.listed')}</option>
             <option value="disposed">{t('status.disposed')}</option>
           </select>
         </div>

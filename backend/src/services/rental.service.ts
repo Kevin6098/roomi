@@ -1,5 +1,5 @@
 import { prisma } from '../db.js';
-import { conflict, notFound } from '../utils/errors.js';
+import { conflict, notFound, validationError } from '../utils/errors.js';
 import type { EndRentalBody, StartRentalBody } from '../validators/rentals.js';
 import { customerService } from './customer.service.js';
 
@@ -38,10 +38,48 @@ export const rentalService = {
   },
 
   async start(body: StartRentalBody) {
-    const customerId = body.customer_id
-      ? (await prisma.customer.findUnique({ where: { id: body.customer_id } }))?.id
-      : (await customerService.getOrCreateCustomerFromContact(body.contact_id ?? undefined, body.contact)).id;
-    if (!customerId) throw notFound('Customer not found');
+    const item = await prisma.item.findUnique({
+      where: { id: body.item_id },
+      include: {
+        rentals: { where: { status: 'active' } },
+        reservations: { where: { status: 'active' }, take: 1, include: { contact: true } },
+        itemListings: { where: { status: { in: ['active', 'needs_update'] } } },
+      },
+    });
+    if (!item) throw notFound('Item not found');
+    if (item.status === 'sold') throw conflict('Item is sold');
+    if (item.rentals.length > 0) throw conflict('Item already has an active rental');
+
+    let customerId: string;
+    const activeReservation = item.reservations[0];
+    if (item.status === 'reserved' && activeReservation) {
+      if (body.payment_received !== true) throw validationError('Payment/deposit must be confirmed when completing a reserved item rental');
+      if (activeReservation.contactId) {
+        const customer = await customerService.getOrCreateCustomerFromContact(activeReservation.contactId, undefined);
+        customerId = customer.id;
+      } else {
+        const cid = body.customer_id
+          ? (await prisma.customer.findUnique({ where: { id: body.customer_id } }))?.id
+          : (await customerService.getOrCreateCustomerFromContact(body.contact_id ?? undefined, body.contact)).id;
+        if (!cid) throw notFound('Customer not found');
+        customerId = cid;
+      }
+    } else {
+      const cid = body.customer_id
+        ? (await prisma.customer.findUnique({ where: { id: body.customer_id } }))?.id
+        : (await customerService.getOrCreateCustomerFromContact(body.contact_id ?? undefined, body.contact)).id;
+      if (!cid) throw notFound('Customer not found');
+      customerId = cid;
+    }
+
+    if (item.itemListings.length > 0) {
+      const listingIds = body.listing_ids ?? [];
+      const idsSet = new Set(listingIds);
+      const allMatch = item.itemListings.every((l) => idsSet.has(l.id));
+      if (!allMatch || listingIds.length !== item.itemListings.length) {
+        throw validationError('Please confirm all listing updates (SNS posts) before finalizing rental');
+      }
+    }
 
     const rentPeriod = body.rent_period === 'annually' ? 'annually' : 'monthly';
     const rentPriceMonthly = body.rent_period === 'annually' && body.rent_price_annually != null
@@ -50,11 +88,12 @@ export const rentalService = {
     const rentPriceAnnually = body.rent_period === 'annually' ? (body.rent_price_annually ?? undefined) : undefined;
 
     return prisma.$transaction(async (tx) => {
-      const item = await tx.item.findUnique({ where: { id: body.item_id }, include: { rentals: { where: { status: 'active' } } } });
-      if (!item) throw notFound('Item not found');
-      if (item.status === 'sold') throw conflict('Item is sold');
-      if (item.rentals.length > 0) throw conflict('Item already has an active rental');
-
+      if (body.listing_ids?.length) {
+        await tx.itemListing.updateMany({
+          where: { id: { in: body.listing_ids }, itemId: body.item_id },
+          data: { status: 'closed' },
+        });
+      }
       const rental = await tx.rental.create({
         data: {
           itemId: body.item_id,
@@ -77,6 +116,12 @@ export const rentalService = {
         where: { id: body.item_id },
         data: { status: 'rented' },
       });
+      if (activeReservation) {
+        await tx.reservation.update({
+          where: { id: activeReservation.id },
+          data: { status: 'converted' },
+        });
+      }
       return addIsOverdue(rental);
     });
   },

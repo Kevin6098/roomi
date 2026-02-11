@@ -54,7 +54,23 @@
     "search": "検索",
     "allStatus": "すべての状態",
     "yes": "はい",
-    "na": "—"
+    "na": "—",
+    "ok": "OK",
+    "actions": "操作",
+    "notes": "備考"
+  },
+  "listings": {
+    "listed": "出品",
+    "confirmMarkClosed": "すべての出品を閉じますか？",
+    "addPlatforms": "出品プラットフォームを追加",
+    "addPlatformsHint": "この商品をどこに掲載しましたか？1つ以上追加してください。",
+    "urlOptional": "URL（任意）",
+    "refIdOptional": "Ref ID（任意）",
+    "addPlatform": "+ プラットフォーム追加",
+    "reserveType": "予約種別",
+    "contact": "連絡先",
+    "depositExpected": "想定デポジット",
+    "expiresAt": "有効期限"
   },
   "table": {
     "item": "商品",
@@ -165,6 +181,7 @@
     "selectAcquisitionType": "取得タイプを選択してください。",
     "selectCondition": "状態を選択してください。",
     "customerDetails": "取引先（売り手）",
+    "customerDetailsOnly": "取引先",
     "selectExistingContact": "既存の取引先を選択",
     "createNewContact": "新規取引先を作成",
     "contactSearch": "取引先を検索",

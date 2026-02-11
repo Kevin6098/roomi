@@ -54,7 +54,23 @@
     "search": "Search",
     "allStatus": "All status",
     "yes": "Yes",
-    "na": "—"
+    "na": "—",
+    "ok": "OK",
+    "actions": "Actions",
+    "notes": "Notes"
+  },
+  "listings": {
+    "listed": "Listed",
+    "confirmMarkClosed": "Mark all listings as closed?",
+    "addPlatforms": "Add listing platforms",
+    "addPlatformsHint": "Where is this item posted? Add at least one platform.",
+    "urlOptional": "URL (optional)",
+    "refIdOptional": "Ref ID (optional)",
+    "addPlatform": "+ Add platform",
+    "reserveType": "Reserve for",
+    "contact": "Contact",
+    "depositExpected": "Deposit expected",
+    "expiresAt": "Expires at"
   },
   "table": {
     "item": "Item",
@@ -165,6 +181,7 @@
     "selectAcquisitionType": "Please select an acquisition type.",
     "selectCondition": "Please select a condition.",
     "customerDetails": "Customer details (seller)",
+    "customerDetailsOnly": "Customer details",
     "selectExistingContact": "Select existing contact",
     "createNewContact": "Create new contact",
     "contactSearch": "Search contacts",

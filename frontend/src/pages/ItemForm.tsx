@@ -4,8 +4,9 @@ import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, type CreateItemBody } from '../api/client';
 import { PREFECTURES, UNDECIDED, getCitiesForPrefecture } from '../data/locationData';
+import { CenteredToast } from '../components/CenteredToast';
 
-const STATUS_OPTIONS = ['in_stock', 'listed', 'reserved', 'rented', 'sold', 'disposed'] as const;
+const STATUS_OPTIONS = ['in_stock', 'reserved', 'rented', 'sold', 'disposed'] as const;
 const CONDITION_OPTIONS = ['new', 'good', 'fair', 'poor'] as const;
 const ACQUISITION_OPTIONS = ['free', 'cheap', 'bought'] as const;
 
@@ -127,17 +128,17 @@ export default function ItemForm() {
   if (isEdit && !item) return <p className="text-roomi-brownLight">Item not found</p>;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-2xl mx-auto">
+      {error && (
+        <CenteredToast message={error} variant="error" onDismiss={() => setError('')} />
+      )}
       <Link to={isEdit ? `/items/${id}` : '/items'} className="nav-link text-sm">
         ← {t('common.back')}
       </Link>
       <h1 className="text-2xl font-bold text-roomi-brown">
         {isEdit ? t('form.editItem') : t('form.newItem')}
       </h1>
-      <form onSubmit={handleSubmit} className="card p-6 space-y-4 max-w-xl">
-        {error && (
-          <div className="rounded-roomi bg-red-50 text-red-700 text-sm px-3 py-2">{error}</div>
-        )}
+      <form onSubmit={handleSubmit} className="card p-6 sm:p-8 space-y-5">
         <div>
           <label className="label">{t('table.title')} *</label>
           <input
@@ -285,7 +286,7 @@ export default function ItemForm() {
             rows={2}
           />
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-3 pt-1">
           <button type="submit" disabled={createMutation.isPending || updateMutation.isPending} className="btn-primary">
             {t('common.save')}
           </button>

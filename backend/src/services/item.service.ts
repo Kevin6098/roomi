@@ -20,14 +20,18 @@ function withDisplaySubCategoryList<T extends ItemWithInclude>(items: T[]): (T &
 
 export const itemService = {
   async getCounts() {
-    const counts = await prisma.item.groupBy({
-      by: ['status'],
-      _count: { id: true },
-    });
+    const [counts, listedCount] = await Promise.all([
+      prisma.item.groupBy({
+        by: ['status'],
+        _count: { id: true },
+      }),
+      prisma.item.count({ where: { isListed: true } }),
+    ]);
     const map: Record<string, number> = {};
-    for (const s of ['in_stock', 'listed', 'rented', 'sold', 'reserved', 'disposed']) {
+    for (const s of ['in_stock', 'rented', 'sold', 'reserved', 'disposed']) {
       map[s] = counts.find((c) => c.status === s)?._count.id ?? 0;
     }
+    map['listed'] = listedCount;
     return map;
   },
 
@@ -51,7 +55,7 @@ export const itemService = {
 
   async getAvailable(params: { search?: string; sub_category_id?: string; location?: string }) {
     const where: Prisma.ItemWhereInput = {
-      status: { in: ['in_stock', 'listed', 'reserved'] as ItemStatus[] },
+      status: { in: ['in_stock', 'reserved'] as ItemStatus[] },
     };
     if (params.sub_category_id) where.subCategoryId = params.sub_category_id;
     if (params.location?.trim()) {
@@ -78,7 +82,13 @@ export const itemService = {
 
   async getMany(params: { status?: string; sub_category_id?: string; search?: string }) {
     const where: Prisma.ItemWhereInput = {};
-    if (params.status) where.status = params.status as ItemStatus;
+    if (params.status) {
+      if (params.status === 'listed') {
+        where.isListed = true;
+      } else {
+        where.status = params.status as ItemStatus;
+      }
+    }
     if (params.sub_category_id) where.subCategoryId = params.sub_category_id;
     if (params.search?.trim()) {
       where.OR = [
@@ -89,7 +99,12 @@ export const itemService = {
     const items = await prisma.item.findMany({
       where,
       orderBy: { createdAt: 'desc' },
-      include: itemInclude,
+      include: {
+        ...itemInclude,
+        sale: { select: { saleDate: true, customer: { select: { name: true, sourcePlatform: true } } } },
+        rentals: { where: { status: 'active' }, take: 1, orderBy: { startDate: 'desc' }, select: { startDate: true, customer: { select: { name: true, sourcePlatform: true } } } },
+        itemListings: { where: { status: { in: ['active', 'needs_update'] } }, select: { id: true, platform: true, status: true } },
+      },
     });
     return withDisplaySubCategoryList(items);
   },
@@ -101,6 +116,8 @@ export const itemService = {
         ...itemInclude,
         rentals: { orderBy: { createdAt: 'desc' }, include: { customer: true } },
         sale: { include: { customer: true } },
+        itemListings: { orderBy: { createdAt: 'desc' } },
+        reservations: { where: { status: 'active' }, orderBy: { reservedAt: 'desc' }, take: 1, include: { contact: true } },
       },
     });
     if (!item) throw notFound('Item not found');
@@ -206,32 +223,6 @@ export const itemService = {
       include: itemInclude,
     });
     return withDisplaySubCategory(item);
-  },
-
-  async setListed(id: string) {
-    const item = await this.getById(id);
-    const allowed = ['in_stock', 'reserved'].includes(item.status);
-    if (!allowed) throw conflict(`Cannot list item with status ${item.status}`);
-    const updated = await prisma.item.update({
-      where: { id },
-      data: { status: 'listed' },
-      include: itemInclude,
-    });
-    return withDisplaySubCategory(updated);
-  },
-
-  async setReserved(id: string, customerId: string, notes?: string | null) {
-    const item = await this.getById(id);
-    const allowed = ['in_stock', 'listed'].includes(item.status);
-    if (!allowed) throw conflict(`Cannot reserve item with status ${item.status}`);
-    const customer = await prisma.customer.findUnique({ where: { id: customerId } });
-    if (!customer) throw validationError('Invalid customer_id');
-    const updated = await prisma.item.update({
-      where: { id },
-      data: { status: 'reserved', notes: notes ?? item.notes },
-      include: itemInclude,
-    });
-    return withDisplaySubCategory(updated);
   },
 
   async dispose(id: string) {

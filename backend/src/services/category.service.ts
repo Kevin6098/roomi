@@ -18,15 +18,22 @@ export const categoryService = {
       include: { subCategories: { orderBy: { name: 'asc' } } },
     });
     if (!main) throw notFound('Main category not found');
-    return main;
+    const subs = main.subCategories;
+    const other = subs.filter((s) => s.name.toLowerCase() === 'other');
+    const rest = subs.filter((s) => s.name.toLowerCase() !== 'other');
+    return { ...main, subCategories: [...rest, ...other] };
   },
 
   async getSubByMainId(mainId: string) {
-    return prisma.subCategory.findMany({
+    const list = await prisma.subCategory.findMany({
       where: { mainCategoryId: mainId },
       orderBy: { name: 'asc' },
       include: { mainCategory: true },
     });
+    // "other" always at the bottom
+    const other = list.filter((s) => s.name.toLowerCase() === 'other');
+    const rest = list.filter((s) => s.name.toLowerCase() !== 'other');
+    return [...rest, ...other];
   },
 
   async getSubById(id: string) {

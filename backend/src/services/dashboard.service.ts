@@ -24,8 +24,9 @@ export const dashboardService = {
     const cutoffStock = oneMonthAgo();
     const cutoffUpcoming = oneMonthFromNow();
 
-    const [counts, activeRentals, recentItems, reservedItems, overdueInStockCount] = await Promise.all([
+    const [counts, listedCount, activeRentals, recentItems, reservedItems, overdueInStockCount] = await Promise.all([
       prisma.item.groupBy({ by: ['status'], _count: { id: true } }),
+      prisma.item.count({ where: { isListed: true } }),
       prisma.rental.findMany({
         where: { status: 'active' },
         include: { item: true, customer: true },
@@ -54,9 +55,10 @@ export const dashboardService = {
     ]);
 
     const countMap: Record<string, number> = {};
-    for (const s of ['in_stock', 'listed', 'rented', 'sold', 'reserved', 'disposed']) {
+    for (const s of ['in_stock', 'rented', 'sold', 'reserved', 'disposed']) {
       countMap[s] = counts.find((c) => c.status === s)?._count.id ?? 0;
     }
+    countMap['listed'] = listedCount;
 
     // Upcoming returns = active rentals ending within 1 month (expectedEndDate between today and today+1 month)
     const upcomingRentals = activeRentals.filter((r) => {

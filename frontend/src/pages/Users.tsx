@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, type CreateUserBody, type UpdateUserBody, type AdminUser } from '../api/client';
+import { CenteredToast } from '../components/CenteredToast';
 
 export default function Users() {
   const { t } = useTranslation();
@@ -65,6 +66,9 @@ export default function Users() {
 
   return (
     <div className="space-y-6">
+      {error && (
+        <CenteredToast message={error} variant="error" onDismiss={() => setError('')} />
+      )}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-roomi-brown">{t('nav.users')}</h1>
         <button
@@ -79,7 +83,6 @@ export default function Users() {
       {(adding || editing) && (
         <form onSubmit={handleSubmitUser} className="card p-6 space-y-4 max-w-xl">
           <h2 className="font-medium text-gray-900">{editing ? t('form.editUser') : t('form.newUser')}</h2>
-          {error && <div className="rounded bg-red-50 text-red-700 text-sm px-3 py-2">{error}</div>}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">{t('auth.email')} *</label>
             <input

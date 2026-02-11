@@ -16,6 +16,8 @@ export const createSaleSchema = z.object({
   handover_city: z.string().max(80).trim().optional().nullable(),
   handover_exact_location: z.string().max(255).trim().optional().nullable(),
   notes: z.string().optional().nullable(),
+  payment_received: z.boolean().optional(),
+  listing_ids: z.array(z.string().min(1)).optional(),
 }).refine(
   (data) => (data.customer_id != null && data.customer_id !== '') || (data.contact_id != null && data.contact_id !== '') || data.contact != null,
   { message: 'Either customer_id, contact_id, or contact is required' }

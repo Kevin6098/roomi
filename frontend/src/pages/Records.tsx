@@ -13,6 +13,7 @@ import {
 } from '../api/client';
 import { PREFECTURES, UNDECIDED, getCitiesForPrefecture } from '../data/locationData';
 import { getStatusBadgeClass } from '../utils/statusStyles';
+import { CenteredToast } from '../components/CenteredToast';
 
 const CONDITION_OPTIONS = ['new', 'good', 'fair', 'poor'] as const;
 const ACQUISITION_OPTIONS = ['free', 'cheap', 'bought'] as const;
@@ -412,19 +413,25 @@ export default function Records() {
   }
 
   return (
-    <div className="space-y-8">
-      <header>
+    <div className="space-y-8 max-w-4xl mx-auto">
+      <header className="text-center lg:text-left">
         <h1 className="text-2xl sm:text-3xl font-bold text-roomi-brown">{t('records.title')}</h1>
         <p className="text-roomi-brownLight mt-1">{t('records.intro')}</p>
       </header>
 
       {toast && (
-        <div className="fixed top-4 right-4 z-50 rounded-lg bg-roomi-mint text-white px-4 py-2.5 shadow-md font-medium">
-          {toast}
-        </div>
+        <CenteredToast
+          message={toast}
+          variant="success"
+          onDismiss={() => setToast('')}
+          autoDismissMs={3000}
+        />
+      )}
+      {error && (
+        <CenteredToast message={error} variant="error" onDismiss={() => setError('')} />
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto sm:max-w-none">
         <div
           className={`rounded-xl border-2 p-5 transition-all ${
             tab === 'acquire' ? 'border-roomi-orange bg-roomi-orange/5 shadow' : 'border-roomi-peach/60 bg-white'
@@ -478,16 +485,15 @@ export default function Records() {
       </div>
 
       <div className="pt-2 border-t border-roomi-peach/60">
-        <p className="text-xs font-semibold text-roomi-brownLight uppercase tracking-wider mb-4">
+        <p className="text-xs font-semibold text-roomi-brownLight uppercase tracking-wider mb-6 text-center lg:text-left">
           {tab === 'acquire' ? t('records.in') : t('records.out')} — {tab === 'acquire' ? t('records.tab.acquire') : tab === 'sell' ? t('records.tab.sell') : t('records.tab.rent')}
         </p>
 
         {tab === 'acquire' && (
           <>
-            <section className="card p-6">
-              <h2 className="text-lg font-semibold text-roomi-brown mb-4">{t('input.newAcquisition')}</h2>
-              <form onSubmit={handleAcquireSubmit} className="space-y-4 max-w-xl">
-                {error && <div className="rounded bg-red-50 text-red-700 text-sm px-3 py-2">{error}</div>}
+            <section className="card p-6 sm:p-8 max-w-2xl mx-auto">
+              <h2 className="text-xl font-semibold text-roomi-brown mb-6">{t('input.newAcquisition')}</h2>
+              <form onSubmit={handleAcquireSubmit} className="space-y-5">
                 <div>
                   <label className="label">{t('table.title')} *</label>
                   <input
@@ -542,14 +548,14 @@ export default function Records() {
                     className="input-field"
                   />
                 </div>
-                <div className="border border-roomi-peach/60 rounded-lg p-4 space-y-4 bg-roomi-cream/30">
+                <div className="border border-roomi-peach/60 rounded-roomiLg p-5 space-y-4 bg-roomi-cream/40">
                   <h3 className="text-sm font-semibold text-roomi-brown">{t('input.customerDetails')}</h3>
-                  <div className="flex gap-3">
+                  <div className="flex flex-wrap gap-3">
                     <button
                       type="button"
                       onClick={() => setContactMode('existing')}
-                      className={`rounded-lg py-2 px-3 text-sm font-medium border-2 ${
-                        contactMode === 'existing' ? 'border-roomi-orange bg-roomi-orange text-white' : 'border-gray-300 text-gray-700 hover:border-roomi-orange/60'
+                      className={`rounded-roomi py-2.5 px-4 text-sm font-semibold border-2 transition-colors ${
+                        contactMode === 'existing' ? 'border-roomi-orange bg-roomi-orange text-white' : 'border-roomi-brown/30 text-roomi-brown bg-white hover:border-roomi-orange/60 hover:bg-roomi-peach/40'
                       }`}
                     >
                       {t('input.selectExistingContact')}
@@ -557,8 +563,8 @@ export default function Records() {
                     <button
                       type="button"
                       onClick={() => setContactMode('new')}
-                      className={`rounded-lg py-2 px-3 text-sm font-medium border-2 ${
-                        contactMode === 'new' ? 'border-roomi-orange bg-roomi-orange text-white' : 'border-gray-300 text-gray-700 hover:border-roomi-orange/60'
+                      className={`rounded-roomi py-2.5 px-4 text-sm font-semibold border-2 transition-colors ${
+                        contactMode === 'new' ? 'border-roomi-orange bg-roomi-orange text-white' : 'border-roomi-brown/30 text-roomi-brown bg-white hover:border-roomi-orange/60 hover:bg-roomi-peach/40'
                       }`}
                     >
                       {t('input.createNewContact')}
@@ -765,13 +771,15 @@ export default function Records() {
                     rows={2}
                   />
                 </div>
-                <button type="submit" disabled={acquireMutation.isPending} className="btn-primary">
-                  {t('input.saveAcquisition')}
-                </button>
+                <div className="pt-1">
+                  <button type="submit" disabled={acquireMutation.isPending} className="btn-primary">
+                    {t('input.saveAcquisition')}
+                  </button>
+                </div>
               </form>
             </section>
-            <section className="card p-6 mt-6">
-              <h2 className="text-lg font-semibold text-roomi-brown mb-3">{t('input.recentlyAcquired')}</h2>
+            <section className="card p-6 sm:p-8 mt-8 max-w-2xl mx-auto">
+              <h2 className="text-lg font-semibold text-roomi-brown mb-4">{t('input.recentlyAcquired')}</h2>
               {recentlyAcquired.length === 0 ? (
                 <p className="text-roomi-brownLight text-sm">{t('input.noAcquisitions')}</p>
               ) : (
@@ -790,10 +798,9 @@ export default function Records() {
         )}
 
         {tab === 'sell' && (
-          <section className="rounded-xl border border-roomi-peach/60 bg-white p-6">
-            <h2 className="text-lg font-semibold text-roomi-brown mb-4">{t('output.createSale')}</h2>
-            <form onSubmit={handleSellSubmit} className="space-y-4 max-w-xl">
-              {error && <div className="rounded bg-red-50 text-red-700 text-sm px-3 py-2">{error}</div>}
+          <section className="card p-6 sm:p-8 max-w-2xl mx-auto">
+            <h2 className="text-xl font-semibold text-roomi-brown mb-6">{t('output.createSale')}</h2>
+            <form onSubmit={handleSellSubmit} className="space-y-5">
               <div>
                 <label className="label">{t('table.item')} *</label>
                 <select
@@ -876,10 +883,9 @@ export default function Records() {
 
         {tab === 'rent' && (
           <>
-            <section className="rounded-xl border border-roomi-peach/60 bg-white p-6">
-              <h2 className="text-lg font-semibold text-roomi-brown mb-4">{t('output.createRental')}</h2>
-              <form onSubmit={handleRentSubmit} className="space-y-4 max-w-xl">
-                {error && <div className="rounded bg-red-50 text-red-700 text-sm px-3 py-2">{error}</div>}
+            <section className="card p-6 sm:p-8 max-w-2xl mx-auto">
+              <h2 className="text-xl font-semibold text-roomi-brown mb-6">{t('output.createRental')}</h2>
+              <form onSubmit={handleRentSubmit} className="space-y-5">
                 <div>
                   <label className="label">{t('table.item')} *</label>
                   <select value={rentForm.item_id} onChange={(e) => setRentForm((f) => ({ ...f, item_id: e.target.value }))} className="input-field" required>
@@ -949,9 +955,8 @@ export default function Records() {
                       <span>{r.item?.title} — {r.customer?.name} (start: {r.startDate})</span>
                       {endRentalId === r.id ? (
                         <form onSubmit={handleEndRentalSubmit} className="flex gap-2 items-center">
-                          <select value={endForm.next_item_status} onChange={(e) => setEndForm((f) => ({ ...f, next_item_status: e.target.value as 'in_stock' | 'listed' | 'disposed' }))} className="input-field py-1 px-2 text-sm inline-block">
+                          <select value={endForm.next_item_status} onChange={(e) => setEndForm((f) => ({ ...f, next_item_status: e.target.value as 'in_stock' | 'disposed' }))} className="input-field py-1 px-2 text-sm inline-block">
                             <option value="in_stock">in_stock</option>
-                            <option value="listed">listed</option>
                             <option value="disposed">disposed</option>
                           </select>
                           <button type="submit" disabled={endRentalMutation.isPending} className="btn-primary py-1.5 px-3 text-sm">End</button>

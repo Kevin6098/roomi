@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, type CreateContactBody } from '../api/client';
+import { CenteredToast } from '../components/CenteredToast';
 
 const SOURCE_PLATFORM_OPTIONS = [
   'Facebook', 'WeChat', 'Xiaohongshu', 'LINE', 'Whatsapp', 'Telegram',
@@ -71,6 +72,9 @@ export default function ContactForm() {
 
   return (
     <div className="space-y-6">
+      {error && (
+        <CenteredToast message={error} variant="error" onDismiss={() => setError('')} />
+      )}
       <Link to="/customers" className="nav-link text-sm">
         ← {t('common.back')}
       </Link>
@@ -78,9 +82,6 @@ export default function ContactForm() {
         {t('form.editCustomer')}
       </h1>
       <form onSubmit={handleSubmit} className="card p-6 space-y-4 max-w-xl">
-        {error && (
-          <div className="rounded bg-red-50 text-red-700 text-sm px-3 py-2">{error}</div>
-        )}
         <div>
           <label className="label">{t('input.sourcePlatform')} *</label>
           <select

@@ -28,10 +28,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <Link
         to={path}
         onClick={() => setDrawerOpen(false)}
-        className={`flex items-center gap-3 rounded-roomi px-3 py-2.5 text-sm font-semibold transition-colors ${
+        className={`flex items-center gap-3 rounded-roomi px-3 min-h-[44px] py-2.5 text-sm font-semibold transition-colors touch-manipulation ${
           active
             ? 'bg-roomi-orange/15 text-roomi-orange'
-            : 'text-roomi-brownLight hover:bg-roomi-peach/60 hover:text-roomi-brown'
+            : 'text-roomi-brownLight hover:bg-roomi-peach/60 hover:text-roomi-brown active:bg-roomi-peach/80'
         }`}
       >
         {label}
@@ -109,7 +109,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <button
           type="button"
           onClick={handleLogout}
-          className="w-full text-left px-3 py-2 text-sm font-semibold text-roomi-brownLight hover:bg-roomi-peach/60 hover:text-roomi-brown rounded-roomi transition-colors"
+          className="w-full text-left px-3 min-h-[44px] py-2.5 text-sm font-semibold text-roomi-brownLight hover:bg-roomi-peach/60 hover:text-roomi-brown rounded-roomi transition-colors touch-manipulation"
         >
           {t('auth.logout')}
         </button>
@@ -140,27 +140,27 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         {sidebar}
       </div>
 
-      {/* Main content */}
-      <div className="min-h-screen lg:ml-[260px]">
-        {/* Top bar: only on mobile, for hamburger + branding */}
-        <header className="lg:hidden sticky top-0 z-20 flex items-center gap-3 h-14 px-4 bg-white/95 backdrop-blur border-b border-roomi-peach/60 shadow-roomi">
+      {/* Main content: no horizontal scroll on mobile */}
+      <div className="min-h-screen lg:ml-[260px] overflow-x-hidden min-w-0">
+        {/* Top bar: only on mobile — proper touch targets and alignment */}
+        <header className="lg:hidden sticky top-0 z-20 flex items-center gap-2 h-[56px] pl-2 pr-4 py-2 bg-white/95 backdrop-blur-sm border-b border-roomi-peach/60 shadow-roomi safe-area-inset-top flex-shrink-0">
           <button
             type="button"
             onClick={() => setDrawerOpen(true)}
-            className="p-2 -ml-2 rounded-roomi text-roomi-brown hover:bg-roomi-peach/60"
+            className="flex items-center justify-center min-w-[44px] min-h-[44px] rounded-roomi text-roomi-brown hover:bg-roomi-peach/60 active:bg-roomi-peach/80 touch-manipulation"
             aria-label="Open menu"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <Link to="/" className="flex items-center gap-2">
-            <img src="/roomi-logo.png" alt="ROOMI" className="h-8 w-8 rounded-roomi object-contain" />
-            <span className="font-bold text-roomi-orange">ROOMI</span>
+          <Link to="/" className="flex items-center gap-2.5 min-w-0 flex-1">
+            <img src="/roomi-logo.png" alt="" className="h-9 w-9 flex-shrink-0 rounded-roomi object-contain" />
+            <span className="font-bold text-lg text-roomi-orange truncate">ROOMI</span>
           </Link>
         </header>
 
-        <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 lg:py-8">{children}</main>
+        <main className="max-w-5xl mx-auto w-full min-w-0 px-4 sm:px-6 pt-5 pb-8 lg:py-8">{children}</main>
       </div>
     </div>
   );

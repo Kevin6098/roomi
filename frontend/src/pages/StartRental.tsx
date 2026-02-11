@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, type StartRentalBody } from '../api/client';
+import { CenteredToast } from '../components/CenteredToast';
 
 export default function StartRental() {
   const { t } = useTranslation();
@@ -17,16 +18,24 @@ export default function StartRental() {
     start_date: today,
     expected_end_date: today,
   });
+  const [showListingsChecklist, setShowListingsChecklist] = useState(false);
+  const [listingsConfirmed, setListingsConfirmed] = useState<Record<string, boolean>>({});
+  const [paymentReceived, setPaymentReceived] = useState(false);
 
   const { data: items = [] } = useQuery({
     queryKey: ['items', 'available'],
     queryFn: async () => {
-      const [inStock, listed] = await Promise.all([
+      const [inStock, reserved] = await Promise.all([
         api.items.getMany({ status: 'in_stock' }),
-        api.items.getMany({ status: 'listed' }),
+        api.items.getMany({ status: 'reserved' }),
       ]);
-      return [...inStock, ...listed];
+      return [...inStock, ...reserved];
     },
+  });
+  const { data: selectedItem } = useQuery({
+    queryKey: ['item', form.item_id],
+    queryFn: () => api.items.getById(form.item_id),
+    enabled: !!form.item_id,
   });
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
@@ -43,22 +52,44 @@ export default function StartRental() {
     onError: (e) => setError((e as Error).message),
   });
 
+  const activeListings = selectedItem?.itemListings?.filter((l) => l.status === 'active' || l.status === 'needs_update') ?? [];
+  const isReserved = selectedItem?.status === 'reserved';
+  const allListingsChecked = activeListings.length === 0 || activeListings.every((l) => listingsConfirmed[l.id]);
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
-    createMutation.mutate(form);
+    if (isReserved && !paymentReceived) {
+      setError('Please confirm payment/deposit received for this reserved item');
+      return;
+    }
+    if (activeListings.length > 0) {
+      setShowListingsChecklist(true);
+      setListingsConfirmed({});
+      return;
+    }
+    doStartRental();
+  }
+
+  function doStartRental() {
+    createMutation.mutate({
+      ...form,
+      payment_received: isReserved ? true : undefined,
+      listing_ids: activeListings.map((l) => l.id),
+    });
+    setShowListingsChecklist(false);
   }
 
   return (
     <div className="space-y-6">
+      {error && (
+        <CenteredToast message={error} variant="error" onDismiss={() => setError('')} />
+      )}
       <Link to="/rentals" className="nav-link text-sm">
         ← {t('common.back')}
       </Link>
       <h1 className="text-2xl font-bold text-roomi-brown">{t('form.startRental')}</h1>
       <form onSubmit={handleSubmit} className="card p-6 space-y-4 max-w-xl">
-        {error && (
-          <div className="rounded bg-red-50 text-red-700 text-sm px-3 py-2">{error}</div>
-        )}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">{t('table.item')} *</label>
           <select
@@ -73,20 +104,36 @@ export default function StartRental() {
             ))}
           </select>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t('table.customer')} *</label>
-          <select
-            value={form.customer_id ?? ''}
-            onChange={(e) => setForm((f) => ({ ...f, customer_id: e.target.value }))}
-            className="input-field"
-            required
-          >
-            <option value="">—</option>
-            {customers.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
-        </div>
+        {!isReserved && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('table.customer')} *</label>
+            <select
+              value={form.customer_id ?? ''}
+              onChange={(e) => setForm((f) => ({ ...f, customer_id: e.target.value }))}
+              className="input-field"
+              required={!isReserved}
+            >
+              <option value="">—</option>
+              {customers.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
+        {isReserved && (
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="payment_received_rental"
+              checked={paymentReceived}
+              onChange={(e) => setPaymentReceived(e.target.checked)}
+              className="rounded border-roomi-brown/40"
+            />
+            <label htmlFor="payment_received_rental" className="text-sm font-medium text-roomi-brown">
+              Payment/deposit received?
+            </label>
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">{t('table.start')} *</label>
@@ -145,7 +192,7 @@ export default function StartRental() {
         <div className="flex gap-2">
           <button
             type="submit"
-            disabled={createMutation.isPending}
+            disabled={createMutation.isPending || (isReserved && !paymentReceived)}
             className="btn-primary"
           >
             {t('common.save')}
@@ -155,6 +202,40 @@ export default function StartRental() {
           </Link>
         </div>
       </form>
+
+      {showListingsChecklist && selectedItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowListingsChecklist(false)}>
+          <div className="card p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-semibold text-roomi-brown mb-2">Update SNS posts</h3>
+            <p className="text-sm text-roomi-brownLight mb-4">Confirm you updated or deleted each listing before finalizing the rental.</p>
+            <ul className="space-y-2 mb-4">
+              {activeListings.map((l) => (
+                <li key={l.id} className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id={`listing-rental-${l.id}`}
+                    checked={!!listingsConfirmed[l.id]}
+                    onChange={(e) => setListingsConfirmed((prev) => ({ ...prev, [l.id]: e.target.checked }))}
+                    className="rounded border-roomi-brown/40"
+                  />
+                  <label htmlFor={`listing-rental-${l.id}`} className="text-sm">{l.platform}</label>
+                </li>
+              ))}
+            </ul>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={doStartRental}
+                disabled={!allListingsChecked || createMutation.isPending}
+                className="btn-primary"
+              >
+                {createMutation.isPending ? t('dashboard.loading') : 'Confirm and start rental'}
+              </button>
+              <button type="button" onClick={() => setShowListingsChecklist(false)} className="btn-secondary">Back</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

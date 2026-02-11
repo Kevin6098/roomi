@@ -13,6 +13,8 @@ import contactsRoutes from './routes/contacts.routes.js';
 import rentalsRoutes from './routes/rentals.routes.js';
 import salesRoutes from './routes/sales.routes.js';
 import dashboardRoutes from './routes/dashboard.routes.js';
+import listingsRoutes from './routes/listings.routes.js';
+import reservationsRoutes from './routes/reservations.routes.js';
 
 const app = express();
 
@@ -34,6 +36,8 @@ app.use('/api/contacts', requireAuth, contactsRoutes);
 app.use('/api/rentals', requireAuth, rentalsRoutes);
 app.use('/api/sales', requireAuth, salesRoutes);
 app.use('/api/dashboard', requireAuth, dashboardRoutes);
+app.use('/api/listings', requireAuth, listingsRoutes);
+app.use('/api/reservations', requireAuth, reservationsRoutes);
 
 // 404 for any unmatched /api route (so frontend gets JSON, not HTML)
 app.use('/api', notFoundMiddleware);

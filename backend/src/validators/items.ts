@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const itemStatusEnum = z.enum(['in_stock', 'listed', 'reserved', 'rented', 'sold', 'disposed']);
+const itemStatusEnum = z.enum(['in_stock', 'reserved', 'rented', 'sold', 'disposed']);
 const conditionEnum = z.enum(['new', 'good', 'fair', 'poor']);
 const acquisitionTypeEnum = z.enum(['free', 'cheap', 'bought']);
 const locationVisibilityEnum = z.enum(['hidden', 'shown']);
@@ -37,11 +37,5 @@ export const createItemSchema = z.object({
 
 export const updateItemSchema = createItemSchema.partial().omit({ contact: true });
 
-export const reserveItemSchema = z.object({
-  customer_id: z.string().min(1),
-  notes: z.string().optional().nullable(),
-});
-
 export type CreateItemBody = z.infer<typeof createItemSchema>;
 export type UpdateItemBody = z.infer<typeof updateItemSchema>;
-export type ReserveItemBody = z.infer<typeof reserveItemSchema>;

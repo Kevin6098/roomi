@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, type MainCategory } from '../api/client';
+import { CenteredToast } from '../components/CenteredToast';
 
 export default function Categories() {
   const { t } = useTranslation();
@@ -122,13 +123,10 @@ export default function Categories() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-bold text-roomi-brown">{t('nav.categories')}</h1>
-
       {error && (
-        <div className="rounded-lg bg-red-50 p-3 text-red-700 text-sm" role="alert">
-          {error}
-        </div>
+        <CenteredToast message={error} variant="error" onDismiss={() => setError('')} />
       )}
+      <h1 className="text-2xl font-bold text-roomi-brown">{t('nav.categories')}</h1>
 
       {/* Main categories */}
       <section>

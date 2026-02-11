@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import * as c from '../controllers/items.controller.js';
+import * as listingsCtrl from '../controllers/listings.controller.js';
+import * as reservationsCtrl from '../controllers/reservations.controller.js';
 
 const router = Router();
 router.get('/counts', c.getCounts);
@@ -7,10 +9,13 @@ router.get('/recent', c.getRecent);
 router.get('/recently-acquired', c.getRecentlyAcquired);
 router.get('/available', c.getAvailable);
 router.get('/', c.getMany);
+router.get('/:id/listings', listingsCtrl.getByItemId);
 router.get('/:id', c.getById);
 router.post('/', ...c.create);
 router.put('/:id', ...c.update);
-router.post('/:id/list', c.setListed);
-router.post('/:id/reserve', ...c.setReserved);
+router.post('/:id/listings', ...listingsCtrl.create);
+router.post('/:id/listed', ...listingsCtrl.setListedFlag);
+router.post('/:id/confirm-listings-updated', ...listingsCtrl.confirmListingsUpdated);
+router.post('/:id/reserve', ...reservationsCtrl.reserve);
 router.delete('/:id', c.dispose);
 export default router;

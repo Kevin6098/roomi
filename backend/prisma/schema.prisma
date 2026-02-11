@@ -37,7 +37,6 @@ enum ItemCondition {
 
 enum ItemStatus {
   in_stock
-  listed
   reserved
   rented
   sold
@@ -98,6 +97,7 @@ model Contact {
   updatedAt       DateTime  @updatedAt
   acquisitionItems Item[]
   customers       Customer[]
+  reservations    Reservation[]
   @@index([name])
   @@index([sourcePlatform])
 }
@@ -124,6 +124,7 @@ model Item {
   locationVisibility    LocationVisibility @default(hidden)
   locationArea          String?
   status                ItemStatus         @default(in_stock)
+  isListed              Boolean            @default(false)
   acquisitionDate       DateTime?
   notes                 String?
   createdAt             DateTime           @default(now())
@@ -132,11 +133,67 @@ model Item {
   acquisitionContact    Contact?           @relation(fields: [acquisitionContactId], references: [id], onDelete: SetNull)
   rentals               Rental[]
   sale                  Sale?
+  itemListings          ItemListing[]
+  reservations          Reservation[]
   @@index([status])
+  @@index([isListed])
   @@index([subCategoryId])
   @@index([title])
   @@index([prefecture, city])
   @@index([acquisitionContactId])
+}
+
+enum ListingStatus {
+  active
+  needs_update
+  closed
+}
+
+model ItemListing {
+  id           String        @id @default(cuid())
+  itemId       String
+  platform     String        @db.VarChar(50)
+  listingUrl   String?       @db.VarChar(255)
+  listingRefId String?      @db.VarChar(120)
+  status       ListingStatus @default(active)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  item         Item          @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  @@index([itemId])
+  @@index([platform])
+  @@index([status])
+}
+
+enum ReserveType {
+  sale
+  rental
+}
+
+enum ReservationStatus {
+  active
+  cancelled
+  converted
+}
+
+model Reservation {
+  id                 String            @id @default(cuid())
+  itemId             String
+  contactId          String?
+  reserveType        ReserveType
+  reservedAt        DateTime          @default(now())
+  expiresAt          DateTime?
+  depositExpected    Decimal?          @db.Decimal(10, 2)
+  depositReceived    Boolean           @default(false)
+  depositReceivedAt  DateTime?
+  note               String?           @db.Text
+  status             ReservationStatus @default(active)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  item               Item             @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  contact            Contact?         @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  @@index([itemId])
+  @@index([contactId])
+  @@index([status])
 }
 
 model Customer {

@@ -1,9 +1,11 @@
 -- ROOMI: Table change + category seed (run after main migrations)
 -- 1) Add custom_sub_category to Item
 -- 2) Safe category seed (no duplicates)
+-- 3) Listed + Reserved workflow: isListed, ItemListing, Reservation (see Prisma migrations)
 
 -- ========== TABLE CHANGE ==========
 ALTER TABLE "Item" ADD COLUMN IF NOT EXISTS "customSubCategory" VARCHAR(120);
+ALTER TABLE "Item" ADD COLUMN IF NOT EXISTS "isListed" BOOLEAN NOT NULL DEFAULT false;
 
 -- ========== SEED: Main categories (upsert) ==========
 INSERT INTO "MainCategory" (id, name, "nameEn", "nameJa", "createdAt")

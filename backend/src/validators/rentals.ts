@@ -19,6 +19,8 @@ export const startRentalSchema = z.object({
   handover_city: z.string().max(80).trim().optional().nullable(),
   handover_exact_location: z.string().max(255).trim().optional().nullable(),
   notes: z.string().optional().nullable(),
+  payment_received: z.boolean().optional(),
+  listing_ids: z.array(z.string().min(1)).optional(),
 }).refine(
   (data) => (data.customer_id != null && data.customer_id !== '') || (data.contact_id != null && data.contact_id !== '') || data.contact != null,
   { message: 'Either customer_id, contact_id, or contact is required' }
@@ -37,7 +39,7 @@ export const startRentalSchema = z.object({
 export const endRentalSchema = z.object({
   actual_end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
   damage_fee: z.coerce.number().min(0).optional().nullable(),
-  next_item_status: z.enum(['in_stock', 'listed', 'disposed']),
+  next_item_status: z.enum(['in_stock', 'disposed']),
   notes: z.string().optional().nullable(),
 });
 

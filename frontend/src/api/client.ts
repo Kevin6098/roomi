@@ -71,8 +71,29 @@ export const api = {
     getById: (id: string) => request<Item>(`/items/${id}`),
     create: (body: CreateItemBody) => request<Item>('/items', { method: 'POST', body: JSON.stringify(body) }),
     update: (id: string, body: Partial<CreateItemBody>) => request<Item>(`/items/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
-    setListed: (id: string) => request<Item>(`/items/${id}/list`, { method: 'POST' }),
+    getListings: (id: string) => request<ItemListing[]>(`/items/${id}/listings`),
+    createListing: (id: string, body: { platform: string; listing_url?: string | null; listing_ref_id?: string | null }) =>
+      request<ItemListing>(`/items/${id}/listings`, { method: 'POST', body: JSON.stringify(body) }),
+    setListedFlag: (id: string, is_listed: boolean) =>
+      request<{ isListed: boolean }>(`/items/${id}/listed`, { method: 'POST', body: JSON.stringify({ is_listed }) }),
+    confirmListingsUpdated: (id: string, body: { listing_ids: string[]; action: 'sold' | 'rented' | 'deleted' }) =>
+      request<{ updated: number }>(`/items/${id}/confirm-listings-updated`, { method: 'POST', body: JSON.stringify(body) }),
+    reserve: (id: string, body: { contact_id?: string | null; contact?: CreateContactBody; reserve_type: 'sale' | 'rental'; deposit_expected?: number | null; expires_at?: string | null; note?: string | null }) =>
+      request<Reservation>(`/items/${id}/reserve`, { method: 'POST', body: JSON.stringify(body) }),
     dispose: (id: string) => request<Item>(`/items/${id}`, { method: 'DELETE' }),
+  },
+
+  listings: {
+    update: (listingId: string, body: { platform?: string; listing_url?: string | null; listing_ref_id?: string | null; status?: string }) =>
+      request<ItemListing>(`/listings/${listingId}`, { method: 'PUT', body: JSON.stringify(body) }),
+  },
+
+  reservations: {
+    getById: (id: string) => request<Reservation>(`/reservations/${id}`),
+    setDepositReceived: (id: string, body: { deposit_received: true; deposit_received_at?: string | null }) =>
+      request<Reservation>(`/reservations/${id}/deposit`, { method: 'PUT', body: JSON.stringify(body) }),
+    cancel: (id: string, body?: { reason?: string | null }) =>
+      request<Reservation>(`/reservations/${id}/cancel`, { method: 'PUT', body: JSON.stringify(body ?? {}) }),
   },
 
   customers: {
@@ -191,6 +212,35 @@ export interface Item {
   acquisitionContact?: Contact | null;
   sale?: Sale | null;
   rentals?: Rental[];
+  isListed?: boolean;
+  itemListings?: ItemListing[];
+}
+
+export interface ItemListing {
+  id: string;
+  itemId: string;
+  platform: string;
+  listingUrl?: string | null;
+  listingRefId?: string | null;
+  status: 'active' | 'needs_update' | 'closed';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Reservation {
+  id: string;
+  itemId: string;
+  contactId?: string | null;
+  reserveType: 'sale' | 'rental';
+  reservedAt: string;
+  expiresAt?: string | null;
+  depositExpected?: number | null;
+  depositReceived: boolean;
+  depositReceivedAt?: string | null;
+  note?: string | null;
+  status: 'active' | 'cancelled' | 'converted';
+  contact?: Contact | null;
+  item?: Item;
 }
 
 export interface CreateContactBody {
@@ -286,12 +336,14 @@ export interface StartRentalBody {
   handover_city?: string | null;
   handover_exact_location?: string | null;
   notes?: string | null;
+  payment_received?: boolean;
+  listing_ids?: string[];
 }
 
 export interface EndRentalBody {
   actual_end_date?: string | null;
   damage_fee?: number | null;
-  next_item_status: 'in_stock' | 'listed' | 'disposed';
+  next_item_status: 'in_stock' | 'disposed';
   notes?: string | null;
 }
 
@@ -322,6 +374,8 @@ export interface CreateSaleBody {
   handover_city?: string | null;
   handover_exact_location?: string | null;
   notes?: string | null;
+  payment_received?: boolean;
+  listing_ids?: string[];
 }
 
 export interface UpdateSaleBody {

@@ -5,20 +5,39 @@
 @tailwind utilities;
 
 @layer base {
+  html,
   body {
     @apply font-roomi text-roomi-brown bg-roomi-cream antialiased;
+  }
+  /* Mobile: no horizontal scroll anywhere */
+  @media (max-width: 1023px) {
+    html,
+    body {
+      overflow-x: hidden;
+      max-width: 100vw;
+    }
+  }
+}
+
+/* Mobile: safe area for notched devices */
+@layer utilities {
+  .safe-area-inset-top {
+    padding-top: env(safe-area-inset-top, 0);
+  }
+  .safe-area-inset-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0);
   }
 }
 
 @layer components {
-  /* Primary button: warm orange from logo */
+  /* Primary button: warm orange from logo; min touch target on mobile */
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-roomi px-4 py-2.5 text-sm font-semibold text-white bg-roomi-orange shadow-roomi transition-all hover:bg-roomi-orangeLight hover:shadow-roomiMd focus:outline-none focus:ring-2 focus:ring-roomi-orange focus:ring-offset-2 focus:ring-offset-roomi-cream disabled:opacity-50 disabled:pointer-events-none;
+    @apply inline-flex items-center justify-center rounded-roomi px-4 py-2.5 min-h-[44px] text-sm font-semibold text-white bg-roomi-orange shadow-roomi transition-all hover:bg-roomi-orangeLight hover:shadow-roomiMd focus:outline-none focus:ring-2 focus:ring-roomi-orange focus:ring-offset-2 focus:ring-offset-roomi-cream disabled:opacity-50 disabled:pointer-events-none touch-manipulation;
   }
 
   /* Secondary / outline button */
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-roomi px-4 py-2.5 text-sm font-semibold text-roomi-brown bg-roomi-cream border-2 border-roomi-orange/40 transition-all hover:bg-roomi-peach hover:border-roomi-orange focus:outline-none focus:ring-2 focus:ring-roomi-orange focus:ring-offset-2 disabled:opacity-50;
+    @apply inline-flex items-center justify-center rounded-roomi px-4 py-2.5 min-h-[44px] text-sm font-semibold text-roomi-brown bg-roomi-cream border-2 border-roomi-orange/40 transition-all hover:bg-roomi-peach hover:border-roomi-orange focus:outline-none focus:ring-2 focus:ring-roomi-orange focus:ring-offset-2 disabled:opacity-50 touch-manipulation;
   }
 
   /* Accent (mint) for secondary actions */
@@ -36,9 +55,9 @@
     @apply rounded-roomiLg border border-roomi-peach/60 bg-white shadow-roomi;
   }
 
-  /* Input field */
+  /* Input field: comfortable touch target on mobile */
   .input-field {
-    @apply w-full rounded-roomi border border-roomi-peach/80 bg-roomi-cream/50 px-3 py-2 text-sm text-roomi-brown placeholder-roomi-brownLight/70 focus:border-roomi-orange focus:outline-none focus:ring-1 focus:ring-roomi-orange transition-colors;
+    @apply w-full rounded-roomi border border-roomi-peach/80 bg-roomi-cream/50 px-3 py-2 min-h-[44px] text-sm text-roomi-brown placeholder-roomi-brownLight/70 focus:border-roomi-orange focus:outline-none focus:ring-1 focus:ring-roomi-orange transition-colors;
   }
 
   .label {
