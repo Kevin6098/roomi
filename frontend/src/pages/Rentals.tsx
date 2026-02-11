@@ -47,11 +47,11 @@ export default function Rentals() {
         </Link>
       </div>
 
-      <div className="flex gap-2">
+      <div className="grid grid-cols-2 sm:flex sm:gap-2 gap-2">
         <button
           type="button"
           onClick={() => setStatus('active')}
-          className={`px-4 py-2 rounded-roomi text-sm font-semibold transition-colors ${
+          className={`min-h-[44px] px-4 py-2 rounded-roomi text-sm font-semibold transition-colors touch-manipulation ${
             status === 'active'
               ? 'bg-roomi-orange text-white shadow-roomi'
               : 'bg-roomi-cream/80 text-roomi-brownLight hover:bg-roomi-peach/60 hover:text-roomi-brown border border-roomi-peach/60'
@@ -62,7 +62,7 @@ export default function Rentals() {
         <button
           type="button"
           onClick={() => setStatus('ended')}
-          className={`px-4 py-2 rounded-roomi text-sm font-semibold transition-colors ${
+          className={`min-h-[44px] px-4 py-2 rounded-roomi text-sm font-semibold transition-colors touch-manipulation ${
             status === 'ended'
               ? 'bg-roomi-orange text-white shadow-roomi'
               : 'bg-roomi-cream/80 text-roomi-brownLight hover:bg-roomi-peach/60 hover:text-roomi-brown border border-roomi-peach/60'
@@ -73,41 +73,67 @@ export default function Rentals() {
       </div>
 
       {status === 'active' && (
-        <div className="card overflow-hidden max-w-full min-w-0">
-          <table className="min-w-full divide-y divide-roomi-peach/60 table-fixed sm:table-auto">
-            <thead className="bg-roomi-cream/80">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.item')}</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.customer')}</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.start')}</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.expectedEnd')}</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.overdue')}</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-roomi-brown uppercase">{t('actions.endRental')}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-roomi-peach/60 bg-white">
-              {(rentals ?? []).map((r) => (
-                <tr key={r.id} className="hover:bg-roomi-cream/40">
-                  <td className="px-4 py-3 font-medium text-roomi-brown min-w-0 truncate" title={r.item?.title ?? r.itemId}>{r.item?.title ?? r.itemId}</td>
-                  <td className="px-4 py-3 text-sm text-roomi-brownLight min-w-0 truncate" title={r.customer?.name ?? r.customerId}>{r.customer?.name ?? r.customerId}</td>
-                  <td className="px-4 py-3 text-sm text-roomi-brownLight shrink-0">{(r.startDate || '').slice(0, 10)}</td>
-                  <td className="px-4 py-3 text-sm text-roomi-brownLight shrink-0">{(r.expectedEndDate || '').slice(0, 10)}</td>
-                  <td className="px-4 py-3">
-                    {r.isOverdue ? <span className="text-orange-600 font-medium">{t('common.yes')}</span> : <span className="text-roomi-brownLight">—</span>}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <Link to={`/rentals/${r.id}/end`} className="text-roomi-orange hover:underline font-medium text-sm">
-                      {t('actions.endRental')}
-                    </Link>
-                  </td>
+        <>
+          {/* Mobile: card list */}
+          <div className="lg:hidden space-y-3 w-full max-w-full min-w-0">
+            {(rentals?.length ?? 0) === 0 ? (
+              <div className="card p-6 text-center text-roomi-brownLight">{t('empty.noRentals')}</div>
+            ) : (
+              (rentals ?? []).map((r) => (
+                <div key={r.id} className="card p-4 flex flex-col gap-2">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-roomi-brown truncate">{r.item?.title ?? r.itemId}</p>
+                    <p className="text-sm text-roomi-brownLight truncate">{r.customer?.name ?? r.customerId}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-roomi-brownLight">
+                    <span>{t('table.start')}: {(r.startDate || '').slice(0, 10)}</span>
+                    <span>{t('table.expectedEnd')}: {(r.expectedEndDate || '').slice(0, 10)}</span>
+                  </div>
+                  {r.isOverdue && <span className="text-orange-600 font-medium text-sm">{t('table.overdue')}: {t('common.yes')}</span>}
+                  <Link to={`/rentals/${r.id}/end`} className="btn-secondary text-sm py-2 w-full sm:w-auto text-center">
+                    {t('actions.endRental')}
+                  </Link>
+                </div>
+              ))
+            )}
+          </div>
+          {/* Desktop: table */}
+          <div className="hidden lg:block card overflow-hidden max-w-full min-w-0">
+            <table className="min-w-full divide-y divide-roomi-peach/60 table-auto">
+              <thead className="bg-roomi-cream/80">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.item')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.customer')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.start')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.expectedEnd')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.overdue')}</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-roomi-brown uppercase">{t('actions.endRental')}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          {(rentals?.length ?? 0) === 0 && (
-            <p className="px-4 py-8 text-center text-roomi-brownLight">{t('empty.noRentals')}</p>
-          )}
-        </div>
+              </thead>
+              <tbody className="divide-y divide-roomi-peach/60 bg-white">
+                {(rentals ?? []).map((r) => (
+                  <tr key={r.id} className="hover:bg-roomi-cream/40">
+                    <td className="px-4 py-3 font-medium text-roomi-brown min-w-0 truncate" title={r.item?.title ?? r.itemId}>{r.item?.title ?? r.itemId}</td>
+                    <td className="px-4 py-3 text-sm text-roomi-brownLight min-w-0 truncate" title={r.customer?.name ?? r.customerId}>{r.customer?.name ?? r.customerId}</td>
+                    <td className="px-4 py-3 text-sm text-roomi-brownLight shrink-0">{(r.startDate || '').slice(0, 10)}</td>
+                    <td className="px-4 py-3 text-sm text-roomi-brownLight shrink-0">{(r.expectedEndDate || '').slice(0, 10)}</td>
+                    <td className="px-4 py-3">
+                      {r.isOverdue ? <span className="text-orange-600 font-medium">{t('common.yes')}</span> : <span className="text-roomi-brownLight">—</span>}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Link to={`/rentals/${r.id}/end`} className="text-roomi-orange hover:underline font-medium text-sm">
+                        {t('actions.endRental')}
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {(rentals?.length ?? 0) === 0 && (
+              <p className="px-4 py-8 text-center text-roomi-brownLight">{t('empty.noRentals')}</p>
+            )}
+          </div>
+        </>
       )}
 
       {status === 'ended' && (
@@ -116,22 +142,22 @@ export default function Rentals() {
           <div className="rounded-roomiLg border-2 border-roomi-peach bg-white px-4 py-3 shadow-roomi">
             <p className="text-sm font-semibold text-roomi-brown mb-3">{t('rentalAnalytics.filters')}</p>
             <div className="flex flex-wrap items-end gap-4">
-              <div>
+              <div className="w-full sm:w-auto min-w-0 sm:min-w-[140px]">
                 <label className="label text-xs">{t('rentalAnalytics.endedFrom')}</label>
                 <input
                   type="date"
                   value={endedDateFrom}
                   onChange={(e) => setEndedDateFrom(e.target.value)}
-                  className="input-field min-w-[140px]"
+                  className="input-field w-full"
                 />
               </div>
-              <div>
+              <div className="w-full sm:w-auto min-w-0 sm:min-w-[140px]">
                 <label className="label text-xs">{t('rentalAnalytics.endedTo')}</label>
                 <input
                   type="date"
                   value={endedDateTo}
                   onChange={(e) => setEndedDateTo(e.target.value)}
-                  className="input-field min-w-[140px]"
+                  className="input-field w-full"
                 />
               </div>
             </div>

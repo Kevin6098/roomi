@@ -184,7 +184,7 @@ export default function Categories() {
           </form>
         )}
 
-        <div className="card overflow-hidden">
+        <div className="card overflow-hidden max-w-full min-w-0 overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -311,7 +311,7 @@ export default function Categories() {
           </form>
         )}
 
-        <div className="card overflow-hidden">
+        <div className="card overflow-hidden max-w-full min-w-0 overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>

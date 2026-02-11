@@ -69,8 +69,8 @@ export default function Users() {
       {error && (
         <CenteredToast message={error} variant="error" onDismiss={() => setError('')} />
       )}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-roomi-brown">{t('nav.users')}</h1>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-xl sm:text-2xl font-bold text-roomi-brown">{t('nav.users')}</h1>
         <button
           type="button"
           onClick={() => { setAdding(true); setEditing(null); setForm({ email: '', password: '', role: 'STAFF' }); setError(''); }}
@@ -136,7 +136,7 @@ export default function Users() {
         </form>
       )}
 
-      <div className="card overflow-hidden">
+      <div className="card overflow-hidden max-w-full min-w-0 overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>

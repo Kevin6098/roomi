@@ -85,12 +85,12 @@ export default function Sales() {
       <div className="rounded-roomiLg border-2 border-roomi-peach bg-white px-4 py-3 shadow-roomi">
         <p className="text-sm font-semibold text-roomi-brown mb-3">{t('salesAnalytics.filters')}</p>
         <div className="flex flex-wrap items-end gap-4">
-          <div>
+          <div className="w-full sm:w-auto min-w-0 sm:min-w-[140px]">
             <label className="label text-xs">{t('salesAnalytics.category')}</label>
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="input-field min-w-[140px]"
+              className="input-field w-full"
             >
               <option value="">{t('salesAnalytics.allCategories')}</option>
               {categoryOptions.filter(Boolean).map((c) => (
@@ -98,22 +98,22 @@ export default function Sales() {
               ))}
             </select>
           </div>
-          <div>
+          <div className="w-full sm:w-auto min-w-0 sm:min-w-[140px]">
             <label className="label text-xs">{t('salesAnalytics.dateFrom')}</label>
             <input
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="input-field min-w-[140px]"
+              className="input-field w-full"
             />
           </div>
-          <div>
+          <div className="w-full sm:w-auto min-w-0 sm:min-w-[140px]">
             <label className="label text-xs">{t('salesAnalytics.dateTo')}</label>
             <input
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className="input-field min-w-[140px]"
+              className="input-field w-full"
             />
           </div>
         </div>
@@ -183,18 +183,16 @@ export default function Sales() {
                   return (
                     <div
                       key={s.id}
-                      className="flex items-center justify-between py-2 px-3 rounded-roomi bg-roomi-cream/50 border border-roomi-peach/40"
+                      className="flex flex-wrap items-start justify-between gap-2 py-2 px-3 rounded-roomi bg-roomi-cream/50 border border-roomi-peach/40 min-w-0"
                     >
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <p className="font-medium text-roomi-brown truncate">{s.item?.title ?? s.itemId}</p>
                         <p className="text-xs text-roomi-brownLight">
                           {(s.saleDate || '').slice(0, 10)} · {s.item?.subCategory?.mainCategory?.name ?? '—'} → {s.item?.displaySubCategory ?? s.item?.subCategory?.name ?? '—'}
                         </p>
                       </div>
-                      <div className="text-right shrink-0 ml-2">
-                        <p className="text-sm text-roomi-brown">
-                          {salePrice.toLocaleString()} − {buyCost.toLocaleString()} = <span className={profit >= 0 ? 'font-semibold text-emerald-700' : 'font-semibold text-red-600'}>{profit.toLocaleString()}</span>
-                        </p>
+                      <div className="text-right shrink-0 text-sm text-roomi-brown">
+                        {salePrice.toLocaleString()} − {buyCost.toLocaleString()} = <span className={profit >= 0 ? 'font-semibold text-emerald-700' : 'font-semibold text-red-600'}>{profit.toLocaleString()}</span>
                       </div>
                     </div>
                   );
@@ -205,64 +203,84 @@ export default function Sales() {
         </>
       )}
 
-      {/* Sales table */}
-      <div className="card overflow-hidden max-w-full min-w-0">
-        <h2 className="text-lg font-semibold text-roomi-brown px-4 pt-4 pb-2">{t('salesAnalytics.allSales')}</h2>
-        <table className="min-w-full divide-y divide-roomi-peach/60 table-fixed sm:table-auto">
-          <thead className="bg-roomi-cream/80">
-            <tr>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.item')}</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.customer')}</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.saleDate')}</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.price')}</th>
-              <th className="px-4 py-2 text-right text-xs font-semibold text-roomi-brown uppercase">{t('actions.edit')}</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-roomi-peach/60 bg-white">
-            {(sales ?? []).map((s) => (
-              <tr key={s.id} className="hover:bg-roomi-cream/40">
-                <td className="px-4 py-2 font-medium text-roomi-brown min-w-0 truncate" title={s.item?.title ?? s.itemId}>{s.item?.title ?? s.itemId}</td>
-                <td className="px-4 py-2 text-sm text-roomi-brownLight min-w-0 truncate" title={s.customer?.name ?? s.customerId}>{s.customer?.name ?? s.customerId}</td>
-                <td className="px-4 py-2 text-sm text-roomi-brownLight shrink-0">{(s.saleDate || '').slice(0, 10)}</td>
-                <td className="px-4 py-2 text-sm text-roomi-brown">{s.salePrice != null ? Number(s.salePrice).toLocaleString() : t('common.na')}</td>
-                <td className="px-4 py-2 text-right text-sm">
-                  {deleteId === s.id ? (
-                    <span className="flex items-center justify-end gap-2">
-                      <span className="text-roomi-brownLight">{t('form.confirmDelete')}</span>
-                      <button
-                        type="button"
-                        onClick={() => deleteMutation.mutate(s.id)}
-                        disabled={deleteMutation.isPending}
-                        className="text-red-600 hover:underline font-medium"
-                      >
-                        {t('common.yes')}
-                      </button>
-                      <button type="button" onClick={() => setDeleteId(null)} className="text-roomi-brownLight hover:underline">
-                        {t('common.cancel')}
-                      </button>
-                    </span>
-                  ) : (
-                    <>
-                      <Link to={`/sales/${s.id}/edit`} className="text-roomi-orange hover:underline font-medium mr-3">
-                        {t('actions.edit')}
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={() => setDeleteId(s.id)}
-                        className="text-red-600 hover:underline"
-                      >
-                        {t('actions.delete')}
-                      </button>
-                    </>
-                  )}
-                </td>
+      {/* Sales list: mobile cards + desktop table */}
+      <div className="w-full max-w-full min-w-0">
+        <h2 className="text-lg font-semibold text-roomi-brown px-0 pt-0 pb-2">{t('salesAnalytics.allSales')}</h2>
+        {/* Mobile: card list */}
+        <div className="lg:hidden space-y-3">
+          {(sales?.length ?? 0) === 0 ? (
+            <div className="card p-6 text-center text-roomi-brownLight">{t('empty.noSales')}</div>
+          ) : (
+            (sales ?? []).map((s) => (
+              <div key={s.id} className="card p-4 flex flex-col gap-2">
+                <p className="font-semibold text-roomi-brown truncate">{s.item?.title ?? s.itemId}</p>
+                <p className="text-sm text-roomi-brownLight truncate">{s.customer?.name ?? s.customerId}</p>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-sm text-roomi-brownLight">{(s.saleDate || '').slice(0, 10)} · {s.salePrice != null ? Number(s.salePrice).toLocaleString() : t('common.na')}</span>
+                  <div className="flex gap-2 flex-wrap">
+                    {deleteId === s.id ? (
+                      <>
+                        <span className="text-roomi-brownLight text-sm">{t('form.confirmDelete')}</span>
+                        <button type="button" onClick={() => deleteMutation.mutate(s.id)} disabled={deleteMutation.isPending} className="text-red-600 hover:underline font-medium text-sm">
+                          {t('common.yes')}
+                        </button>
+                        <button type="button" onClick={() => setDeleteId(null)} className="text-roomi-brownLight hover:underline text-sm">{t('common.cancel')}</button>
+                      </>
+                    ) : (
+                      <>
+                        <Link to={`/sales/${s.id}/edit`} className="text-roomi-orange hover:underline font-medium text-sm">{t('actions.edit')}</Link>
+                        <button type="button" onClick={() => setDeleteId(s.id)} className="text-red-600 hover:underline text-sm">{t('actions.delete')}</button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+        {/* Desktop: table */}
+        <div className="hidden lg:block card overflow-hidden max-w-full min-w-0">
+          <table className="min-w-full divide-y divide-roomi-peach/60 table-auto">
+            <thead className="bg-roomi-cream/80">
+              <tr>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.item')}</th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.customer')}</th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.saleDate')}</th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.price')}</th>
+                <th className="px-4 py-2 text-right text-xs font-semibold text-roomi-brown uppercase">{t('actions.edit')}</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-        {(sales?.length ?? 0) === 0 && (
-          <p className="px-4 py-8 text-center text-roomi-brownLight">{t('empty.noSales')}</p>
-        )}
+            </thead>
+            <tbody className="divide-y divide-roomi-peach/60 bg-white">
+              {(sales ?? []).map((s) => (
+                <tr key={s.id} className="hover:bg-roomi-cream/40">
+                  <td className="px-4 py-2 font-medium text-roomi-brown min-w-0 truncate" title={s.item?.title ?? s.itemId}>{s.item?.title ?? s.itemId}</td>
+                  <td className="px-4 py-2 text-sm text-roomi-brownLight min-w-0 truncate" title={s.customer?.name ?? s.customerId}>{s.customer?.name ?? s.customerId}</td>
+                  <td className="px-4 py-2 text-sm text-roomi-brownLight shrink-0">{(s.saleDate || '').slice(0, 10)}</td>
+                  <td className="px-4 py-2 text-sm text-roomi-brown">{s.salePrice != null ? Number(s.salePrice).toLocaleString() : t('common.na')}</td>
+                  <td className="px-4 py-2 text-right text-sm">
+                    {deleteId === s.id ? (
+                      <span className="flex items-center justify-end gap-2">
+                        <span className="text-roomi-brownLight">{t('form.confirmDelete')}</span>
+                        <button type="button" onClick={() => deleteMutation.mutate(s.id)} disabled={deleteMutation.isPending} className="text-red-600 hover:underline font-medium">
+                          {t('common.yes')}
+                        </button>
+                        <button type="button" onClick={() => setDeleteId(null)} className="text-roomi-brownLight hover:underline">{t('common.cancel')}</button>
+                      </span>
+                    ) : (
+                      <>
+                        <Link to={`/sales/${s.id}/edit`} className="text-roomi-orange hover:underline font-medium mr-3">{t('actions.edit')}</Link>
+                        <button type="button" onClick={() => setDeleteId(s.id)} className="text-red-600 hover:underline">{t('actions.delete')}</button>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {(sales?.length ?? 0) === 0 && (
+            <p className="px-4 py-8 text-center text-roomi-brownLight">{t('empty.noSales')}</p>
+          )}
+        </div>
       </div>
     </div>
   );

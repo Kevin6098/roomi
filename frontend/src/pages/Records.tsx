@@ -506,7 +506,7 @@ export default function Records() {
                 </div>
                 <div>
                   <label className="label">{t('table.category')} *</label>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <select
                       value={mainId}
                       onChange={(e) => { setMainId(e.target.value); setAcquireForm((f) => ({ ...f, sub_category_id: '', custom_sub_category: null })); }}
@@ -662,7 +662,7 @@ export default function Records() {
                     </>
                   )}
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="label">{t('input.acquisitionType')}</label>
                     <select
@@ -693,7 +693,7 @@ export default function Records() {
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="label">{t('input.originalPrice')}</label>
                     <input
@@ -723,7 +723,7 @@ export default function Records() {
                   </button>
                   {showLocationFields && (
                     <div className="mt-3 space-y-3">
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="label">{t('input.prefecture')}</label>
                           <select
@@ -823,7 +823,7 @@ export default function Records() {
               </div>
               <div className="border border-roomi-peach/60 rounded-lg p-4 space-y-4 bg-roomi-cream/30">
                 <h3 className="text-sm font-semibold text-roomi-brown">{t('input.customerDetails')} (buyer)</h3>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3">
                   <button type="button" onClick={() => setSellContactMode('existing')} className={`rounded-lg py-2 px-3 text-sm font-medium border-2 ${sellContactMode === 'existing' ? 'border-roomi-orange bg-roomi-orange text-white' : 'border-gray-300 text-gray-700 hover:border-roomi-orange/60'}`}>{t('input.selectExistingContact')}</button>
                   <button type="button" onClick={() => setSellContactMode('new')} className={`rounded-lg py-2 px-3 text-sm font-medium border-2 ${sellContactMode === 'new' ? 'border-roomi-orange bg-roomi-orange text-white' : 'border-gray-300 text-gray-700 hover:border-roomi-orange/60'}`}>{t('input.createNewContact')}</button>
                 </div>
@@ -847,7 +847,7 @@ export default function Records() {
                     </div>
                     <div><label className="label">{t('table.name')} *</label><input type="text" value={sellNewContact.name} onChange={(e) => setSellNewContact((c) => ({ ...c, name: e.target.value }))} className="input-field" required /></div>
                     <div><label className="label">{t('input.platformId')}</label><input type="text" value={sellNewContact.platform_user_id} onChange={(e) => setSellNewContact((c) => ({ ...c, platform_user_id: e.target.value }))} className="input-field" placeholder={t('input.platformIdPlaceholder')} /></div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div><label className="label">{t('table.phone')}</label><input type="text" value={sellNewContact.phone} onChange={(e) => setSellNewContact((c) => ({ ...c, phone: e.target.value }))} className="input-field" /></div>
                       <div><label className="label">{t('table.email')}</label><input type="email" value={sellNewContact.email} onChange={(e) => setSellNewContact((c) => ({ ...c, email: e.target.value }))} className="input-field" /></div>
                     </div>
@@ -863,7 +863,7 @@ export default function Records() {
                 <button type="button" onClick={() => setShowSellLocation((v) => !v)} className="text-sm font-medium text-roomi-orange hover:underline">{showSellLocation ? '− ' : '+ '}{t('input.decideLocation')}</button>
                 {showSellLocation && (
                   <div className="mt-3 space-y-3">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div><label className="label">{t('input.prefecture')}</label><select value={sellForm.handover_prefecture ?? UNDECIDED} onChange={(e) => { const p = e.target.value; const cities = getCitiesForPrefecture(p); setSellForm((f) => ({ ...f, handover_prefecture: p, handover_city: cities[0] ?? UNDECIDED })); }} className="input-field">{PREFECTURES.map((pref) => <option key={pref} value={pref}>{pref === UNDECIDED ? t('input.undecided') : pref}</option>)}</select></div>
                       <div><label className="label">{t('input.city')}</label><select value={sellForm.handover_city ?? UNDECIDED} onChange={(e) => setSellForm((f) => ({ ...f, handover_city: e.target.value }))} className="input-field">{getCitiesForPrefecture(sellForm.handover_prefecture ?? UNDECIDED).map((c) => <option key={c} value={c}>{c === UNDECIDED ? t('input.undecided') : c}</option>)}</select></div>
                     </div>
@@ -903,7 +903,7 @@ export default function Records() {
                 </div>
                 <div className="border border-roomi-peach/60 rounded-lg p-4 space-y-4 bg-roomi-cream/30">
                   <h3 className="text-sm font-semibold text-roomi-brown">{t('input.customerDetails')} (renter)</h3>
-                  <div className="flex gap-3">
+                  <div className="flex flex-wrap gap-3">
                     <button type="button" onClick={() => setRentContactMode('existing')} className={`rounded-lg py-2 px-3 text-sm font-medium border-2 ${rentContactMode === 'existing' ? 'border-roomi-orange bg-roomi-orange text-white' : 'border-gray-300 text-gray-700 hover:border-roomi-orange/60'}`}>{t('input.selectExistingContact')}</button>
                     <button type="button" onClick={() => setRentContactMode('new')} className={`rounded-lg py-2 px-3 text-sm font-medium border-2 ${rentContactMode === 'new' ? 'border-roomi-orange bg-roomi-orange text-white' : 'border-gray-300 text-gray-700 hover:border-roomi-orange/60'}`}>{t('input.createNewContact')}</button>
                   </div>
@@ -914,11 +914,11 @@ export default function Records() {
                       <div><label className="label">{t('input.sourcePlatform')} *</label><select value={rentNewContact.source_platform === SOURCE_PLATFORM_OTHER_SENTINEL ? SOURCE_PLATFORM_OTHER : rentNewContact.source_platform} onChange={(e) => setRentNewContact((c) => ({ ...c, source_platform: e.target.value === SOURCE_PLATFORM_OTHER ? SOURCE_PLATFORM_OTHER_SENTINEL : e.target.value }))} className="input-field"><option value="">—</option>{SOURCE_PLATFORM_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt === SOURCE_PLATFORM_OTHER ? t('input.sourcePlatformOther') : opt}</option>)}</select>{rentNewContact.source_platform === SOURCE_PLATFORM_OTHER_SENTINEL && <input type="text" value={rentNewContact.source_platform_other} onChange={(e) => setRentNewContact((c) => ({ ...c, source_platform_other: e.target.value }))} className="input-field mt-2" placeholder={t('input.sourcePlatformOther')} />}</div>
                       <div><label className="label">{t('table.name')} *</label><input type="text" value={rentNewContact.name} onChange={(e) => setRentNewContact((c) => ({ ...c, name: e.target.value }))} className="input-field" required /></div>
                       <div><label className="label">{t('input.platformId')}</label><input type="text" value={rentNewContact.platform_user_id} onChange={(e) => setRentNewContact((c) => ({ ...c, platform_user_id: e.target.value }))} className="input-field" placeholder={t('input.platformIdPlaceholder')} /></div>
-                      <div className="grid grid-cols-2 gap-4"><div><label className="label">{t('table.phone')}</label><input type="text" value={rentNewContact.phone} onChange={(e) => setRentNewContact((c) => ({ ...c, phone: e.target.value }))} className="input-field" /></div><div><label className="label">{t('table.email')}</label><input type="email" value={rentNewContact.email} onChange={(e) => setRentNewContact((c) => ({ ...c, email: e.target.value }))} className="input-field" /></div></div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label className="label">{t('table.phone')}</label><input type="text" value={rentNewContact.phone} onChange={(e) => setRentNewContact((c) => ({ ...c, phone: e.target.value }))} className="input-field" /></div><div><label className="label">{t('table.email')}</label><input type="email" value={rentNewContact.email} onChange={(e) => setRentNewContact((c) => ({ ...c, email: e.target.value }))} className="input-field" /></div></div>
                     </>
                   )}
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div><label className="label">{t('output.rentPeriod')}</label><select value={rentForm.rent_period ?? 'monthly'} onChange={(e) => setRentForm((f) => ({ ...f, rent_period: e.target.value as 'monthly' | 'annually' }))} className="input-field"><option value="monthly">{t('output.rentPeriodMonthly')}</option><option value="annually">{t('output.rentPeriodAnnually')}</option></select></div>
                   <div>
                     <label className="label">{rentForm.rent_period === 'annually' ? t('output.rentPriceAnnually') : t('output.rentPriceMonthly')}</label>
@@ -926,7 +926,7 @@ export default function Records() {
                   </div>
                 </div>
                 <div><label className="label">{t('output.deposit')}</label><input type="number" min={0} step={0.01} value={rentForm.deposit ?? ''} onChange={(e) => setRentForm((f) => ({ ...f, deposit: e.target.value ? Number(e.target.value) : null }))} className="input-field" placeholder={t('output.depositPlaceholder')} /></div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div><label className="label">{t('table.start')} *</label><input type="date" value={rentForm.start_date} onChange={(e) => setRentForm((f) => ({ ...f, start_date: e.target.value }))} className="input-field" required /></div>
                   <div><label className="label">{t('table.expectedEnd')} *</label><input type="date" value={rentForm.expected_end_date} onChange={(e) => setRentForm((f) => ({ ...f, expected_end_date: e.target.value }))} className="input-field" required /></div>
                 </div>
@@ -935,7 +935,7 @@ export default function Records() {
                 <button type="button" onClick={() => setShowRentLocation((v) => !v)} className="text-sm font-medium text-roomi-orange hover:underline">{showRentLocation ? '− ' : '+ '}{t('input.decideLocation')}</button>
                 {showRentLocation && (
                   <div className="mt-3 space-y-3">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div><label className="label">{t('input.prefecture')}</label><select value={rentForm.handover_prefecture ?? UNDECIDED} onChange={(e) => { const p = e.target.value; const cities = getCitiesForPrefecture(p); setRentForm((f) => ({ ...f, handover_prefecture: p, handover_city: cities[0] ?? UNDECIDED })); }} className="input-field">{PREFECTURES.map((pref) => <option key={pref} value={pref}>{pref === UNDECIDED ? t('input.undecided') : pref}</option>)}</select></div>
                       <div><label className="label">{t('input.city')}</label><select value={rentForm.handover_city ?? UNDECIDED} onChange={(e) => setRentForm((f) => ({ ...f, handover_city: e.target.value }))} className="input-field">{getCitiesForPrefecture(rentForm.handover_prefecture ?? UNDECIDED).map((c) => <option key={c} value={c}>{c === UNDECIDED ? t('input.undecided') : c}</option>)}</select></div>
                     </div>

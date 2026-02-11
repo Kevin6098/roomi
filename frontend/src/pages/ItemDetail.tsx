@@ -38,9 +38,9 @@ export default function ItemDetail() {
   return (
     <div className="space-y-6">
       <Link to="/items" className="nav-link text-sm">← {t('common.back')}</Link>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-roomi-brown">{item.title}</h1>
-        <div className="flex gap-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-xl sm:text-2xl font-bold text-roomi-brown truncate min-w-0">{item.title}</h1>
+        <div className="flex flex-wrap gap-2 shrink-0">
           {canEdit && (
             <Link to={`/items/${id}/edit`} className="btn-secondary py-1.5 px-3 text-sm">
               {t('actions.edit')}
