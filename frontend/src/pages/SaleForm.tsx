@@ -44,6 +44,8 @@ export default function SaleForm() {
   useEffect(() => {
     if (sale) {
       setForm({
+        item_id: sale.itemId,
+        customer_id: sale.customerId,
         sale_price: sale.salePrice != null ? Number(sale.salePrice) : null,
         sale_date: sale.saleDate.slice(0, 10),
         platform_sold: sale.platformSold ?? null,

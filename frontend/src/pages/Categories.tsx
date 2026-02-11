@@ -119,7 +119,6 @@ export default function Categories() {
   }
 
   const displayMainName = (m: MainCategory) => m.nameEn || m.nameJa || m.name;
-  const displaySubName = (s: SubCategory) => s.nameEn || s.nameJa || s.name;
 
   return (
     <div className="space-y-8">
