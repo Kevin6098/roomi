@@ -80,6 +80,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div className="mt-1 space-y-0.5">
             {navItem('/categories', t('nav.categories'))}
             {user?.role === 'OWNER' && navItem('/users', t('nav.users'))}
+            {navItem('/manual', t('nav.manual'))}
           </div>
         </div>
       </nav>

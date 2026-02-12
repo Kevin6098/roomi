@@ -18,6 +18,7 @@ import SaleForm from './pages/SaleForm';
 import Users from './pages/Users';
 import Categories from './pages/Categories';
 import Records from './pages/Records';
+import Manual from './pages/Manual';
 
 function AppRoutes() {
   return (
@@ -42,6 +43,7 @@ function AppRoutes() {
           <Route path="/sales/:id/edit" element={<SaleForm />} />
           <Route path="/users" element={<Users />} />
           <Route path="/categories" element={<Categories />} />
+          <Route path="/manual" element={<Manual />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Layout>
