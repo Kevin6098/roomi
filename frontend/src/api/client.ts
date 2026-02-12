@@ -184,6 +184,9 @@ export interface Contact {
   name: string;
   phone?: string | null;
   email?: string | null;
+  prefecture?: string | null;
+  city?: string | null;
+  exactLocation?: string | null;
   notes?: string | null;
   createdAt: string;
   acquisitionItems?: { id: string; title: string }[];
@@ -252,6 +255,9 @@ export interface CreateContactBody {
   platform_user_id?: string | null;
   phone?: string | null;
   email?: string | null;
+  prefecture?: string | null;
+  city?: string | null;
+  exact_location?: string | null;
   notes?: string | null;
 }
 

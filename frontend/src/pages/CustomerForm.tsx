@@ -144,37 +144,9 @@ export default function CustomerForm() {
             required
           />
         </div>
-        <div>
-          <label className="label">{t('input.platformId')}</label>
-          <input
-            type="text"
-            value={form.app_id ?? ''}
-            onChange={(e) => setForm((f) => ({ ...f, app_id: e.target.value || null }))}
-            className="input-field"
-            placeholder={t('input.platformIdPlaceholder')}
-          />
-        </div>
-        <div>
-          <label className="label">{t('table.phone')}</label>
-          <input
-            type="text"
-            value={form.phone ?? ''}
-            onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value || null }))}
-            className="input-field"
-          />
-        </div>
-        <div>
-          <label className="label">{t('table.email')}</label>
-          <input
-            type="email"
-            value={form.email ?? ''}
-            onChange={(e) => setForm((f) => ({ ...f, email: e.target.value || null }))}
-            className="input-field"
-          />
-        </div>
 
         <div className="border-t border-roomi-peach/40 pt-4 mt-2">
-          <h3 className="text-sm font-semibold text-roomi-brown mb-3">{t('input.defaultLocation')}</h3>
+          <h3 className="text-sm font-semibold text-roomi-brown mb-1">{t('input.defaultLocation')}</h3>
           <p className="text-xs text-roomi-brownLight mb-3">{t('input.defaultLocationHint')}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -216,6 +188,35 @@ export default function CustomerForm() {
               placeholder={t('input.addExactLocationOptional')}
             />
           </div>
+        </div>
+
+        <div>
+          <label className="label">{t('input.platformId')}</label>
+          <input
+            type="text"
+            value={form.app_id ?? ''}
+            onChange={(e) => setForm((f) => ({ ...f, app_id: e.target.value || null }))}
+            className="input-field"
+            placeholder={t('input.platformIdPlaceholder')}
+          />
+        </div>
+        <div>
+          <label className="label">{t('table.phone')}</label>
+          <input
+            type="text"
+            value={form.phone ?? ''}
+            onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value || null }))}
+            className="input-field"
+          />
+        </div>
+        <div>
+          <label className="label">{t('table.email')}</label>
+          <input
+            type="email"
+            value={form.email ?? ''}
+            onChange={(e) => setForm((f) => ({ ...f, email: e.target.value || null }))}
+            className="input-field"
+          />
         </div>
 
         <div className="flex gap-2">

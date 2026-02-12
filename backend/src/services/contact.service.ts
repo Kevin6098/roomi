@@ -36,6 +36,9 @@ export const contactService = {
         platformUserId: body.platform_user_id ?? undefined,
         phone: body.phone ?? undefined,
         email: body.email ?? undefined,
+        prefecture: body.prefecture ?? undefined,
+        city: body.city ?? undefined,
+        exactLocation: body.exact_location ?? undefined,
         notes: body.notes ?? undefined,
       },
     });
@@ -43,7 +46,7 @@ export const contactService = {
 
   async update(id: string, body: UpdateContactBody) {
     await this.getById(id);
-    return prisma.contact.update({
+    const updated = await prisma.contact.update({
       where: { id },
       data: {
         ...(body.source_platform !== undefined && { sourcePlatform: body.source_platform }),
@@ -51,9 +54,27 @@ export const contactService = {
         ...(body.platform_user_id !== undefined && { platformUserId: body.platform_user_id }),
         ...(body.phone !== undefined && { phone: body.phone }),
         ...(body.email !== undefined && { email: body.email }),
+        ...(body.prefecture !== undefined && { prefecture: body.prefecture }),
+        ...(body.city !== undefined && { city: body.city }),
+        ...(body.exact_location !== undefined && { exactLocation: body.exact_location }),
         ...(body.notes !== undefined && { notes: body.notes }),
       },
     });
+    if (
+      body.prefecture !== undefined ||
+      body.city !== undefined ||
+      body.exact_location !== undefined
+    ) {
+      await prisma.customer.updateMany({
+        where: { contactId: id },
+        data: {
+          ...(body.prefecture !== undefined && { prefecture: body.prefecture }),
+          ...(body.city !== undefined && { city: body.city }),
+          ...(body.exact_location !== undefined && { exactLocation: body.exact_location }),
+        },
+      });
+    }
+    return updated;
   },
 
   async delete(id: string) {
