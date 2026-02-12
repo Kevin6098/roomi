@@ -301,26 +301,73 @@
   },
   "manual": {
     "title": "User Manual",
-    "intro": "This manual explains all functions of ROOMI and how to use them. Use it to onboard new users or to remind yourself of the workflow.",
-    "overviewTitle": "1. System overview",
-    "overviewBody": "ROOMI is an inventory and sales system for managing items (e.g. second-hand goods), customers, rentals, and sales. You add items to inventory, optionally list them for sale, rent them out or sell them, and track revenue and profit. The main areas are: Dashboard (overview), Records (quick add/sell/rent), Items (inventory list and detail), Customers (contacts and platforms), Rentals (active and ended), Sales (analytics and history), and Settings (Categories, Users, this Manual).",
-    "flowTitle": "2. Recommended flow — what to do next",
-    "flowBody": "First time: (1) Go to Settings → Categories and create at least one main category and subcategory (e.g. Furniture → Table). (2) Go to Records and use the “Acquire” tab to add your first item (choose category, condition, cost, etc.). (3) Go to Items to see your inventory; open an item to edit, list it, reserve it, or record a sale/rental from there. For daily use: Use Records to quickly add new stock (Acquire), record a sale (Sell), or start a rental (Rent). Use Dashboard to see counts by status (overdue, in stock, listed, reserved, rented, sold, disposed) and upcoming returns. Use Rentals to see active/ended rentals and to end a rental when the item is returned. Use Sales to view revenue, cost, profit, charts (by category, over time by day/month/year), and the full sales list. Use Customers to search and manage contacts (buyers/renters); link contacts to customers if needed. When in doubt: add or edit items from Items; record one-off sales or rentals from Records.",
-    "dashboardTitle": "3. Dashboard",
-    "dashboardBody": "The Dashboard shows counts of items by status: Overdue, In Stock, Listed, Reserved, Rented, Sold, Disposed. Each count links to the Items page filtered by that status. It also shows upcoming returns (rentals ending soon) with a link to active Rentals. Recent items (newly added) are listed at the bottom. Use it to see at a glance what needs attention (e.g. overdue returns, items in stock to list).",
-    "recordsTitle": "4. Records",
-    "recordsBody": "Records is the one-stop page for three actions: Acquire (add to inventory), Sell (record a sale), and Rent (start a rental). Acquire: Fill in title, category, acquisition type and cost, condition, dates, and optionally link or create a contact (seller). Sell: Pick an item (in stock or listed), enter sale price and date, and optionally link or create a contact (buyer). Rent: Pick an item, set rent period (monthly/annual), prices, deposit, start and expected end date, and optionally link or create a contact (renter). Each tab can create a new contact (name, platform, etc.) or select an existing one. After submitting, the item status updates (e.g. to sold or rented) and you can go to Items or Sales/Rentals to see the result.",
-    "itemsTitle": "5. Items",
-    "itemsBody": "Items lists all inventory. Filter by status (overdue, in stock, listed, reserved, rented, sold, disposed) and search by text. Open an item to view its detail: category, condition, cost, status, linked sale or rental, and actions (Edit, List, Reserve, Record sale, Start rental, etc.). You can edit the item, add it to a listing platform (List), reserve it for a contact, record a sale, or start a rental from the detail page. Use “Add item” to create a new item (same as Records → Acquire).",
-    "customersTitle": "6. Customers",
-    "customersBody": "Customers (contacts) are people you deal with: sellers, buyers, renters. You can search by name or platform and filter by platform. Add a new customer with name, platform, platform user ID, phone, email, and location (prefecture, city, etc.). Edit a customer or their contact details to keep information up to date. When you record a sale or rental (Records or from an item), you can link an existing contact or create a new one; that link is used for handover and history.",
-    "rentalsTitle": "7. Rentals",
-    "rentalsBody": "Rentals shows active and ended rentals. Switch between “Active” and “Ended” tabs. For active rentals you see start date, expected end date, item, and renter; use “End rental” to record the return and optional actual end date. For ended rentals you can filter by date range and see total earnings. Start a new rental from “Start rental” (same as Records → Rent) or from an item’s detail page.",
-    "salesTitle": "8. Sales",
-    "salesBody": "Sales shows analytics and all sales. Use filters: category, date from, date to. The page shows total revenue, total cost (buy), and total profit. Charts: “Sales over time” (line chart) can be grouped by day, month, or year; “Sales by category” (pie chart) and “Profit per sale” list. The “Group by” dropdown only affects the line chart. At the bottom you see the full list of sales; you can add a new sale or edit an existing one from here.",
-    "categoriesTitle": "9. Settings — Categories",
-    "categoriesBody": "Categories organize items: main categories (e.g. Furniture, Electronics) and subcategories (e.g. Table, Chair). Create or edit main and subcategories (names in English and Japanese if needed). You must have at least one subcategory before you can add items; choose the right category when acquiring or editing an item. Delete subcategories before deleting a main category.",
-    "usersTitle": "10. Settings — Users",
-    "usersBody": "Only OWNER role can see and manage Users. Add or edit user accounts (email, role). Use this to give team members access to ROOMI with the right permissions."
+    "intro": "Follow the 4 steps below. Every box takes you to the real page.",
+    "startHere": "Start here (3 steps)",
+    "flowStep1": "Set categories",
+    "flowStep2": "Add item",
+    "flowStep3": "View inventory",
+    "flowStep4": "Sell or rent",
+    "flowStep1Hint": "Settings → Categories",
+    "flowStep2Hint": "Records → Acquire",
+    "flowStep3Hint": "Items",
+    "flowStep4Hint": "Records → Sell / Rent",
+    "goTo": "Go to {{page}}",
+    "thenWhat": "Then what?",
+    "thenWhat1": "Add more items",
+    "thenWhat2": "Sell or rent something",
+    "thenWhat3": "See status numbers",
+    "thenWhat4": "Edit or list an item",
+    "allFunctions": "All functions (click to open)",
+    "dashboardTitle": "Dashboard",
+    "dashboardBody": "See how many items: In stock, Rented, Sold, etc. Click a number to open that list.",
+    "recordsTitle": "Records",
+    "recordsBody": "Add item (Acquire), record a sale (Sell), or start a rental (Rent). One page for all three.",
+    "itemsTitle": "Items",
+    "itemsBody": "All your inventory. Filter, search, open one to edit, list, reserve, sell, or rent.",
+    "customersTitle": "Customers",
+    "customersBody": "People you deal with. Add, edit, search. Link them when you sell or rent.",
+    "rentalsTitle": "Rentals",
+    "rentalsBody": "Active rentals and ended ones. End rental when item returns. Start rental for new.",
+    "salesTitle": "Sales",
+    "salesBody": "Revenue, profit, charts by day/month/year and by category. Filter and see list.",
+    "categoriesTitle": "Categories",
+    "categoriesBody": "Create main + sub (e.g. Furniture → Table). Needed before adding items.",
+    "usersTitle": "Users",
+    "usersBody": "OWNER only. Add or edit team members (email, role).",
+    "statusGuideTitle": "What do the statuses mean?",
+    "statusGuideIntro": "Each item has a status. Here’s what each one means and what you should do.",
+    "statusGuideMeaning": "What it means",
+    "statusGuideDo": "What to do",
+    "statusGuideView": "View {{status}} items",
+    "statusGuide": {
+      "overdue": {
+        "meaning": "This item was rented and the expected return date has passed.",
+        "do": "Contact the renter or check where the item is. When it’s back, go to Rentals and tap End rental."
+      },
+      "in_stock": {
+        "meaning": "The item is in your inventory and not yet listed, reserved, or rented.",
+        "do": "You can list it for sale, reserve it for someone, record a sale, or start a rental from the item page."
+      },
+      "listed": {
+        "meaning": "The item is listed on a platform (e.g. Mercari, Jimoty) for sale.",
+        "do": "When someone buys it, record the sale (Records → Sell or from the item). If you remove the listing, edit the item and change status."
+      },
+      "reserved": {
+        "meaning": "The item is reserved for a specific customer (not yet sold or rented).",
+        "do": "When they buy or rent, record the sale or start the rental. To cancel, edit the item and change status."
+      },
+      "rented": {
+        "meaning": "The item is currently out on rental.",
+        "do": "When the customer returns it, go to Rentals and tap End rental for that rental."
+      },
+      "sold": {
+        "meaning": "The item was sold and is no longer in your inventory.",
+        "do": "Nothing. It’s recorded in Sales. Remove the listing from the platform if it was listed online."
+      },
+      "disposed": {
+        "meaning": "The item was disposed (thrown away, donated, or written off).",
+        "do": "Nothing. It’s no longer in your active inventory."
+      }
+    }
   }
 }
