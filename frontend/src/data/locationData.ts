@@ -117,7 +117,7 @@ export function getCitiesForPrefecture(prefecture: string): readonly string[] {
   return PREFECTURE_CITIES[prefecture] ?? [UNDECIDED, OTHER];
 }
 
-export function getDisplayLocation(prefecture: string | null | undefined, city: string | null | undefined): string {
+export function getDisplayLocation(prefecture: string | null | undefined, city: string | null | undefined, _lang?: string): string {
   const p = prefecture?.trim() || UNDECIDED;
   const c = city?.trim() || UNDECIDED;
   if (p === UNDECIDED && c === UNDECIDED) return UNDECIDED;

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { api, type Item, type ItemListing, type CreateContactBody } from '../api/client';
-import { getDisplayLocation, UNDECIDED } from '../data/locationData';
+import { getDisplayLocation } from '../data/locationData';
 import { getStatusBadgeClass } from '../utils/statusStyles';
 import { LISTING_PLATFORMS } from '../data/listingPlatforms';
 import { CenteredToast } from '../components/CenteredToast';
@@ -197,7 +197,7 @@ export default function Items() {
                     {t('table.customer')}: {getItemCustomerDisplay(item)}
                   </div>
                   <div className="text-sm text-roomi-brownLight truncate min-w-0">
-                    {t('table.location')}: {getItemDisplayLocation(item) === UNDECIDED ? t('input.undecided') : getItemDisplayLocation(item)}
+                    {t('table.location')}: {getItemDisplayLocation(item) === 'Undecided' ? t('input.undecided') : getItemDisplayLocation(item)}
                   </div>
                   <div className="flex flex-wrap gap-2 pt-1">
                     {(item.status === 'in_stock' || item.status === 'overdue' || item.status === 'reserved') && (
@@ -262,7 +262,7 @@ export default function Items() {
                         <span className="text-roomi-brownLight">—</span>
                       )}
                     </td>
-                    <td className="px-2 py-3 text-sm text-roomi-brownLight min-w-0 truncate">{getItemDisplayLocation(item) === UNDECIDED ? t('input.undecided') : getItemDisplayLocation(item)}</td>
+                    <td className="px-2 py-3 text-sm text-roomi-brownLight min-w-0 truncate">{getItemDisplayLocation(item) === 'Undecided' ? t('input.undecided') : getItemDisplayLocation(item)}</td>
                     <td className="px-2 py-3">
                       {(item.status === 'in_stock' || item.status === 'overdue') && (
                         <button type="button" onClick={() => setReserveModalItem(item)} className="btn-secondary text-xs py-1.5 px-2 min-h-0">

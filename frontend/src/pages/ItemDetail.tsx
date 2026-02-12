@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/client';
-import { getDisplayLocation, UNDECIDED } from '../data/locationData';
+import { getDisplayLocation } from '../data/locationData';
 import { getStatusBadgeClass } from '../utils/statusStyles';
 
 export default function ItemDetail() {
@@ -85,7 +85,7 @@ export default function ItemDetail() {
         <p><span className="text-roomi-brownLight">{t('itemDetail.categoryLabel')}:</span> {item.subCategory?.mainCategory?.name} → {item.displaySubCategory ?? item.subCategory?.name}</p>
         <p><span className="text-roomi-brownLight">{t('itemDetail.conditionLabel')}:</span> {item.condition}</p>
         <p><span className="text-roomi-brownLight">{t('itemDetail.locationLabel')}:</span> {(() => {
-          const area = getDisplayLocation(item.prefecture, item.city) === UNDECIDED ? t('input.undecided') : getDisplayLocation(item.prefecture, item.city);
+          const area = getDisplayLocation(item.prefecture, item.city) === 'Undecided' ? t('input.undecided') : getDisplayLocation(item.prefecture, item.city);
           const exact = item.exactLocation?.trim();
           if (exact) return `${area} — ${exact}`;
           return area;
