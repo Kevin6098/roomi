@@ -69,6 +69,9 @@ export const customerService = {
         preferredLanguage: body.preferred_language,
         sourcePlatform: body.source_platform ?? undefined,
         appId: body.app_id ?? undefined,
+        prefecture: body.prefecture ?? undefined,
+        city: body.city ?? undefined,
+        exactLocation: body.exact_location ?? undefined,
       },
     });
   },
@@ -84,6 +87,9 @@ export const customerService = {
         ...(body.preferred_language !== undefined && { preferredLanguage: body.preferred_language }),
         ...(body.source_platform !== undefined && { sourcePlatform: body.source_platform }),
         ...(body.app_id !== undefined && { appId: body.app_id }),
+        ...(body.prefecture !== undefined && { prefecture: body.prefecture }),
+        ...(body.city !== undefined && { city: body.city }),
+        ...(body.exact_location !== undefined && { exactLocation: body.exact_location }),
       },
     });
   },

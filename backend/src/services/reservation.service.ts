@@ -2,6 +2,7 @@ import { prisma } from '../db.js';
 import { conflict, notFound, validationError } from '../utils/errors.js';
 import type { ReserveItemBody, DepositReceivedBody } from '../validators/reservations.js';
 import { contactService } from './contact.service.js';
+import { customerService } from './customer.service.js';
 
 export const reservationService = {
   async getByItemId(itemId: string) {
@@ -39,7 +40,7 @@ export const reservationService = {
     if (item.status === 'rented') throw conflict('Item is rented');
     if (item.reservations.length > 0) throw conflict('Item is already reserved');
 
-    const allowedStatuses = ['in_stock'];
+    const allowedStatuses = ['in_stock', 'overdue'];
     if (!allowedStatuses.includes(item.status)) throw conflict(`Cannot reserve item with status ${item.status}`);
 
     let contactId: string | null = null;
@@ -57,6 +58,11 @@ export const reservationService = {
         notes: body.contact.notes ?? undefined,
       });
       contactId = contact.id;
+    }
+
+    // Ensure a Customer record exists for this contact so they appear on the Customers page
+    if (contactId) {
+      await customerService.getOrCreateCustomerFromContact(contactId, undefined);
     }
 
     const expiresAt = body.expires_at ? new Date(body.expires_at) : undefined;
@@ -105,10 +111,11 @@ export const reservationService = {
     if (!r) throw notFound('Reservation not found');
     if (r.status !== 'active') throw conflict('Reservation is not active');
 
+    const now = new Date();
     return prisma.$transaction(async (tx) => {
       await tx.reservation.update({
         where: { id },
-        data: { status: 'cancelled' },
+        data: { status: 'cancelled', cancelledAt: now },
       });
       await tx.item.update({
         where: { id: r.itemId },
@@ -127,7 +134,7 @@ export const reservationService = {
     if (!r) throw notFound('Reservation not found');
     return prisma.reservation.update({
       where: { id },
-      data: { status: 'converted' },
+      data: { status: 'converted', convertedAt: new Date() },
       include: { item: true, contact: true },
     });
   },

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const itemStatusEnum = z.enum(['in_stock', 'reserved', 'rented', 'sold', 'disposed']);
+const itemStatusEnum = z.enum(['overdue', 'in_stock', 'reserved', 'rented', 'sold', 'disposed']);
 const conditionEnum = z.enum(['new', 'good', 'fair', 'poor']);
 const acquisitionTypeEnum = z.enum(['free', 'cheap', 'bought']);
 const locationVisibilityEnum = z.enum(['hidden', 'shown']);
@@ -23,7 +23,7 @@ export const createItemSchema = z.object({
   source_platform: z.string().max(100).trim().optional().nullable(),
   acquisition_type: acquisitionTypeEnum.optional().default('bought'),
   acquisition_cost: z.coerce.number().min(0).optional().default(0),
-  original_price: z.coerce.number().min(0).optional().nullable(),
+  original_price: z.coerce.number().min(0).default(0),
   condition: conditionEnum.optional().default('good'),
   prefecture: z.string().max(50).trim().optional().default('Undecided'),
   city: z.string().max(80).trim().optional().default('Undecided'),

@@ -27,18 +27,20 @@ export default function Dashboard() {
   }
   if (!data) return null;
 
-  const { counts, overdueCount, upcomingReturnsCount, recentItems } = data;
+  const { counts, upcomingReturnsCount, recentItems } = data;
 
   const statCards = [
+    { value: counts.overdue ?? 0, label: t('status.overdue'), href: '/items?status=overdue' },
     { value: counts.in_stock ?? 0, label: t('status.in_stock'), href: '/items?status=in_stock' },
     { value: counts.listed ?? 0, label: t('status.listed'), href: '/items?status=listed' },
+    { value: counts.reserved ?? 0, label: t('status.reserved'), href: '/items?status=reserved' },
     { value: counts.rented ?? 0, label: t('status.rented'), href: '/items?status=rented' },
     { value: counts.sold ?? 0, label: t('status.sold'), href: '/items?status=sold' },
+    { value: counts.disposed ?? 0, label: t('status.disposed'), href: '/items?status=disposed' },
   ];
 
   const alertCards = [
-    { value: overdueCount, label: t('dashboard.overdue') },
-    { value: upcomingReturnsCount, label: t('dashboard.upcomingReturns') },
+    { value: upcomingReturnsCount, label: t('dashboard.upcomingReturns'), href: '/rentals?status=active' },
   ];
 
   return (
@@ -65,12 +67,13 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Overdue & Upcoming: same pattern — number on top, label below */}
+      {/* Upcoming returns — number on top, label below, link to active rentals */}
       <div className="grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2">
-        {alertCards.map(({ value, label }) => (
-          <div
+        {alertCards.map(({ value, label, href }) => (
+          <Link
             key={label}
-            className="card-stat flex flex-col justify-center border-l-4 border-l-roomi-mint/80 py-5"
+            to={href ?? '#'}
+            className="card-stat flex flex-col justify-center border-l-4 border-l-roomi-mint/80 py-5 hover:border-l-roomi-mint touch-manipulation"
           >
             <span className="text-3xl sm:text-4xl font-extrabold text-roomi-brown tabular-nums">
               {value}
@@ -78,7 +81,7 @@ export default function Dashboard() {
             <span className="text-sm sm:text-base font-semibold text-roomi-brownLight mt-1">
               {label}
             </span>
-          </div>
+          </Link>
         ))}
       </div>
 

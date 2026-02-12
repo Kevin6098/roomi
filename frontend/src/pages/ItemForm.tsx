@@ -6,7 +6,7 @@ import { api, type CreateItemBody } from '../api/client';
 import { PREFECTURES, UNDECIDED, getCitiesForPrefecture } from '../data/locationData';
 import { CenteredToast } from '../components/CenteredToast';
 
-const STATUS_OPTIONS = ['in_stock', 'reserved', 'rented', 'sold', 'disposed'] as const;
+const STATUS_OPTIONS = ['overdue', 'in_stock', 'reserved', 'rented', 'sold', 'disposed'] as const;
 const CONDITION_OPTIONS = ['new', 'good', 'fair', 'poor'] as const;
 const ACQUISITION_OPTIONS = ['free', 'cheap', 'bought'] as const;
 
@@ -41,6 +41,7 @@ export default function ItemForm() {
     custom_sub_category: null,
     acquisition_type: 'bought',
     acquisition_cost: 0,
+    original_price: 0,
     condition: 'good',
     prefecture: UNDECIDED,
     city: UNDECIDED,
@@ -118,6 +119,7 @@ export default function ItemForm() {
       ...form,
       sub_category_id: subId,
       acquisition_cost: Number(form.acquisition_cost) || 0,
+      original_price: Number(form.original_price) ?? 0,
       custom_sub_category: isOther ? (form.custom_sub_category ?? null) : null,
     };
     if (isEdit) updateMutation.mutate(body);
@@ -241,6 +243,18 @@ export default function ItemForm() {
               className="input-field"
             />
           </div>
+        </div>
+        <div>
+          <label className="label">{t('input.originalPrice')} *</label>
+          <input
+            type="number"
+            min={0}
+            step={0.01}
+            value={form.original_price === undefined || form.original_price === null ? '' : form.original_price}
+            onChange={(e) => setForm((f) => ({ ...f, original_price: e.target.value === '' ? 0 : Number(e.target.value) }))}
+            className="input-field"
+            required
+          />
         </div>
         <div>
           <button type="button" onClick={() => setShowLocationFields((v) => !v)} className="text-sm font-semibold text-roomi-orange hover:underline">

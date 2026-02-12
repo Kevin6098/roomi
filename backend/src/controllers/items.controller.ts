@@ -32,8 +32,13 @@ export async function getRecentlyAcquired(_req: Request, res: Response, next: Ne
 
 export async function getAvailable(req: Request, res: Response, next: NextFunction) {
   try {
-    const { search, sub_category_id, location } = req.query as Record<string, string | undefined>;
-    const items = await itemService.getAvailable({ search, sub_category_id, location });
+    const { search, sub_category_id, location, for_use } = req.query as Record<string, string | undefined>;
+    const items = await itemService.getAvailable({
+      search,
+      sub_category_id,
+      location,
+      for_use: for_use === 'sell' || for_use === 'rent' ? for_use : undefined,
+    });
     res.json(items);
   } catch (e) {
     next(e);
@@ -54,6 +59,15 @@ export async function getById(req: Request, res: Response, next: NextFunction) {
   try {
     const item = await itemService.getById(req.params.id);
     res.json(item);
+  } catch (e) {
+    next(e);
+  }
+}
+
+export async function getReservation(req: Request, res: Response, next: NextFunction) {
+  try {
+    const reservation = await itemService.getActiveReservation(req.params.id);
+    res.json({ reservation: reservation ?? null });
   } catch (e) {
     next(e);
   }

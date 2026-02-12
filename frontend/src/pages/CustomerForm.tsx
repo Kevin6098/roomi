@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, type CreateCustomerBody } from '../api/client';
 import { CenteredToast } from '../components/CenteredToast';
+import { PREFECTURES, getCitiesForPrefecture, UNDECIDED } from '../data/locationData';
 
 const SOURCE_PLATFORM_OPTIONS = [
   'Facebook', 'WeChat', 'Xiaohongshu', 'LINE', 'Whatsapp', 'Telegram',
@@ -31,6 +32,9 @@ export default function CustomerForm() {
     app_id: null,
     phone: null,
     email: null,
+    prefecture: null,
+    city: null,
+    exact_location: null,
   });
   const [error, setError] = useState('');
 
@@ -45,6 +49,9 @@ export default function CustomerForm() {
         app_id: customer.appId ?? null,
         phone: customer.phone ?? null,
         email: customer.email ?? null,
+        prefecture: customer.prefecture ?? null,
+        city: customer.city ?? null,
+        exact_location: customer.exactLocation ?? null,
       });
     }
   }, [customer]);
@@ -81,6 +88,9 @@ export default function CustomerForm() {
       app_id: form.app_id?.trim() || null,
       phone: form.phone?.trim() || null,
       email: form.email?.trim() || null,
+      prefecture: form.prefecture?.trim() || null,
+      city: form.city?.trim() || null,
+      exact_location: form.exact_location?.trim() || null,
     };
     if (isEdit) updateMutation.mutate(body);
     else createMutation.mutate(body);
@@ -162,6 +172,52 @@ export default function CustomerForm() {
             className="input-field"
           />
         </div>
+
+        <div className="border-t border-roomi-peach/40 pt-4 mt-2">
+          <h3 className="text-sm font-semibold text-roomi-brown mb-3">{t('input.defaultLocation')}</h3>
+          <p className="text-xs text-roomi-brownLight mb-3">{t('input.defaultLocationHint')}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="label">{t('input.prefecture')}</label>
+              <select
+                value={form.prefecture ?? UNDECIDED}
+                onChange={(e) => {
+                  const p = e.target.value;
+                  const cities = getCitiesForPrefecture(p);
+                  setForm((f) => ({ ...f, prefecture: p === UNDECIDED ? null : p, city: cities[0] === UNDECIDED ? null : cities[0] }));
+                }}
+                className="input-field"
+              >
+                {PREFECTURES.map((pref) => (
+                  <option key={pref} value={pref}>{pref === UNDECIDED ? t('input.undecided') : pref}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="label">{t('input.city')}</label>
+              <select
+                value={form.city ?? UNDECIDED}
+                onChange={(e) => setForm((f) => ({ ...f, city: e.target.value === UNDECIDED ? null : e.target.value }))}
+                className="input-field"
+              >
+                {getCitiesForPrefecture(form.prefecture ?? UNDECIDED).map((c) => (
+                  <option key={c} value={c}>{c === UNDECIDED ? t('input.undecided') : c}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="mt-3">
+            <label className="label">{t('input.addExactLocationOptional')}</label>
+            <input
+              type="text"
+              value={form.exact_location ?? ''}
+              onChange={(e) => setForm((f) => ({ ...f, exact_location: e.target.value.trim() || null }))}
+              className="input-field"
+              placeholder={t('input.addExactLocationOptional')}
+            />
+          </div>
+        </div>
+
         <div className="flex gap-2">
           <button
             type="submit"

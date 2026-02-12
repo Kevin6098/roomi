@@ -13,6 +13,7 @@
     "records": "Records"
   },
   "status": {
+    "overdue": "Overdue",
     "in_stock": "In Stock",
     "listed": "Listed",
     "reserved": "Reserved",
@@ -61,12 +62,20 @@
   },
   "listings": {
     "listed": "Listed",
+    "removeSnsHint": "Item is sold — remove the post from SNS",
+    "wherePosted": "Where you posted",
     "confirmMarkClosed": "Mark all listings as closed?",
+    "markAllClosed": "Mark all as closed",
+    "markClosed": "Mark closed",
+    "noListingsYet": "No listings yet. Add where this item is posted.",
     "addPlatforms": "Add listing platforms",
     "addPlatformsHint": "Where is this item posted? Add at least one platform.",
     "urlOptional": "URL (optional)",
     "refIdOptional": "Ref ID (optional)",
     "addPlatform": "+ Add platform",
+    "editListing": "Edit",
+    "statusActive": "Active",
+    "statusClosed": "Closed",
     "reserveType": "Reserve for",
     "contact": "Contact",
     "depositExpected": "Deposit expected",
@@ -89,6 +98,7 @@
     "start": "Start",
     "expectedEnd": "Expected end",
     "overdue": "Overdue",
+    "upcomingReturns": "Upcoming returns",
     "saleDate": "Sale date",
     "price": "Price"
   },
@@ -101,7 +111,13 @@
     "acquisitionLabel": "Acquisition",
     "notesLabel": "Notes",
     "rentInfo": "Rent info",
-    "rentPeriod": "Period"
+    "rentPeriod": "Period",
+    "reservedBy": "Reserved by",
+    "reservedDate": "Reserved date",
+    "depositStatus": "Deposit",
+    "cancelReservation": "Cancel reservation",
+    "depositReceived": "Received",
+    "depositPending": "Pending"
   },
   "empty": {
     "noRentals": "No rentals.",
@@ -136,6 +152,7 @@
     "editUser": "Edit user",
     "confirmDelete": "Are you sure you want to delete this?",
     "confirmDispose": "Are you sure you want to dispose the item instead?",
+    "confirmCancelReservation": "Cancel reservation and return item to In Stock?",
     "role": "Role"
   },
   "role": {
@@ -169,6 +186,9 @@
     "undecided": "Undecided",
     "addExactLocation": "Add exact location (optional)",
     "addExactLocationRequired": "Exact location *",
+    "addExactLocationOptional": "Exact address (optional)",
+    "defaultLocation": "Default location",
+    "defaultLocationHint": "Used to pre-fill handover location when recording a sale or rental for this customer.",
     "customSubCategory": "Custom sub category",
     "customSubCategoryRequired": "Please enter a custom sub category (min 2 characters) when \"other\" is selected.",
     "decideLocation": "Decide the location",
@@ -213,6 +233,7 @@
     "salePrice": "Sale price",
     "salePriceRequired": "Please enter a sale price (0 or more).",
     "handoverLocationRequired": "Handover location is required: select prefecture, city, and enter exact location.",
+    "reservedItemPrefilled": "This item is reserved by {{name}}. Customer info prefilled.",
     "rentPeriod": "Rent period",
     "rentPeriodMonthly": "Per month",
     "rentPeriodAnnually": "Per year",
@@ -220,7 +241,10 @@
     "rentPriceAnnually": "Rent (per year)",
     "deposit": "Deposit (if damaged, renter pays this)",
     "depositPlaceholder": "Amount",
-    "buyPrice": "Buy price"
+    "buyPrice": "Buy price",
+    "originalPriceForDeposit": "Original price (for deposit if damaged)",
+    "setOriginalPricePlaceholder": "Enter amount",
+    "saveOriginalPrice": "Save"
   },
   "rentalAnalytics": {
     "filters": "Filter by end date",

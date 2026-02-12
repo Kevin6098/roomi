@@ -1,6 +1,6 @@
 // Records — Acquire (Buy), Sell, and Rent in one page
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -54,6 +54,7 @@ export default function Records() {
     custom_sub_category: null,
     acquisition_type: '',
     acquisition_cost: 0,
+    original_price: 0,
     condition: '',
     prefecture: UNDECIDED,
     city: UNDECIDED,
@@ -80,7 +81,6 @@ export default function Records() {
   const [sellSelectedContactId, setSellSelectedContactId] = useState('');
   const [sellNewContact, setSellNewContact] = useState(emptyNewContact());
   const [sellContactSearch, setSellContactSearch] = useState('');
-  const [showSellLocation, setShowSellLocation] = useState(false);
   const [sellConfirm, setSellConfirm] = useState(false);
 
   const [rentForm, setRentForm] = useState<StartRentalBody>({
@@ -99,7 +99,7 @@ export default function Records() {
   const [rentSelectedContactId, setRentSelectedContactId] = useState('');
   const [rentNewContact, setRentNewContact] = useState(emptyNewContact());
   const [rentContactSearch, setRentContactSearch] = useState('');
-  const [showRentLocation, setShowRentLocation] = useState(false);
+  const [rentOriginalPriceEdit, setRentOriginalPriceEdit] = useState<string>('');
 
   const { data: mainCategories = [] } = useQuery({
     queryKey: ['categories', 'main'],
@@ -117,11 +117,17 @@ export default function Records() {
     queryFn: () => api.items.getRecentlyAcquired(),
     enabled: tab === 'acquire',
   });
-  const { data: availableItems = [] } = useQuery({
-    queryKey: ['items', 'available'],
-    queryFn: () => api.items.getAvailable({}),
-    enabled: tab === 'sell' || tab === 'rent',
+  const { data: availableItemsForSell = [] } = useQuery({
+    queryKey: ['items', 'available', 'sell'],
+    queryFn: () => api.items.getAvailable({ for_use: 'sell' }),
+    enabled: tab === 'sell',
   });
+  const { data: availableItemsForRent = [] } = useQuery({
+    queryKey: ['items', 'available', 'rent'],
+    queryFn: () => api.items.getAvailable({ for_use: 'rent' }),
+    enabled: tab === 'rent',
+  });
+  const availableItems = tab === 'sell' ? availableItemsForSell : availableItemsForRent;
   const { data: contacts = [] } = useQuery({
     queryKey: ['contacts', contactSearch],
     queryFn: () => api.contacts.getMany({ search: contactSearch || undefined }),
@@ -136,6 +142,21 @@ export default function Records() {
     queryKey: ['contacts', 'rent', rentContactSearch],
     queryFn: () => api.contacts.getMany({ search: rentContactSearch || undefined }),
     enabled: tab === 'rent',
+  });
+  const { data: customers = [] } = useQuery({
+    queryKey: ['customers'],
+    queryFn: () => api.customers.getMany(),
+    enabled: tab === 'sell' || tab === 'rent',
+  });
+  const { data: sellReservationData } = useQuery({
+    queryKey: ['item-reservation', sellForm.item_id],
+    queryFn: () => api.items.getReservation(sellForm.item_id),
+    enabled: tab === 'sell' && !!sellForm.item_id,
+  });
+  const { data: rentReservationData } = useQuery({
+    queryKey: ['item-reservation', rentForm.item_id],
+    queryFn: () => api.items.getReservation(rentForm.item_id),
+    enabled: tab === 'rent' && !!rentForm.item_id,
   });
   const { data: rentals = [] } = useQuery({
     queryKey: ['rentals', { status: 'active' }],
@@ -181,7 +202,6 @@ export default function Records() {
       setSellSelectedContactId('');
       setSellNewContact(emptyNewContact());
       setSellContactSearch('');
-      setShowSellLocation(false);
       setSellConfirm(false);
       queryClient.invalidateQueries({ queryKey: ['items'] });
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
@@ -198,11 +218,85 @@ export default function Records() {
       setRentSelectedContactId('');
       setRentNewContact(emptyNewContact());
       setRentContactSearch('');
-      setShowRentLocation(false);
       queryClient.invalidateQueries({ queryKey: ['items'] });
       queryClient.invalidateQueries({ queryKey: ['rentals'] });
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
       setTimeout(() => setToast(''), 3000);
+    },
+    onError: (e) => setError((e as Error).message),
+  });
+
+  // Auto-fill sell contact from reservation when selected item is reserved
+  useEffect(() => {
+    if (tab !== 'sell' || !sellForm.item_id || !sellReservationData?.reservation?.contact) return;
+    const res = sellReservationData.reservation;
+    setSellContactMode('existing');
+    setSellSelectedContactId(res.contact!.id);
+  }, [tab, sellForm.item_id, sellReservationData?.reservation]);
+
+  // Include reservation contact in sell dropdown so it's always selectable and shows the right name
+  const sellContactOptions = useMemo(() => {
+    const res = sellReservationData?.reservation?.contact;
+    if (!res) return contactsForSell;
+    const inList = contactsForSell.some((c) => c.id === res.id);
+    if (inList) return contactsForSell;
+    return [res, ...contactsForSell];
+  }, [contactsForSell, sellReservationData?.reservation?.contact]);
+
+  // Pre-fill handover location from customer when selecting an existing contact (sell)
+  useEffect(() => {
+    if (tab !== 'sell' || !sellSelectedContactId || customers.length === 0) return;
+    const customer = customers.find((c) => c.contactId === sellSelectedContactId);
+    if (!customer || (!customer.prefecture && !customer.city && !customer.exactLocation)) return;
+    setSellForm((prev) => ({
+      ...prev,
+      handover_prefecture: customer.prefecture ?? prev.handover_prefecture,
+      handover_city: customer.city ?? prev.handover_city,
+      handover_exact_location: customer.exactLocation ?? prev.handover_exact_location,
+    }));
+  }, [tab, sellSelectedContactId, customers]);
+
+  // Auto-fill rent contact from reservation when selected item is reserved
+  useEffect(() => {
+    if (tab !== 'rent' || !rentForm.item_id || !rentReservationData?.reservation?.contact) return;
+    const res = rentReservationData.reservation;
+    setRentContactMode('existing');
+    setRentSelectedContactId(res.contact!.id);
+  }, [tab, rentForm.item_id, rentReservationData?.reservation]);
+
+  // Include reservation contact in rent dropdown so it's always selectable and shows the right name
+  const rentContactOptions = useMemo(() => {
+    const res = rentReservationData?.reservation?.contact;
+    if (!res) return contactsForRent;
+    const inList = contactsForRent.some((c) => c.id === res.id);
+    if (inList) return contactsForRent;
+    return [res, ...contactsForRent];
+  }, [contactsForRent, rentReservationData?.reservation?.contact]);
+
+  // Pre-fill handover location from customer when selecting an existing contact (rent)
+  useEffect(() => {
+    if (tab !== 'rent' || !rentSelectedContactId || customers.length === 0) return;
+    const customer = customers.find((c) => c.contactId === rentSelectedContactId);
+    if (!customer || (!customer.prefecture && !customer.city && !customer.exactLocation)) return;
+    setRentForm((prev) => ({
+      ...prev,
+      handover_prefecture: customer.prefecture ?? prev.handover_prefecture,
+      handover_city: customer.city ?? prev.handover_city,
+      handover_exact_location: customer.exactLocation ?? prev.handover_exact_location,
+    }));
+  }, [tab, rentSelectedContactId, customers]);
+
+  useEffect(() => {
+    setRentOriginalPriceEdit('');
+  }, [rentForm.item_id]);
+
+  const updateRentItemOriginalPriceMutation = useMutation({
+    mutationFn: ({ itemId, original_price }: { itemId: string; original_price: number }) =>
+      api.items.update(itemId, { original_price }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['items', 'available', 'rent'] });
+      queryClient.invalidateQueries({ queryKey: ['items'] });
+      setRentOriginalPriceEdit('');
     },
     onError: (e) => setError((e as Error).message),
   });
@@ -269,6 +363,7 @@ export default function Records() {
       acquisition_type: at,
       condition: cond,
       acquisition_cost: at === 'free' ? 0 : (Number(acquireForm.acquisition_cost) || 0),
+      original_price: Number(acquireForm.original_price) ?? 0,
       custom_sub_category: isOtherSub ? (acquireForm.custom_sub_category?.trim() || null) : null,
     };
     if (contactMode === 'existing') {
@@ -317,7 +412,6 @@ export default function Records() {
     const exact = sellForm.handover_exact_location?.trim();
     if (!pref || pref === UNDECIDED || !city || city === UNDECIDED || !exact) {
       setError(t('output.handoverLocationRequired'));
-      setShowSellLocation(true);
       return;
     }
     if (!sellConfirm) {
@@ -373,7 +467,6 @@ export default function Records() {
     const rentExact = rentForm.handover_exact_location?.trim();
     if (!rentPref || rentPref === UNDECIDED || !rentCity || rentCity === UNDECIDED || !rentExact) {
       setError(t('output.handoverLocationRequired'));
-      setShowRentLocation(true);
       return;
     }
     const payload: StartRentalBody = {
@@ -695,14 +788,15 @@ export default function Records() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="label">{t('input.originalPrice')}</label>
+                    <label className="label">{t('input.originalPrice')} *</label>
                     <input
                       type="number"
                       min={0}
                       step={0.01}
                       value={acquireForm.original_price ?? ''}
-                      onChange={(e) => setAcquireForm((f) => ({ ...f, original_price: e.target.value ? Number(e.target.value) : null }))}
+                      onChange={(e) => setAcquireForm((f) => ({ ...f, original_price: e.target.value ? Number(e.target.value) : 0 }))}
                       className="input-field"
+                      required
                     />
                   </div>
                   <div>
@@ -812,15 +906,12 @@ export default function Records() {
                   <option value="">—</option>
                   {availableItems.map((i) => <option key={i.id} value={i.id}>{i.title} (#{i.id.slice(-6)}) — {i.status}</option>)}
                 </select>
-                {sellForm.item_id && (() => {
-                  const item = availableItems.find((i) => i.id === sellForm.item_id);
-                  return item != null ? (
-                    <p className="mt-1.5 text-sm text-roomi-brownLight">
-                      {t('output.buyPrice')}: {Number(item.acquisitionCost).toLocaleString()}
-                    </p>
-                  ) : null;
-                })()}
               </div>
+              {sellReservationData?.reservation?.contact && (
+                <div className="rounded-roomi border border-roomi-orange/40 bg-roomi-peach/30 px-3 py-2 text-sm text-roomi-brown">
+                  {t('output.reservedItemPrefilled', { name: sellReservationData.reservation.contact.name })}
+                </div>
+              )}
               <div className="border border-roomi-peach/60 rounded-lg p-4 space-y-4 bg-roomi-cream/30">
                 <h3 className="text-sm font-semibold text-roomi-brown">{t('input.customerDetails')} (buyer)</h3>
                 <div className="flex flex-wrap gap-3">
@@ -829,11 +920,23 @@ export default function Records() {
                 </div>
                 {sellContactMode === 'existing' ? (
                   <>
-                    <input type="text" value={sellContactSearch} onChange={(e) => setSellContactSearch(e.target.value)} placeholder={t('common.search')} className="input-field mb-2" />
-                    <select value={sellSelectedContactId} onChange={(e) => setSellSelectedContactId(e.target.value)} className="input-field">
-                      <option value="">—</option>
-                      {contactsForSell.map((c) => <option key={c.id} value={c.id}>{c.name} ({c.sourcePlatform})</option>)}
-                    </select>
+                    {sellReservationData?.reservation?.contact && sellSelectedContactId === sellReservationData.reservation.contact.id ? (
+                      <div className="rounded-roomi border border-roomi-peach/50 bg-roomi-cream/50 px-3 py-2 text-sm text-roomi-brown">
+                        <span className="text-roomi-brownLight font-medium">{t('table.buyer')}: </span>
+                        {sellReservationData.reservation.contact.name}
+                        {sellReservationData.reservation.contact.sourcePlatform && (
+                          <span className="text-roomi-brownLight"> ({sellReservationData.reservation.contact.sourcePlatform})</span>
+                        )}
+                      </div>
+                    ) : (
+                      <>
+                        <input type="text" value={sellContactSearch} onChange={(e) => setSellContactSearch(e.target.value)} placeholder={t('common.search')} className="input-field mb-2" />
+                        <select value={sellSelectedContactId} onChange={(e) => setSellSelectedContactId(e.target.value)} className="input-field">
+                          <option value="">—</option>
+                          {sellContactOptions.map((c) => <option key={c.id} value={c.id}>{c.name} ({c.sourcePlatform})</option>)}
+                        </select>
+                      </>
+                    )}
                   </>
                 ) : (
                   <>
@@ -857,19 +960,24 @@ export default function Records() {
               <div>
                 <label className="label">{t('output.salePrice')} *</label>
                 <input type="number" min={0} step={0.01} value={sellForm.sale_price === 0 ? '' : sellForm.sale_price} onChange={(e) => setSellForm((f) => ({ ...f, sale_price: Number(e.target.value) || 0 }))} className="input-field" required />
+                {sellForm.item_id && (() => {
+                  const item = availableItems.find((i) => i.id === sellForm.item_id);
+                  return item != null ? (
+                    <p className="mt-1.5 text-sm text-roomi-brownLight">
+                      {t('output.buyPrice')}: {Number(item.acquisitionCost).toLocaleString()}
+                    </p>
+                  ) : null;
+                })()}
               </div>
               <div>
                 <label className="label">{t('input.decideLocation')} *</label>
-                <button type="button" onClick={() => setShowSellLocation((v) => !v)} className="text-sm font-medium text-roomi-orange hover:underline">{showSellLocation ? '− ' : '+ '}{t('input.decideLocation')}</button>
-                {showSellLocation && (
-                  <div className="mt-3 space-y-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div><label className="label">{t('input.prefecture')}</label><select value={sellForm.handover_prefecture ?? UNDECIDED} onChange={(e) => { const p = e.target.value; const cities = getCitiesForPrefecture(p); setSellForm((f) => ({ ...f, handover_prefecture: p, handover_city: cities[0] ?? UNDECIDED })); }} className="input-field">{PREFECTURES.map((pref) => <option key={pref} value={pref}>{pref === UNDECIDED ? t('input.undecided') : pref}</option>)}</select></div>
-                      <div><label className="label">{t('input.city')}</label><select value={sellForm.handover_city ?? UNDECIDED} onChange={(e) => setSellForm((f) => ({ ...f, handover_city: e.target.value }))} className="input-field">{getCitiesForPrefecture(sellForm.handover_prefecture ?? UNDECIDED).map((c) => <option key={c} value={c}>{c === UNDECIDED ? t('input.undecided') : c}</option>)}</select></div>
-                    </div>
-                    <div><label className="label">{t('input.addExactLocationRequired')}</label><input type="text" value={sellForm.handover_exact_location ?? ''} onChange={(e) => setSellForm((f) => ({ ...f, handover_exact_location: e.target.value.trim() || null }))} className="input-field mt-1" placeholder={t('input.addExactLocationRequired')} required /></div>
+                <div className="mt-2 space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div><label className="label">{t('input.prefecture')}</label><select value={sellForm.handover_prefecture ?? UNDECIDED} onChange={(e) => { const p = e.target.value; const cities = getCitiesForPrefecture(p); setSellForm((f) => ({ ...f, handover_prefecture: p, handover_city: cities[0] ?? UNDECIDED })); }} className="input-field">{PREFECTURES.map((pref) => <option key={pref} value={pref}>{pref === UNDECIDED ? t('input.undecided') : pref}</option>)}</select></div>
+                    <div><label className="label">{t('input.city')}</label><select value={sellForm.handover_city ?? UNDECIDED} onChange={(e) => setSellForm((f) => ({ ...f, handover_city: e.target.value }))} className="input-field">{getCitiesForPrefecture(sellForm.handover_prefecture ?? UNDECIDED).map((c) => <option key={c} value={c}>{c === UNDECIDED ? t('input.undecided') : c}</option>)}</select></div>
                   </div>
-                )}
+                  <div><label className="label">{t('input.addExactLocationRequired')}</label><input type="text" value={sellForm.handover_exact_location ?? ''} onChange={(e) => setSellForm((f) => ({ ...f, handover_exact_location: e.target.value.trim() || null }))} className="input-field mt-1" placeholder={t('input.addExactLocationRequired')} required /></div>
+                </div>
               </div>
               <div><label className="label">{t('table.saleDate')}</label><input type="date" value={sellForm.sale_date} onChange={(e) => setSellForm((f) => ({ ...f, sale_date: e.target.value }))} className="input-field" /></div>
               {sellConfirm && <p className="text-amber-700 text-sm bg-amber-50 rounded px-3 py-2">{t('output.confirmSell')}</p>}
@@ -890,17 +998,14 @@ export default function Records() {
                   <label className="label">{t('table.item')} *</label>
                   <select value={rentForm.item_id} onChange={(e) => setRentForm((f) => ({ ...f, item_id: e.target.value }))} className="input-field" required>
                     <option value="">—</option>
-                    {availableItems.map((i) => <option key={i.id} value={i.id}>{i.title} (#{i.id.slice(-6)})</option>)}
+                    {availableItems.map((i) => <option key={i.id} value={i.id}>{i.title} (#{i.id.slice(-6)}) — {i.status}</option>)}
                   </select>
-                  {rentForm.item_id && (() => {
-                    const item = availableItems.find((i) => i.id === rentForm.item_id);
-                    return item != null ? (
-                      <p className="mt-1.5 text-sm text-roomi-brownLight">
-                        {t('output.buyPrice')}: {Number(item.acquisitionCost).toLocaleString()}
-                      </p>
-                    ) : null;
-                  })()}
                 </div>
+                {rentReservationData?.reservation?.contact && (
+                  <div className="rounded-roomi border border-roomi-orange/40 bg-roomi-peach/30 px-3 py-2 text-sm text-roomi-brown">
+                    {t('output.reservedItemPrefilled', { name: rentReservationData.reservation.contact.name })}
+                  </div>
+                )}
                 <div className="border border-roomi-peach/60 rounded-lg p-4 space-y-4 bg-roomi-cream/30">
                   <h3 className="text-sm font-semibold text-roomi-brown">{t('input.customerDetails')} (renter)</h3>
                   <div className="flex flex-wrap gap-3">
@@ -908,7 +1013,22 @@ export default function Records() {
                     <button type="button" onClick={() => setRentContactMode('new')} className={`rounded-lg py-2 px-3 text-sm font-medium border-2 ${rentContactMode === 'new' ? 'border-roomi-orange bg-roomi-orange text-white' : 'border-gray-300 text-gray-700 hover:border-roomi-orange/60'}`}>{t('input.createNewContact')}</button>
                   </div>
                   {rentContactMode === 'existing' ? (
-                    <><input type="text" value={rentContactSearch} onChange={(e) => setRentContactSearch(e.target.value)} placeholder={t('common.search')} className="input-field mb-2" /><select value={rentSelectedContactId} onChange={(e) => setRentSelectedContactId(e.target.value)} className="input-field"><option value="">—</option>{contactsForRent.map((c) => <option key={c.id} value={c.id}>{c.name} ({c.sourcePlatform})</option>)}</select></>
+                    <>
+                      {rentReservationData?.reservation?.contact && rentSelectedContactId === rentReservationData.reservation.contact.id ? (
+                        <div className="rounded-roomi border border-roomi-peach/50 bg-roomi-cream/50 px-3 py-2 text-sm text-roomi-brown">
+                          <span className="text-roomi-brownLight font-medium">{t('table.renter')}: </span>
+                          {rentReservationData.reservation.contact.name}
+                          {rentReservationData.reservation.contact.sourcePlatform && (
+                            <span className="text-roomi-brownLight"> ({rentReservationData.reservation.contact.sourcePlatform})</span>
+                          )}
+                        </div>
+                      ) : (
+                        <>
+                          <input type="text" value={rentContactSearch} onChange={(e) => setRentContactSearch(e.target.value)} placeholder={t('common.search')} className="input-field mb-2" />
+                          <select value={rentSelectedContactId} onChange={(e) => setRentSelectedContactId(e.target.value)} className="input-field"><option value="">—</option>{rentContactOptions.map((c) => <option key={c.id} value={c.id}>{c.name} ({c.sourcePlatform})</option>)}</select>
+                        </>
+                      )}
+                    </>
                   ) : (
                     <>
                       <div><label className="label">{t('input.sourcePlatform')} *</label><select value={rentNewContact.source_platform === SOURCE_PLATFORM_OTHER_SENTINEL ? SOURCE_PLATFORM_OTHER : rentNewContact.source_platform} onChange={(e) => setRentNewContact((c) => ({ ...c, source_platform: e.target.value === SOURCE_PLATFORM_OTHER ? SOURCE_PLATFORM_OTHER_SENTINEL : e.target.value }))} className="input-field"><option value="">—</option>{SOURCE_PLATFORM_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt === SOURCE_PLATFORM_OTHER ? t('input.sourcePlatformOther') : opt}</option>)}</select>{rentNewContact.source_platform === SOURCE_PLATFORM_OTHER_SENTINEL && <input type="text" value={rentNewContact.source_platform_other} onChange={(e) => setRentNewContact((c) => ({ ...c, source_platform_other: e.target.value }))} className="input-field mt-2" placeholder={t('input.sourcePlatformOther')} />}</div>
@@ -923,25 +1043,68 @@ export default function Records() {
                   <div>
                     <label className="label">{rentForm.rent_period === 'annually' ? t('output.rentPriceAnnually') : t('output.rentPriceMonthly')}</label>
                     <input type="number" min={0} step={0.01} value={rentForm.rent_period === 'annually' ? (rentForm.rent_price_annually ?? '') : (rentForm.rent_price_monthly ?? '')} onChange={(e) => setRentForm((f) => ({ ...f, ...(f.rent_period === 'annually' ? { rent_price_annually: e.target.value ? Number(e.target.value) : null } : { rent_price_monthly: e.target.value ? Number(e.target.value) : null }) }))} className="input-field" />
+                    {rentForm.item_id && (() => {
+                      const item = availableItems.find((i) => i.id === rentForm.item_id);
+                      return item != null ? (
+                        <p className="mt-1.5 text-sm text-roomi-brownLight">
+                          {t('output.buyPrice')}: {Number(item.acquisitionCost).toLocaleString()}
+                        </p>
+                      ) : null;
+                    })()}
                   </div>
                 </div>
                 <div><label className="label">{t('output.deposit')}</label><input type="number" min={0} step={0.01} value={rentForm.deposit ?? ''} onChange={(e) => setRentForm((f) => ({ ...f, deposit: e.target.value ? Number(e.target.value) : null }))} className="input-field" placeholder={t('output.depositPlaceholder')} /></div>
+                {rentForm.item_id && (() => {
+                  const item = availableItems.find((i) => i.id === rentForm.item_id);
+                  if (!item) return null;
+                  const originalPrice = Number(item.originalPrice ?? item.acquisitionCost) ?? 0;
+                  const hasOriginalPrice = originalPrice > 0;
+                  return (
+                    <div className="rounded-roomi border border-roomi-peach/50 bg-roomi-cream/40 p-3 space-y-2">
+                      <p className="text-sm font-medium text-roomi-brown">{t('output.originalPriceForDeposit')}</p>
+                      {hasOriginalPrice ? (
+                        <p className="text-roomi-brownLight text-sm">{t('input.originalPrice')}: {originalPrice.toLocaleString()}</p>
+                      ) : (
+                        <div className="flex flex-wrap items-center gap-2">
+                          <input
+                            type="number"
+                            min={0}
+                            step={0.01}
+                            value={rentOriginalPriceEdit}
+                            onChange={(e) => setRentOriginalPriceEdit(e.target.value)}
+                            className="input-field flex-1 min-w-[120px]"
+                            placeholder={t('output.setOriginalPricePlaceholder')}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const v = Number(rentOriginalPriceEdit);
+                              if (!Number.isFinite(v) || v < 0) return;
+                              updateRentItemOriginalPriceMutation.mutate({ itemId: item.id, original_price: v });
+                            }}
+                            disabled={updateRentItemOriginalPriceMutation.isPending || !rentOriginalPriceEdit.trim()}
+                            className="btn-secondary text-sm py-2 px-3"
+                          >
+                            {t('output.saveOriginalPrice')}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div><label className="label">{t('table.start')} *</label><input type="date" value={rentForm.start_date} onChange={(e) => setRentForm((f) => ({ ...f, start_date: e.target.value }))} className="input-field" required /></div>
                   <div><label className="label">{t('table.expectedEnd')} *</label><input type="date" value={rentForm.expected_end_date} onChange={(e) => setRentForm((f) => ({ ...f, expected_end_date: e.target.value }))} className="input-field" required /></div>
                 </div>
                 <div>
                   <label className="label">{t('input.decideLocation')} *</label>
-                <button type="button" onClick={() => setShowRentLocation((v) => !v)} className="text-sm font-medium text-roomi-orange hover:underline">{showRentLocation ? '− ' : '+ '}{t('input.decideLocation')}</button>
-                {showRentLocation && (
-                  <div className="mt-3 space-y-3">
+                  <div className="mt-2 space-y-3">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div><label className="label">{t('input.prefecture')}</label><select value={rentForm.handover_prefecture ?? UNDECIDED} onChange={(e) => { const p = e.target.value; const cities = getCitiesForPrefecture(p); setRentForm((f) => ({ ...f, handover_prefecture: p, handover_city: cities[0] ?? UNDECIDED })); }} className="input-field">{PREFECTURES.map((pref) => <option key={pref} value={pref}>{pref === UNDECIDED ? t('input.undecided') : pref}</option>)}</select></div>
                       <div><label className="label">{t('input.city')}</label><select value={rentForm.handover_city ?? UNDECIDED} onChange={(e) => setRentForm((f) => ({ ...f, handover_city: e.target.value }))} className="input-field">{getCitiesForPrefecture(rentForm.handover_prefecture ?? UNDECIDED).map((c) => <option key={c} value={c}>{c === UNDECIDED ? t('input.undecided') : c}</option>)}</select></div>
                     </div>
                     <div><label className="label">{t('input.addExactLocationRequired')}</label><input type="text" value={rentForm.handover_exact_location ?? ''} onChange={(e) => setRentForm((f) => ({ ...f, handover_exact_location: e.target.value.trim() || null }))} className="input-field mt-1" placeholder={t('input.addExactLocationRequired')} required /></div>
                   </div>
-                )}
                 </div>
                 <button type="submit" disabled={rentMutation.isPending} className="btn-primary">{t('output.startRentalBtn')}</button>
               </form>

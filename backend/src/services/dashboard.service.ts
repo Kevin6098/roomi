@@ -60,10 +60,10 @@ export const dashboardService = {
     }
     countMap['listed'] = listedCount;
 
-    // Upcoming returns = active rentals ending within 1 month (expectedEndDate between today and today+1 month)
+    // Upcoming returns = active rentals due in the past (overdue) or ending within 1 month
     const upcomingRentals = activeRentals.filter((r) => {
       const exp = new Date(r.expectedEndDate);
-      return exp >= now && exp <= cutoffUpcoming;
+      return exp <= cutoffUpcoming;
     });
 
     return {

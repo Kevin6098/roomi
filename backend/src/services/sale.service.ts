@@ -38,7 +38,6 @@ export const saleService = {
     let customerId: string;
     const activeReservation = item.reservations[0];
     if (item.status === 'reserved' && activeReservation) {
-      if (body.payment_received !== true) throw validationError('Payment/deposit must be confirmed when completing a reserved item sale');
       if (activeReservation.contactId) {
         const customer = await customerService.getOrCreateCustomerFromContact(activeReservation.contactId, undefined);
         customerId = customer.id;
@@ -54,15 +53,6 @@ export const saleService = {
         ? (await prisma.customer.findUnique({ where: { id: body.customer_id } }))?.id!
         : (await customerService.getOrCreateCustomerFromContact(body.contact_id ?? undefined, body.contact)).id;
       if (!customerId) throw notFound('Customer not found');
-    }
-
-    if (item.itemListings.length > 0) {
-      const listingIds = body.listing_ids ?? [];
-      const idsSet = new Set(listingIds);
-      const allMatch = item.itemListings.every((l) => idsSet.has(l.id));
-      if (!allMatch || listingIds.length !== item.itemListings.length) {
-        throw validationError('Please confirm all listing updates (SNS posts) before finalizing sale');
-      }
     }
 
     return prisma.$transaction(async (tx) => {

@@ -11,6 +11,7 @@ export default function ItemDetail() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [disposeConfirm, setDisposeConfirm] = useState(false);
+  const [cancelReservationConfirm, setCancelReservationConfirm] = useState(false);
 
   const { data: item, isLoading, error } = useQuery({
     queryKey: ['item', id],
@@ -26,6 +27,17 @@ export default function ItemDetail() {
       setDisposeConfirm(false);
     },
   });
+
+  const cancelReservationMutation = useMutation({
+    mutationFn: (reservationId: string) => api.reservations.cancel(reservationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['items'] });
+      queryClient.invalidateQueries({ queryKey: ['item', id] });
+      setCancelReservationConfirm(false);
+    },
+  });
+
+  const activeReservation = item?.status === 'reserved' ? item.reservations?.[0] : null;
 
   if (!id) return <p className="text-roomi-brownLight">{t('itemDetail.missingId')}</p>;
   if (isLoading) return <p className="text-roomi-brownLight">{t('dashboard.loading')}</p>;
@@ -72,12 +84,70 @@ export default function ItemDetail() {
         <p><span className="text-roomi-brownLight">{t('itemDetail.statusLabel')}:</span> <span className={getStatusBadgeClass(item.status)}>{item.status}</span></p>
         <p><span className="text-roomi-brownLight">{t('itemDetail.categoryLabel')}:</span> {item.subCategory?.mainCategory?.name} → {item.displaySubCategory ?? item.subCategory?.name}</p>
         <p><span className="text-roomi-brownLight">{t('itemDetail.conditionLabel')}:</span> {item.condition}</p>
-        <p><span className="text-roomi-brownLight">{t('itemDetail.locationLabel')}:</span> {(getDisplayLocation(item.prefecture, item.city) === UNDECIDED ? t('input.undecided') : getDisplayLocation(item.prefecture, item.city))}{item.locationVisibility === 'shown' && item.exactLocation ? ` — ${item.exactLocation}` : ''}</p>
+        <p><span className="text-roomi-brownLight">{t('itemDetail.locationLabel')}:</span> {(() => {
+          const area = getDisplayLocation(item.prefecture, item.city) === UNDECIDED ? t('input.undecided') : getDisplayLocation(item.prefecture, item.city);
+          const exact = item.exactLocation?.trim();
+          if (exact) return `${area} — ${exact}`;
+          return area;
+        })()}</p>
         <p><span className="text-roomi-brownLight">{t('table.seller')}:</span> {item.acquisitionContact ? `${item.acquisitionContact.name} (${item.acquisitionContact.sourcePlatform})` : '—'}</p>
         {item.sale?.customer && (
           <p><span className="text-roomi-brownLight">{t('table.buyer')}:</span> {item.sale.customer.name}{item.sale.customer.sourcePlatform ? ` (${item.sale.customer.sourcePlatform})` : ''}</p>
         )}
         <p><span className="text-roomi-brownLight">{t('itemDetail.acquisitionLabel')}:</span> {item.acquisitionType} / {Number(item.acquisitionCost)}</p>
+        <p><span className="text-roomi-brownLight">{t('input.originalPrice')}:</span> {item.originalPrice != null ? Number(item.originalPrice).toLocaleString() : '—'}</p>
+        {item.status === 'reserved' && activeReservation && (
+          <div className="rounded-roomi border border-roomi-peach/60 bg-roomi-cream/40 p-4 space-y-2">
+            <p className="text-sm font-semibold text-roomi-brownLight uppercase tracking-wider">{t('itemDetail.reservedBy')}</p>
+            <p className="text-roomi-brown font-medium">
+              {activeReservation.contact?.name ?? '—'}
+              {activeReservation.contact?.sourcePlatform ? ` (${activeReservation.contact.sourcePlatform})` : ''}
+            </p>
+            {activeReservation.contact?.platformUserId && (
+              <p className="text-sm text-roomi-brownLight">{t('input.platformId')}: {activeReservation.contact.platformUserId}</p>
+            )}
+            {(activeReservation.contact?.phone || activeReservation.contact?.email) && (
+              <p className="text-sm text-roomi-brownLight">
+                {activeReservation.contact.phone && <span>{t('table.phone')}: {activeReservation.contact.phone}</span>}
+                {activeReservation.contact.phone && activeReservation.contact.email && ' · '}
+                {activeReservation.contact.email && <span>{t('table.email')}: {activeReservation.contact.email}</span>}
+              </p>
+            )}
+            <p className="text-sm text-roomi-brownLight">
+              {t('itemDetail.reservedDate')}: {activeReservation.reservedAt ? new Date(activeReservation.reservedAt).toLocaleDateString() : '—'}
+            </p>
+            {(activeReservation.depositExpected != null || activeReservation.depositReceived != null) && (
+              <p className="text-sm text-roomi-brownLight">
+                {t('itemDetail.depositStatus')}: {activeReservation.depositReceived ? t('itemDetail.depositReceived') : t('itemDetail.depositPending')}
+                {activeReservation.depositExpected != null && ` (${Number(activeReservation.depositExpected)})`}
+              </p>
+            )}
+            {!cancelReservationConfirm ? (
+              <button
+                type="button"
+                onClick={() => setCancelReservationConfirm(true)}
+                className="mt-2 rounded-roomi border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-semibold text-red-700 hover:bg-red-100"
+              >
+                {t('itemDetail.cancelReservation')}
+              </button>
+            ) : (
+              <span className="flex flex-wrap items-center gap-2 mt-2 text-sm">
+                <span className="text-roomi-brownLight">{t('form.confirmCancelReservation')}</span>
+                <button
+                  type="button"
+                  onClick={() => cancelReservationMutation.mutate(activeReservation.id)}
+                  disabled={cancelReservationMutation.isPending}
+                  className="rounded-roomi px-2 py-1 text-sm font-semibold bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+                >
+                  {t('common.yes')}
+                </button>
+                <button type="button" onClick={() => setCancelReservationConfirm(false)} className="btn-ghost py-1 px-2 text-sm">
+                  {t('common.cancel')}
+                </button>
+              </span>
+            )}
+          </div>
+        )}
         {item.rentals && item.rentals.length > 0 && (
           <div className="pt-1">
             <p className="text-roomi-brownLight font-medium">{t('itemDetail.rentInfo')}</p>

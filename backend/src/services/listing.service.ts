@@ -17,7 +17,7 @@ export const listingService = {
       include: { itemListings: { where: { status: 'active' } } },
     });
     if (!item) throw notFound('Item not found');
-    if (item.status !== 'in_stock' && item.status !== 'reserved') throw conflict('Item cannot have listings in current status');
+    if (item.status !== 'in_stock' && item.status !== 'reserved' && item.status !== 'overdue') throw conflict('Item cannot have listings in current status');
 
     const listing = await prisma.itemListing.create({
       data: {
@@ -56,7 +56,7 @@ export const listingService = {
       include: { itemListings: true },
     });
     if (!item) throw notFound('Item not found');
-    if (item.status !== 'in_stock' && item.status !== 'reserved') throw conflict('Cannot change listed flag in current status');
+    if (item.status !== 'in_stock' && item.status !== 'reserved' && item.status !== 'overdue') throw conflict('Cannot change listed flag in current status');
 
     if (isListed) {
       await prisma.item.update({

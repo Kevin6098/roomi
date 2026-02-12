@@ -20,9 +20,6 @@ export default function SaleForm() {
     sale_date: today,
   });
   const [error, setError] = useState('');
-  const [showListingsChecklist, setShowListingsChecklist] = useState(false);
-  const [listingsConfirmed, setListingsConfirmed] = useState<Record<string, boolean>>({});
-  const [paymentReceived, setPaymentReceived] = useState(false);
 
   const { data: sale, isLoading: loadingSale } = useQuery({
     queryKey: ['sale', id],
@@ -65,6 +62,31 @@ export default function SaleForm() {
     }
   }, [sale]);
 
+  // When selecting a reserved item, buyer is from the reservation (backend will use it automatically)
+  const reservedContact = selectedItem?.status === 'reserved' && selectedItem.reservations?.[0]?.contact
+    ? selectedItem.reservations[0].contact
+    : null;
+
+  // Auto-link customer to the reservation's contact when user selects a reserved item
+  useEffect(() => {
+    if (isEdit || !form.item_id || !selectedItem || !isReserved || !reservedContact) return;
+    const matchingCustomer = customers.find((c) => c.contactId === reservedContact.id);
+    setForm((f) => ({ ...f, customer_id: matchingCustomer?.id ?? '' }));
+  }, [isEdit, form.item_id, selectedItem?.id, isReserved, reservedContact?.id, customers]);
+
+  // Pre-fill handover location from customer when selecting a customer (non-reserved)
+  useEffect(() => {
+    if (isEdit || isReserved || !form.customer_id || customers.length === 0) return;
+    const customer = customers.find((c) => c.id === form.customer_id);
+    if (!customer || (!customer.prefecture && !customer.city && !customer.exactLocation)) return;
+    setForm((f) => ({
+      ...f,
+      handover_prefecture: customer.prefecture ?? f.handover_prefecture,
+      handover_city: customer.city ?? f.handover_city,
+      handover_exact_location: customer.exactLocation ?? f.handover_exact_location,
+    }));
+  }, [isEdit, isReserved, form.customer_id, customers]);
+
   const createMutation = useMutation({
     mutationFn: (body: CreateSaleBody) => api.sales.create(body),
     onSuccess: () => {
@@ -86,7 +108,6 @@ export default function SaleForm() {
 
   const activeListings = selectedItem?.itemListings?.filter((l) => l.status === 'active' || l.status === 'needs_update') ?? [];
   const isReserved = selectedItem?.status === 'reserved';
-  const allListingsChecked = activeListings.length === 0 || activeListings.every((l) => listingsConfirmed[l.id]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -110,24 +131,12 @@ export default function SaleForm() {
       return;
     }
     if (!selectedItem) return;
-    if (isReserved && !paymentReceived) {
-      setError('Please confirm payment/deposit received for this reserved item');
-      return;
-    }
-    if (activeListings.length > 0) {
-      setShowListingsChecklist(true);
-      setListingsConfirmed({});
-      return;
-    }
     doCreateSale();
   }
 
   function doCreateSale() {
-    createMutation.mutate({
+    const body: CreateSaleBody = {
       item_id: form.item_id,
-      customer_id: form.customer_id ?? undefined,
-      contact_id: form.contact_id ?? undefined,
-      contact: form.contact,
       sale_price: form.sale_price != null ? form.sale_price : 0,
       sale_date: form.sale_date!,
       platform_sold: form.platform_sold,
@@ -136,10 +145,16 @@ export default function SaleForm() {
       handover_city: form.handover_city,
       handover_exact_location: form.handover_exact_location,
       notes: form.notes,
-      payment_received: isReserved ? true : undefined,
       listing_ids: activeListings.map((l) => l.id),
-    });
-    setShowListingsChecklist(false);
+    };
+    if (isReserved && reservedContact) {
+      body.contact_id = reservedContact.id;
+    } else {
+      body.customer_id = form.customer_id || undefined;
+      body.contact_id = form.contact_id ?? undefined;
+      body.contact = form.contact;
+    }
+    createMutation.mutate(body);
   }
 
   if (isEdit && loadingSale) return <p className="text-gray-500">{t('dashboard.loading')}</p>;
@@ -173,6 +188,17 @@ export default function SaleForm() {
                 ))}
               </select>
             </div>
+            {isReserved && reservedContact && (
+              <>
+                <div className="rounded-roomi border border-roomi-orange/40 bg-roomi-peach/30 px-3 py-2 text-sm text-roomi-brown">
+                  {t('output.reservedItemPrefilled', { name: reservedContact.name })}
+                </div>
+                <div className="rounded-roomi border border-roomi-peach/60 bg-roomi-cream/40 p-3">
+                  <p className="text-xs font-semibold text-roomi-brownLight uppercase tracking-wider mb-1">{t('table.buyer')} (from reservation)</p>
+                  <p className="text-roomi-brown font-medium">{reservedContact.name}{reservedContact.sourcePlatform ? ` (${reservedContact.sourcePlatform})` : ''}</p>
+                </div>
+              </>
+            )}
             {!isReserved && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">{t('table.customer')} *</label>
@@ -180,27 +206,13 @@ export default function SaleForm() {
                   value={form.customer_id ?? ''}
                   onChange={(e) => setForm((f) => ({ ...f, customer_id: e.target.value }))}
                   className="input-field"
-                  required={!isReserved}
+                  required
                 >
                   <option value="">—</option>
                   {customers.map((c) => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
                 </select>
-              </div>
-            )}
-            {isReserved && (
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="payment_received"
-                  checked={paymentReceived}
-                  onChange={(e) => setPaymentReceived(e.target.checked)}
-                  className="rounded border-roomi-brown/40"
-                />
-                <label htmlFor="payment_received" className="text-sm font-medium text-roomi-brown">
-                  Payment/deposit received?
-                </label>
               </div>
             )}
           </>
@@ -245,7 +257,7 @@ export default function SaleForm() {
         <div className="flex gap-2">
           <button
             type="submit"
-            disabled={createMutation.isPending || updateMutation.isPending || (!isEdit && isReserved && !paymentReceived)}
+            disabled={createMutation.isPending || updateMutation.isPending}
             className="btn-primary"
           >
             {t('common.save')}
@@ -255,40 +267,6 @@ export default function SaleForm() {
           </Link>
         </div>
       </form>
-
-      {showListingsChecklist && selectedItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowListingsChecklist(false)}>
-          <div className="card p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
-            <h3 className="font-semibold text-roomi-brown mb-2">Update SNS posts</h3>
-            <p className="text-sm text-roomi-brownLight mb-4">Confirm you updated or deleted each listing before finalizing the sale.</p>
-            <ul className="space-y-2 mb-4">
-              {activeListings.map((l) => (
-                <li key={l.id} className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id={`listing-${l.id}`}
-                    checked={!!listingsConfirmed[l.id]}
-                    onChange={(e) => setListingsConfirmed((prev) => ({ ...prev, [l.id]: e.target.checked }))}
-                    className="rounded border-roomi-brown/40"
-                  />
-                  <label htmlFor={`listing-${l.id}`} className="text-sm">{l.platform}</label>
-                </li>
-              ))}
-            </ul>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={doCreateSale}
-                disabled={!allListingsChecked || createMutation.isPending}
-                className="btn-primary"
-              >
-                {createMutation.isPending ? t('dashboard.loading') : 'Confirm and sell'}
-              </button>
-              <button type="button" onClick={() => setShowListingsChecklist(false)} className="btn-secondary">Back</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

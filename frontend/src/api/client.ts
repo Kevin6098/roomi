@@ -52,11 +52,12 @@ export const api = {
     getCounts: () => request<Record<string, number>>('/items/counts'),
     getRecent: () => request<Item[]>('/items/recent'),
     getRecentlyAcquired: () => request<Item[]>('/items/recently-acquired'),
-    getAvailable: (params?: { search?: string; sub_category_id?: string; location?: string }) => {
+    getAvailable: (params?: { search?: string; sub_category_id?: string; location?: string; for_use?: 'sell' | 'rent' }) => {
       const q = new URLSearchParams();
       if (params?.search) q.set('search', params.search);
       if (params?.sub_category_id) q.set('sub_category_id', params.sub_category_id);
       if (params?.location) q.set('location', params.location);
+      if (params?.for_use) q.set('for_use', params.for_use);
       const query = q.toString();
       return request<Item[]>(`/items/available${query ? `?${query}` : ''}`);
     },
@@ -69,6 +70,7 @@ export const api = {
       return request<Item[]>(`/items${query ? `?${query}` : ''}`);
     },
     getById: (id: string) => request<Item>(`/items/${id}`),
+    getReservation: (id: string) => request<{ reservation: Reservation | null }>(`/items/${id}/reservation`),
     create: (body: CreateItemBody) => request<Item>('/items', { method: 'POST', body: JSON.stringify(body) }),
     update: (id: string, body: Partial<CreateItemBody>) => request<Item>(`/items/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
     getListings: (id: string) => request<ItemListing[]>(`/items/${id}/listings`),
@@ -214,6 +216,7 @@ export interface Item {
   rentals?: Rental[];
   isListed?: boolean;
   itemListings?: ItemListing[];
+  reservations?: Reservation[];
 }
 
 export interface ItemListing {
@@ -282,6 +285,9 @@ export interface Customer {
   preferredLanguage?: string;
   sourcePlatform?: string | null;
   appId?: string | null;
+  prefecture?: string | null;
+  city?: string | null;
+  exactLocation?: string | null;
   createdAt: string;
   sales?: { item?: { id: string; title: string } }[];
   rentals?: { item?: { id: string; title: string } }[];
@@ -294,6 +300,9 @@ export interface CreateCustomerBody {
   preferred_language?: string;
   source_platform?: string | null;
   app_id?: string | null;
+  prefecture?: string | null;
+  city?: string | null;
+  exact_location?: string | null;
 }
 
 export interface Rental {
@@ -356,6 +365,9 @@ export interface Sale {
   platformSold?: string | null;
   notes?: string | null;
   handoverLocation?: string | null;
+  handoverPrefecture?: string | null;
+  handoverCity?: string | null;
+  handoverExactLocation?: string | null;
   item?: Item;
   customer?: Customer;
   createdAt: string;

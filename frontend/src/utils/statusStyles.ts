@@ -2,6 +2,7 @@
  * Tailwind classes for item status badges. Uses theme colors where possible.
  */
 const STATUS_STYLES: Record<string, string> = {
+  overdue: 'bg-orange-200 text-orange-900 border border-orange-400/80',
   in_stock: 'bg-emerald-100 text-emerald-800 border border-emerald-200/80',
   listed: 'bg-roomi-yellowLight/90 text-roomi-brown border border-roomi-yellow/60',
   reserved: 'bg-amber-100 text-amber-800 border border-amber-200/80',

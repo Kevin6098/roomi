@@ -10,6 +10,7 @@ router.get('/recently-acquired', c.getRecentlyAcquired);
 router.get('/available', c.getAvailable);
 router.get('/', c.getMany);
 router.get('/:id/listings', listingsCtrl.getByItemId);
+router.get('/:id/reservation', c.getReservation);
 router.get('/:id', c.getById);
 router.post('/', ...c.create);
 router.put('/:id', ...c.update);

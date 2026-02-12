@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { api, type Item, type CreateContactBody } from '../api/client';
+import { api, type Item, type ItemListing, type CreateContactBody } from '../api/client';
 import { getDisplayLocation, UNDECIDED } from '../data/locationData';
 import { getStatusBadgeClass } from '../utils/statusStyles';
 import { LISTING_PLATFORMS } from '../data/listingPlatforms';
@@ -46,12 +46,34 @@ export default function Items() {
     queryFn: () => api.items.getMany({ status: status || undefined, search: search || undefined }),
   });
 
+  const STATUS_ORDER = ['overdue', 'in_stock', 'reserved', 'rented', 'sold', 'disposed'] as const;
+
+  function getItemStatusDateForSort(item: Item): string {
+    const d =
+      item.status === 'in_stock' || item.status === 'overdue'
+        ? (item.acquisitionDate || item.createdAt)
+        : item.status === 'sold'
+          ? item.sale?.saleDate
+          : item.status === 'rented'
+            ? item.rentals?.[0]?.startDate
+            : (item.status === 'disposed' || item.status === 'reserved')
+              ? item.updatedAt
+              : null;
+    if (!d) return '0000-00-00';
+    return typeof d === 'string' ? d.slice(0, 10) : new Date(d).toISOString().slice(0, 10);
+  }
+
   const items = useMemo(() => {
     if (!itemsRaw) return itemsRaw;
     return [...itemsRaw].sort((a, b) => {
-      const aInStock = a.status === 'in_stock' ? 0 : 1;
-      const bInStock = b.status === 'in_stock' ? 0 : 1;
-      return aInStock - bInStock;
+      const ai = STATUS_ORDER.indexOf(a.status as (typeof STATUS_ORDER)[number]);
+      const bi = STATUS_ORDER.indexOf(b.status as (typeof STATUS_ORDER)[number]);
+      const aIdx = ai === -1 ? STATUS_ORDER.length : ai;
+      const bIdx = bi === -1 ? STATUS_ORDER.length : bi;
+      if (aIdx !== bIdx) return aIdx - bIdx;
+      const aDate = getItemStatusDateForSort(a);
+      const bDate = getItemStatusDateForSort(b);
+      return aDate.localeCompare(bDate);
     });
   }, [itemsRaw]);
 
@@ -74,7 +96,7 @@ export default function Items() {
 
   function getItemStatusDate(item: Item): string | null {
     const d =
-      item.status === 'in_stock'
+      item.status === 'in_stock' || item.status === 'overdue'
         ? (item.acquisitionDate || item.createdAt)
         : item.status === 'sold'
           ? item.sale?.saleDate
@@ -87,13 +109,21 @@ export default function Items() {
     return typeof d === 'string' ? d.slice(0, 10) : new Date(d).toISOString().slice(0, 10);
   }
 
+  function getItemDisplayLocation(item: Item): string {
+    if (item.status === 'sold' && item.sale) {
+      return getDisplayLocation(item.sale.handoverPrefecture ?? undefined, item.sale.handoverCity ?? undefined);
+    }
+    if (item.status === 'rented' && item.rentals?.[0]) {
+      const r = item.rentals[0];
+      return getDisplayLocation(r.handoverPrefecture ?? undefined, r.handoverCity ?? undefined);
+    }
+    return getDisplayLocation(item.prefecture ?? undefined, item.city ?? undefined);
+  }
+
   return (
     <div className="space-y-4 sm:space-y-6 w-full max-w-full min-w-0">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div>
         <h1 className="text-xl sm:text-2xl font-bold text-roomi-brown">{t('nav.items')}</h1>
-        <Link to="/items/new" className="btn-primary w-full sm:w-auto text-center">
-          {t('actions.add')} {t('nav.items')}
-        </Link>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
@@ -118,11 +148,12 @@ export default function Items() {
           className="input-field min-h-[44px] w-full sm:max-w-[180px]"
         >
           <option value="">{t('common.allStatus')}</option>
+          <option value="overdue">{t('status.overdue')}</option>
           <option value="in_stock">{t('status.in_stock')}</option>
           <option value="listed">{t('status.listed')}</option>
+          <option value="reserved">{t('status.reserved')}</option>
           <option value="rented">{t('status.rented')}</option>
           <option value="sold">{t('status.sold')}</option>
-          <option value="reserved">{t('status.reserved')}</option>
           <option value="disposed">{t('status.disposed')}</option>
         </select>
       </div>
@@ -166,13 +197,13 @@ export default function Items() {
                     {t('table.customer')}: {getItemCustomerDisplay(item)}
                   </div>
                   <div className="text-sm text-roomi-brownLight truncate min-w-0">
-                    {t('table.location')}: {getDisplayLocation(item.prefecture, item.city) === UNDECIDED ? t('input.undecided') : getDisplayLocation(item.prefecture, item.city)}
+                    {t('table.location')}: {getItemDisplayLocation(item) === UNDECIDED ? t('input.undecided') : getItemDisplayLocation(item)}
                   </div>
                   <div className="flex flex-wrap gap-2 pt-1">
-                    {(item.status === 'in_stock' || item.status === 'reserved') && (
+                    {(item.status === 'in_stock' || item.status === 'overdue' || item.status === 'reserved') && (
                       <ListedCheckbox item={item} onOpenModal={() => setListedModalItem(item)} onRefresh={() => queryClient.invalidateQueries({ queryKey: ['items'] })} />
                     )}
-                    {item.status === 'in_stock' && (
+                    {(item.status === 'in_stock' || item.status === 'overdue') && (
                       <button
                         type="button"
                         onClick={() => setReserveModalItem(item)}
@@ -223,17 +254,17 @@ export default function Items() {
                         )}
                       </div>
                     </td>
-                    <td className="px-2 py-3 text-sm text-roomi-brownLight min-w-0 truncate">{getDisplayLocation(item.prefecture, item.city) === UNDECIDED ? t('input.undecided') : getDisplayLocation(item.prefecture, item.city)}</td>
                     <td className="px-2 py-3">
-                      {(item.status === 'in_stock' || item.status === 'reserved') && (
+                      {(item.status === 'in_stock' || item.status === 'overdue' || item.status === 'reserved') && (
                         <ListedCheckbox item={item} onOpenModal={() => setListedModalItem(item)} onRefresh={() => queryClient.invalidateQueries({ queryKey: ['items'] })} />
                       )}
                       {(item.status === 'sold' || item.status === 'rented' || item.status === 'disposed') && (
                         <span className="text-roomi-brownLight">—</span>
                       )}
                     </td>
+                    <td className="px-2 py-3 text-sm text-roomi-brownLight min-w-0 truncate">{getItemDisplayLocation(item) === UNDECIDED ? t('input.undecided') : getItemDisplayLocation(item)}</td>
                     <td className="px-2 py-3">
-                      {item.status === 'in_stock' && (
+                      {(item.status === 'in_stock' || item.status === 'overdue') && (
                         <button type="button" onClick={() => setReserveModalItem(item)} className="btn-secondary text-xs py-1.5 px-2 min-h-0">
                           {t('actions.reserve')}
                         </button>
@@ -248,7 +279,7 @@ export default function Items() {
       )}
 
       {listedModalItem && (
-        <ListedModal
+        <ListingsModal
           item={listedModalItem}
           onClose={() => setListedModalItem(null)}
           onSaved={() => {
@@ -271,35 +302,200 @@ export default function Items() {
   );
 }
 
-function ListedCheckbox({ item, onOpenModal, onRefresh }: { item: Item; onOpenModal: () => void; onRefresh: () => void }) {
+function ListedCheckbox({ item, onOpenModal }: { item: Item; onOpenModal: () => void; onRefresh: () => void }) {
+  const { t } = useTranslation();
+  const isListed = !!item.isListed;
+  const isSold = item.status === 'sold';
+  const showRemoveSnsHint = isSold && isListed;
+  return (
+    <button
+      type="button"
+      onClick={onOpenModal}
+      title={showRemoveSnsHint ? t('listings.removeSnsHint') : undefined}
+      className="flex items-center gap-1 cursor-pointer text-left text-xs text-roomi-brownLight hover:text-roomi-brown border-0 bg-transparent p-0"
+    >
+      <span className={`inline-block w-4 h-4 rounded border border-roomi-brown/40 flex items-center justify-center ${isListed ? 'bg-roomi-orange/20 border-roomi-orange' : ''}`}>
+        {isListed && <span className="text-roomi-orange text-[10px]">✓</span>}
+      </span>
+      <span>{t('listings.listed')}{showRemoveSnsHint && <span className="text-amber-600 font-bold" aria-hidden> !</span>}</span>
+    </button>
+  );
+}
+
+function ListingsModal({ item, onClose, onSaved }: { item: Item; onClose: () => void; onSaved: () => void }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const [view, setView] = useState<'list' | 'add'>('list');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<{ platform: string; listing_url: string; listing_ref_id: string }>({ platform: '', listing_url: '', listing_ref_id: '' });
+
+  const { data: listings = [], isLoading: loadingListings, refetch: refetchListings } = useQuery({
+    queryKey: ['listings', item.id],
+    queryFn: () => api.items.getListings(item.id),
+    enabled: !!item.id,
+  });
+
   const setListedMutation = useMutation({
     mutationFn: (is_listed: boolean) => api.items.setListedFlag(item.id, is_listed),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['items'] });
-      onRefresh();
+      refetchListings();
+      onSaved();
+      onClose();
     },
   });
-  const isListed = !!item.isListed;
-  const handleChange = () => {
-    if (isListed) {
-      if (window.confirm(t('listings.confirmMarkClosed'))) {
-        setListedMutation.mutate(false);
-      }
-    } else {
-      onOpenModal();
-    }
-  };
+  const updateListingMutation = useMutation({
+    mutationFn: ({ id, body }: { id: string; body: { platform?: string; listing_url?: string | null; listing_ref_id?: string | null; status?: string } }) =>
+      api.listings.update(id, body),
+    onSuccess: () => {
+      refetchListings();
+      queryClient.invalidateQueries({ queryKey: ['items'] });
+      setEditingId(null);
+    },
+  });
+
+  const activeListings = listings.filter((l) => l.status !== 'closed');
+  const hasActive = activeListings.length > 0;
+
+  function handleMarkAllClosed() {
+    if (!window.confirm(t('listings.confirmMarkClosed'))) return;
+    setListedMutation.mutate(false);
+  }
+
+  function startEdit(l: ItemListing) {
+    setEditingId(l.id);
+    setEditForm({
+      platform: l.platform,
+      listing_url: l.listingUrl ?? '',
+      listing_ref_id: l.listingRefId ?? '',
+    });
+  }
+
+  function saveEdit() {
+    if (!editingId) return;
+    updateListingMutation.mutate({
+      id: editingId,
+      body: {
+        platform: editForm.platform,
+        listing_url: editForm.listing_url || null,
+        listing_ref_id: editForm.listing_ref_id || null,
+      },
+    });
+  }
+
+  function markClosed(listingId: string) {
+    updateListingMutation.mutate({ id: listingId, body: { status: 'closed' } });
+  }
+
   return (
-    <label className="flex items-center gap-1 cursor-pointer">
-      <input type="checkbox" checked={isListed} onChange={handleChange} className="rounded border-roomi-brown/40" />
-      <span className="text-xs text-roomi-brownLight">{t('listings.listed')}</span>
-    </label>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <div className="card p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <h3 className="font-semibold text-roomi-brown mb-4">{t('listings.wherePosted')} — {item.title}</h3>
+
+        {view === 'list' ? (
+          <>
+            {loadingListings ? (
+              <p className="text-roomi-brownLight text-sm">{t('dashboard.loading')}</p>
+            ) : listings.length === 0 ? (
+              <div className="space-y-4">
+                <p className="text-sm text-roomi-brownLight">{t('listings.noListingsYet')}</p>
+                <button type="button" onClick={() => setView('add')} className="btn-primary">
+                  {t('listings.addPlatforms')}
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <ul className="space-y-3 divide-y divide-roomi-peach/50">
+                  {listings.map((l) => (
+                    <li key={l.id} className="pt-3 first:pt-0">
+                      {editingId === l.id ? (
+                        <div className="space-y-2">
+                          <select
+                            value={editForm.platform}
+                            onChange={(e) => setEditForm((f) => ({ ...f, platform: e.target.value }))}
+                            className="input-field"
+                          >
+                            {LISTING_PLATFORMS.map((pl) => (
+                              <option key={pl} value={pl}>{pl}</option>
+                            ))}
+                          </select>
+                          <input
+                            type="url"
+                            placeholder={t('listings.urlOptional')}
+                            value={editForm.listing_url}
+                            onChange={(e) => setEditForm((f) => ({ ...f, listing_url: e.target.value }))}
+                            className="input-field"
+                          />
+                          <input
+                            type="text"
+                            placeholder={t('listings.refIdOptional')}
+                            value={editForm.listing_ref_id}
+                            onChange={(e) => setEditForm((f) => ({ ...f, listing_ref_id: e.target.value }))}
+                            className="input-field"
+                          />
+                          <div className="flex gap-2">
+                            <button type="button" onClick={saveEdit} className="btn-primary text-sm" disabled={updateListingMutation.isPending}>{t('common.save')}</button>
+                            <button type="button" onClick={() => setEditingId(null)} className="btn-secondary text-sm">{t('common.cancel')}</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-roomi-brown">{l.platform}</p>
+                            {l.listingUrl && (
+                              <a href={l.listingUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-roomi-orange hover:underline truncate block">{l.listingUrl}</a>
+                            )}
+                            {l.listingRefId && <p className="text-xs text-roomi-brownLight">{t('listings.refIdOptional')}: {l.listingRefId}</p>}
+                            <span className={`text-xs px-1.5 py-0.5 rounded ${l.status === 'closed' ? 'bg-roomi-brownLight/20 text-roomi-brownLight' : 'bg-roomi-mint/30 text-roomi-brown'}`}>
+                              {l.status === 'closed' ? t('listings.statusClosed') : t('listings.statusActive')}
+                            </span>
+                          </div>
+                          <div className="flex gap-1 shrink-0">
+                            {l.status !== 'closed' && (
+                              <>
+                                <button type="button" onClick={() => startEdit(l)} className="btn-ghost text-xs py-1 px-2 min-h-0">{t('listings.editListing')}</button>
+                                <button type="button" onClick={() => markClosed(l.id)} className="text-xs text-roomi-brownLight hover:text-red-600 py-1 px-2">{t('listings.markClosed')}</button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+                <div className="flex flex-wrap gap-2 pt-2">
+                  <button type="button" onClick={() => { setView('add'); }} className="btn-secondary text-sm">{t('listings.addPlatform')}</button>
+                  {hasActive && (
+                    <button type="button" onClick={handleMarkAllClosed} className="btn-ghost text-sm text-roomi-brownLight hover:text-roomi-brown" disabled={setListedMutation.isPending}>
+                      {t('listings.markAllClosed')}
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+            <div className="mt-4 pt-4 border-t border-roomi-peach/60">
+              <button type="button" onClick={onClose} className="btn-secondary w-full sm:w-auto">{t('common.cancel')}</button>
+            </div>
+          </>
+        ) : (
+          <AddListingsForm
+            item={item}
+            setListedAfterCreate={listings.length === 0}
+            onSaved={() => {
+              refetchListings();
+              queryClient.invalidateQueries({ queryKey: ['items'] });
+              onSaved();
+              setView('list');
+            }}
+            onCancel={() => setView('list')}
+          />
+        )}
+      </div>
+    </div>
   );
 }
 
-function ListedModal({ item, onClose, onSaved }: { item: Item; onClose: () => void; onSaved: () => void }) {
+function AddListingsForm({ item, setListedAfterCreate, onSaved, onCancel }: { item: Item; setListedAfterCreate: boolean; onSaved: () => void; onCancel: () => void }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [platforms, setPlatforms] = useState<{ platform: string; listing_url: string; listing_ref_id: string }[]>([{ platform: LISTING_PLATFORMS[0], listing_url: '', listing_ref_id: '' }]);
@@ -322,51 +518,52 @@ function ListedModal({ item, onClose, onSaved }: { item: Item; onClose: () => vo
         listing_ref_id: row.listing_ref_id || null,
       });
     }
-    await setListedMutation.mutateAsync();
+    if (setListedAfterCreate) {
+      await setListedMutation.mutateAsync();
+    } else {
+      onSaved();
+    }
   };
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
-      <div className="card p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <h3 className="font-semibold text-roomi-brown mb-2">{t('listings.addPlatforms')} — {item.title}</h3>
-        <p className="text-sm text-roomi-brownLight mb-4">{t('listings.addPlatformsHint')}</p>
-        <div className="space-y-3">
-          {platforms.map((row, i) => (
-            <div key={i} className="flex flex-wrap gap-2 items-center">
-              <select
-                value={row.platform}
-                onChange={(e) => setPlatforms((p) => p.map((r, j) => (j === i ? { ...r, platform: e.target.value } : r)))}
-                className="input-field flex-1 min-w-[120px]"
-              >
-                {LISTING_PLATFORMS.map((pl) => (
-                  <option key={pl} value={pl}>{pl}</option>
-                ))}
-              </select>
-              <input
-                type="url"
-                placeholder={t('listings.urlOptional')}
-                value={row.listing_url}
-                onChange={(e) => setPlatforms((p) => p.map((r, j) => (j === i ? { ...r, listing_url: e.target.value } : r)))}
-                className="input-field flex-1 min-w-[140px]"
-              />
-              <input
-                type="text"
-                placeholder={t('listings.refIdOptional')}
-                value={row.listing_ref_id}
-                onChange={(e) => setPlatforms((p) => p.map((r, j) => (j === i ? { ...r, listing_ref_id: e.target.value } : r)))}
-                className="input-field w-24"
-              />
-            </div>
-          ))}
-          <button type="button" onClick={handleAddRow} className="btn-ghost text-sm">{t('listings.addPlatform')}</button>
-        </div>
-        <div className="flex gap-2 mt-4">
-          <button type="button" onClick={handleSave} className="btn-primary" disabled={createListingMutation.isPending || setListedMutation.isPending}>
-            {createListingMutation.isPending || setListedMutation.isPending ? t('dashboard.loading') : t('common.save')}
-          </button>
-          <button type="button" onClick={onClose} className="btn-secondary">{t('common.cancel')}</button>
-        </div>
+    <>
+      <p className="text-sm text-roomi-brownLight mb-4">{t('listings.addPlatformsHint')}</p>
+      <div className="space-y-3">
+        {platforms.map((row, i) => (
+          <div key={i} className="flex flex-wrap gap-2 items-center">
+            <select
+              value={row.platform}
+              onChange={(e) => setPlatforms((p) => p.map((r, j) => (j === i ? { ...r, platform: e.target.value } : r)))}
+              className="input-field flex-1 min-w-[120px]"
+            >
+              {LISTING_PLATFORMS.map((pl) => (
+                <option key={pl} value={pl}>{pl}</option>
+              ))}
+            </select>
+            <input
+              type="url"
+              placeholder={t('listings.urlOptional')}
+              value={row.listing_url}
+              onChange={(e) => setPlatforms((p) => p.map((r, j) => (j === i ? { ...r, listing_url: e.target.value } : r)))}
+              className="input-field flex-1 min-w-[140px]"
+            />
+            <input
+              type="text"
+              placeholder={t('listings.refIdOptional')}
+              value={row.listing_ref_id}
+              onChange={(e) => setPlatforms((p) => p.map((r, j) => (j === i ? { ...r, listing_ref_id: e.target.value } : r)))}
+              className="input-field w-24"
+            />
+          </div>
+        ))}
+        <button type="button" onClick={handleAddRow} className="btn-ghost text-sm">{t('listings.addPlatform')}</button>
       </div>
-    </div>
+      <div className="flex gap-2 mt-4">
+        <button type="button" onClick={handleSave} className="btn-primary" disabled={createListingMutation.isPending || setListedMutation.isPending}>
+          {createListingMutation.isPending || setListedMutation.isPending ? t('dashboard.loading') : t('common.save')}
+        </button>
+        <button type="button" onClick={onCancel} className="btn-secondary">{t('common.cancel')}</button>
+      </div>
+    </>
   );
 }
 
@@ -376,7 +573,6 @@ function ReserveModal({ item, onClose, onSaved }: { item: Item; onClose: () => v
   const [contactMode, setContactMode] = useState<'existing' | 'new'>('existing');
   const [selectedContactId, setSelectedContactId] = useState('');
   const [newContact, setNewContact] = useState(emptyReserveContact);
-  const [depositExpected, setDepositExpected] = useState<string>('');
   const [expiresAt, setExpiresAt] = useState('');
   const [note, setNote] = useState('');
   const [error, setError] = useState('');
@@ -397,7 +593,6 @@ function ReserveModal({ item, onClose, onSaved }: { item: Item; onClose: () => v
       reserveMutation.mutate({
         contact_id: selectedContactId,
         reserve_type: reserveType,
-        deposit_expected: depositExpected ? Number(depositExpected) : null,
         expires_at: expiresAt || null,
         note: note || null,
       });
@@ -424,7 +619,6 @@ function ReserveModal({ item, onClose, onSaved }: { item: Item; onClose: () => v
     reserveMutation.mutate({
       contact: contactPayload,
       reserve_type: reserveType,
-      deposit_expected: depositExpected ? Number(depositExpected) : null,
       expires_at: expiresAt || null,
       note: note || null,
     });
@@ -552,10 +746,6 @@ function ReserveModal({ item, onClose, onSaved }: { item: Item; onClose: () => v
             )}
           </div>
 
-          <div>
-            <label className="label">{t('listings.depositExpected')} (optional)</label>
-            <input type="number" min={0} step={0.01} value={depositExpected} onChange={(e) => setDepositExpected(e.target.value)} className="input-field" />
-          </div>
           <div>
             <label className="label">{t('listings.expiresAt')} (optional)</label>
             <input type="datetime-local" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} className="input-field" />

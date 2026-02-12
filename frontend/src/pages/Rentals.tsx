@@ -1,15 +1,32 @@
-import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useMemo, useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '../api/client';
+import { api, type Rental } from '../api/client';
 import { getRentalEarnings } from '../utils/rentalEarnings';
+
+function oneMonthFromNow(): Date {
+  const d = new Date();
+  d.setMonth(d.getMonth() + 1);
+  return d;
+}
+
+function isUpcomingReturn(r: Rental): boolean {
+  if (r.status !== 'active' || !r.expectedEndDate) return false;
+  return new Date(r.expectedEndDate) <= oneMonthFromNow();
+}
 
 export default function Rentals() {
   const { t } = useTranslation();
-  const [status, setStatus] = useState<string>('active');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const statusParam = searchParams.get('status');
+  const [status, setStatus] = useState<string>(statusParam === 'ended' ? 'ended' : 'active');
   const [endedDateFrom, setEndedDateFrom] = useState<string>('');
   const [endedDateTo, setEndedDateTo] = useState<string>('');
+
+  useEffect(() => {
+    if (statusParam === 'ended' || statusParam === 'active') setStatus(statusParam);
+  }, [statusParam]);
 
   const { data: rentals, isLoading, error } = useQuery({
     queryKey: ['rentals', status],
@@ -50,7 +67,7 @@ export default function Rentals() {
       <div className="grid grid-cols-2 sm:flex sm:gap-2 gap-2">
         <button
           type="button"
-          onClick={() => setStatus('active')}
+          onClick={() => { setStatus('active'); setSearchParams({ status: 'active' }); }}
           className={`min-h-[44px] px-4 py-2 rounded-roomi text-sm font-semibold transition-colors touch-manipulation ${
             status === 'active'
               ? 'bg-roomi-orange text-white shadow-roomi'
@@ -61,7 +78,7 @@ export default function Rentals() {
         </button>
         <button
           type="button"
-          onClick={() => setStatus('ended')}
+          onClick={() => { setStatus('ended'); setSearchParams({ status: 'ended' }); }}
           className={`min-h-[44px] px-4 py-2 rounded-roomi text-sm font-semibold transition-colors touch-manipulation ${
             status === 'ended'
               ? 'bg-roomi-orange text-white shadow-roomi'
@@ -89,7 +106,7 @@ export default function Rentals() {
                     <span>{t('table.start')}: {(r.startDate || '').slice(0, 10)}</span>
                     <span>{t('table.expectedEnd')}: {(r.expectedEndDate || '').slice(0, 10)}</span>
                   </div>
-                  {r.isOverdue && <span className="text-orange-600 font-medium text-sm">{t('table.overdue')}: {t('common.yes')}</span>}
+                  {isUpcomingReturn(r) && <span className="text-orange-600 font-medium text-sm">{t('table.upcomingReturns')}: {t('common.yes')}</span>}
                   <Link to={`/rentals/${r.id}/end`} className="btn-secondary text-sm py-2 w-full sm:w-auto text-center">
                     {t('actions.endRental')}
                   </Link>
@@ -106,7 +123,7 @@ export default function Rentals() {
                   <th className="px-4 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.customer')}</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.start')}</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.expectedEnd')}</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.overdue')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-roomi-brown uppercase">{t('table.upcomingReturns')}</th>
                   <th className="px-4 py-3 text-right text-xs font-semibold text-roomi-brown uppercase">{t('actions.endRental')}</th>
                 </tr>
               </thead>
@@ -118,7 +135,7 @@ export default function Rentals() {
                     <td className="px-4 py-3 text-sm text-roomi-brownLight shrink-0">{(r.startDate || '').slice(0, 10)}</td>
                     <td className="px-4 py-3 text-sm text-roomi-brownLight shrink-0">{(r.expectedEndDate || '').slice(0, 10)}</td>
                     <td className="px-4 py-3">
-                      {r.isOverdue ? <span className="text-orange-600 font-medium">{t('common.yes')}</span> : <span className="text-roomi-brownLight">—</span>}
+                      {isUpcomingReturn(r) ? <span className="text-orange-600 font-medium">{t('common.yes')}</span> : <span className="text-roomi-brownLight">—</span>}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <Link to={`/rentals/${r.id}/end`} className="text-roomi-orange hover:underline font-medium text-sm">

@@ -4,6 +4,13 @@ import { conflict, notFound, validationError } from '../utils/errors.js';
 import type { CreateItemBody, UpdateItemBody } from '../validators/items.js';
 import { contactService } from './contact.service.js';
 
+/** Date 1 month ago: in-stock items older than this are marked overdue */
+function oneMonthAgo(): Date {
+  const d = new Date();
+  d.setMonth(d.getMonth() - 1);
+  return d;
+}
+
 const itemInclude = {
   subCategory: { include: { mainCategory: true } },
   acquisitionContact: true,
@@ -28,7 +35,7 @@ export const itemService = {
       prisma.item.count({ where: { isListed: true } }),
     ]);
     const map: Record<string, number> = {};
-    for (const s of ['in_stock', 'rented', 'sold', 'reserved', 'disposed']) {
+    for (const s of ['overdue', 'in_stock', 'rented', 'sold', 'reserved', 'disposed']) {
       map[s] = counts.find((c) => c.status === s)?._count.id ?? 0;
     }
     map['listed'] = listedCount;
@@ -53,24 +60,47 @@ export const itemService = {
     return withDisplaySubCategoryList(items);
   },
 
-  async getAvailable(params: { search?: string; sub_category_id?: string; location?: string }) {
-    const where: Prisma.ItemWhereInput = {
-      status: { in: ['in_stock', 'reserved'] as ItemStatus[] },
-    };
+  async getAvailable(params: { search?: string; sub_category_id?: string; location?: string; for_use?: 'sell' | 'rent' }) {
+    const where: Prisma.ItemWhereInput = {};
+
+    if (params.for_use === 'rent') {
+      // For rent: overdue, in_stock OR reserved for rental only
+      where.OR = [
+        { status: 'overdue' },
+        { status: 'in_stock' },
+        { status: 'reserved', reservations: { some: { status: 'active', reserveType: 'rental' } } },
+      ];
+    } else if (params.for_use === 'sell') {
+      // For sell: overdue, in_stock OR reserved for sale only
+      where.OR = [
+        { status: 'overdue' },
+        { status: 'in_stock' },
+        { status: 'reserved', reservations: { some: { status: 'active', reserveType: 'sale' } } },
+      ];
+    } else {
+      where.status = { in: ['overdue', 'in_stock', 'reserved'] as ItemStatus[] };
+    }
+
     if (params.sub_category_id) where.subCategoryId = params.sub_category_id;
     if (params.location?.trim()) {
       const loc = params.location.trim();
-      where.OR = [
-        { prefecture: { contains: loc, mode: 'insensitive' } },
-        { city: { contains: loc, mode: 'insensitive' } },
-        { locationArea: { contains: loc, mode: 'insensitive' } },
-      ];
+      where.AND = (where.AND as Prisma.ItemWhereInput[]) ?? [];
+      (where.AND as Prisma.ItemWhereInput[]).push({
+        OR: [
+          { prefecture: { contains: loc, mode: 'insensitive' } },
+          { city: { contains: loc, mode: 'insensitive' } },
+          { locationArea: { contains: loc, mode: 'insensitive' } },
+        ],
+      });
     }
     if (params.search?.trim()) {
-      where.OR = [
-        { title: { contains: params.search.trim(), mode: 'insensitive' } },
-        { notes: { contains: params.search.trim(), mode: 'insensitive' } },
-      ];
+      where.AND = (where.AND as Prisma.ItemWhereInput[]) ?? [];
+      (where.AND as Prisma.ItemWhereInput[]).push({
+        OR: [
+          { title: { contains: params.search.trim(), mode: 'insensitive' } },
+          { notes: { contains: params.search.trim(), mode: 'insensitive' } },
+        ],
+      });
     }
     const items = await prisma.item.findMany({
       where,
@@ -81,6 +111,18 @@ export const itemService = {
   },
 
   async getMany(params: { status?: string; sub_category_id?: string; search?: string }) {
+    const cutoff = oneMonthAgo();
+    await prisma.item.updateMany({
+      where: {
+        status: 'in_stock',
+        OR: [
+          { acquisitionDate: { lt: cutoff } },
+          { acquisitionDate: null, createdAt: { lt: cutoff } },
+        ],
+      },
+      data: { status: 'overdue' },
+    });
+
     const where: Prisma.ItemWhereInput = {};
     if (params.status) {
       if (params.status === 'listed') {
@@ -101,8 +143,8 @@ export const itemService = {
       orderBy: { createdAt: 'desc' },
       include: {
         ...itemInclude,
-        sale: { select: { saleDate: true, customer: { select: { name: true, sourcePlatform: true } } } },
-        rentals: { where: { status: 'active' }, take: 1, orderBy: { startDate: 'desc' }, select: { startDate: true, customer: { select: { name: true, sourcePlatform: true } } } },
+        sale: { select: { saleDate: true, handoverPrefecture: true, handoverCity: true, customer: { select: { name: true, sourcePlatform: true } } } },
+        rentals: { where: { status: 'active' }, take: 1, orderBy: { startDate: 'desc' }, select: { startDate: true, handoverPrefecture: true, handoverCity: true, customer: { select: { name: true, sourcePlatform: true } } } },
         itemListings: { where: { status: { in: ['active', 'needs_update'] } }, select: { id: true, platform: true, status: true } },
       },
     });
@@ -122,6 +164,16 @@ export const itemService = {
     });
     if (!item) throw notFound('Item not found');
     return withDisplaySubCategory(item);
+  },
+
+  /** Get active reservation for an item (for sale/rent forms). Returns null if none. */
+  async getActiveReservation(itemId: string) {
+    const reservation = await prisma.reservation.findFirst({
+      where: { itemId, status: 'active' },
+      orderBy: { reservedAt: 'desc' },
+      include: { contact: true },
+    });
+    return reservation;
   },
 
   async create(body: CreateItemBody) {

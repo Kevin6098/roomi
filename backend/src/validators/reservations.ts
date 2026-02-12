@@ -16,7 +16,10 @@ export const reserveItemSchema = z.object({
   deposit_expected: z.coerce.number().min(0).optional().nullable(),
   expires_at: z.string().optional().nullable(),
   note: z.string().optional().nullable(),
-});
+}).refine(
+  (data) => (data.contact_id != null && data.contact_id !== '') || data.contact != null,
+  { message: 'Either contact_id or contact is required to link the reservation to a person.' }
+);
 
 export const depositReceivedSchema = z.object({
   deposit_received: z.literal(true),

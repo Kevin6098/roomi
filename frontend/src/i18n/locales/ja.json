@@ -13,6 +13,7 @@
     "records": "記録"
   },
   "status": {
+    "overdue": "長期未売却",
     "in_stock": "在庫",
     "listed": "出品中",
     "reserved": "予約中",
@@ -61,12 +62,20 @@
   },
   "listings": {
     "listed": "出品",
+    "removeSnsHint": "売却済み — SNSの投稿を削除してください",
+    "wherePosted": "掲載先",
     "confirmMarkClosed": "すべての出品を閉じますか？",
+    "markAllClosed": "すべて閉じる",
+    "markClosed": "閉じる",
+    "noListingsYet": "掲載先がありません。追加してください。",
     "addPlatforms": "出品プラットフォームを追加",
     "addPlatformsHint": "この商品をどこに掲載しましたか？1つ以上追加してください。",
     "urlOptional": "URL（任意）",
     "refIdOptional": "Ref ID（任意）",
     "addPlatform": "+ プラットフォーム追加",
+    "editListing": "編集",
+    "statusActive": "掲載中",
+    "statusClosed": "閉じた",
     "reserveType": "予約種別",
     "contact": "連絡先",
     "depositExpected": "想定デポジット",
@@ -89,6 +98,7 @@
     "start": "開始日",
     "expectedEnd": "返却予定",
     "overdue": "延滞",
+    "upcomingReturns": "返却予定",
     "saleDate": "売却日",
     "price": "価格"
   },
@@ -101,7 +111,13 @@
     "acquisitionLabel": "取得",
     "notesLabel": "備考",
     "rentInfo": "レンタル情報",
-    "rentPeriod": "期間"
+    "rentPeriod": "期間",
+    "reservedBy": "予約者",
+    "reservedDate": "予約日",
+    "depositStatus": "デポジット",
+    "cancelReservation": "予約をキャンセル",
+    "depositReceived": "受領済み",
+    "depositPending": "未受領"
   },
   "empty": {
     "noRentals": "レンタルがありません。",
@@ -136,6 +152,7 @@
     "editUser": "ユーザーを編集",
     "confirmDelete": "削除してもよろしいですか？",
     "confirmDispose": "この商品を廃棄してもよろしいですか？",
+    "confirmCancelReservation": "予約をキャンセルして在庫に戻しますか？",
     "role": "権限"
   },
   "role": {
@@ -169,6 +186,9 @@
     "undecided": "未定",
     "addExactLocation": "詳細住所を追加（任意）",
     "addExactLocationRequired": "詳細住所 *",
+    "addExactLocationOptional": "詳細住所（任意）",
+    "defaultLocation": "デフォルトの場所",
+    "defaultLocationHint": "このお客様の売却・レンタル記録時に手渡し場所を自動入力します。",
     "customSubCategory": "カスタムサブカテゴリ",
     "customSubCategoryRequired": "「その他」を選択した場合は、カスタムサブカテゴリを2文字以上入力してください。",
     "decideLocation": "保管場所を決める",
@@ -213,6 +233,7 @@
     "salePrice": "売却価格",
     "salePriceRequired": "売却価格を入力してください（0以上）。",
     "handoverLocationRequired": "売却・レンタルには手渡し場所が必須です。都道府県・市区町村を選び、詳細住所を入力してください。",
+    "reservedItemPrefilled": "この商品は {{name}} が予約しています。お客様情報は自動入力されています。",
     "rentPeriod": "賃料単位",
     "rentPeriodMonthly": "月額",
     "rentPeriodAnnually": "年額",
@@ -220,7 +241,10 @@
     "rentPriceAnnually": "賃料（年額）",
     "deposit": "敷金（破損時はこの金額を請求）",
     "depositPlaceholder": "金額",
-    "buyPrice": "購入価格"
+    "buyPrice": "購入価格",
+    "originalPriceForDeposit": "元の価格（破損時敷金の参考）",
+    "setOriginalPricePlaceholder": "金額を入力",
+    "saveOriginalPrice": "保存"
   },
   "rentalAnalytics": {
     "filters": "終了日でフィルター",
