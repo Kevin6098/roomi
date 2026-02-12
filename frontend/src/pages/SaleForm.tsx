@@ -66,6 +66,7 @@ export default function SaleForm() {
   const reservedContact = selectedItem?.status === 'reserved' && selectedItem.reservations?.[0]?.contact
     ? selectedItem.reservations[0].contact
     : null;
+  const isReserved = selectedItem?.status === 'reserved';
 
   // Auto-link customer to the reservation's contact when user selects a reserved item
   useEffect(() => {
@@ -107,7 +108,6 @@ export default function SaleForm() {
   });
 
   const activeListings = selectedItem?.itemListings?.filter((l) => l.status === 'active' || l.status === 'needs_update') ?? [];
-  const isReserved = selectedItem?.status === 'reserved';
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

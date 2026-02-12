@@ -192,7 +192,7 @@ export default function Sales() {
                     <XAxis dataKey="period" tick={{ fontSize: 12 }} />
                     <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => v.toLocaleString()} />
                     <Tooltip
-                      formatter={(value: number) => value.toLocaleString()}
+                      formatter={(value: number | undefined) => (value ?? 0).toLocaleString()}
                       labelFormatter={(label) => t('salesAnalytics.period') + ': ' + label}
                     />
                     <Line type="monotone" dataKey="revenue" name={t('salesAnalytics.revenue')} stroke="#f97316" strokeWidth={2} dot={{ r: 4 }} />
