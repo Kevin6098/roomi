@@ -5,10 +5,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/client';
 import { getDisplayLocation } from '../data/locationData';
 import { getStatusBadgeClass } from '../utils/statusStyles';
+import { getMainCategoryDisplayName, getSubCategoryDisplayName } from '../utils/categoryDisplay';
 
 export default function ItemDetail() {
   const { id } = useParams<{ id: string }>();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const [disposeConfirm, setDisposeConfirm] = useState(false);
   const [cancelReservationConfirm, setCancelReservationConfirm] = useState(false);
@@ -81,20 +82,20 @@ export default function ItemDetail() {
         </div>
       </div>
       <div className="card p-6 space-y-2">
-        <p><span className="text-roomi-brownLight">{t('itemDetail.statusLabel')}:</span> <span className={getStatusBadgeClass(item.status)}>{item.status}</span></p>
-        <p><span className="text-roomi-brownLight">{t('itemDetail.categoryLabel')}:</span> {item.subCategory?.mainCategory?.name} → {item.displaySubCategory ?? item.subCategory?.name}</p>
-        <p><span className="text-roomi-brownLight">{t('itemDetail.conditionLabel')}:</span> {item.condition}</p>
+        <p><span className="text-roomi-brownLight">{t('itemDetail.statusLabel')}:</span> <span className={getStatusBadgeClass(item.status)}>{t(`status.${item.status}`)}</span></p>
+        <p><span className="text-roomi-brownLight">{t('itemDetail.categoryLabel')}:</span> {getMainCategoryDisplayName(item.subCategory?.mainCategory, i18n.language)} → {item.customSubCategory ?? getSubCategoryDisplayName(item.subCategory, i18n.language)}</p>
+        <p><span className="text-roomi-brownLight">{t('itemDetail.conditionLabel')}:</span> {item.condition ? t(`condition.${item.condition}`) : '—'}</p>
         <p><span className="text-roomi-brownLight">{t('itemDetail.locationLabel')}:</span> {(() => {
-          const area = getDisplayLocation(item.prefecture, item.city) === 'Undecided' ? t('input.undecided') : getDisplayLocation(item.prefecture, item.city);
+          const area = getDisplayLocation(item.prefecture, item.city, i18n.language);
           const exact = item.exactLocation?.trim();
           if (exact) return `${area} — ${exact}`;
           return area;
         })()}</p>
-        <p><span className="text-roomi-brownLight">{t('table.seller')}:</span> {item.acquisitionContact ? `${item.acquisitionContact.name} (${item.acquisitionContact.sourcePlatform})` : '—'}</p>
+        <p><span className="text-roomi-brownLight">{t('table.seller')}:</span> {item.acquisitionContact ? `${item.acquisitionContact.name} (${t('platform.' + item.acquisitionContact.sourcePlatform) !== 'platform.' + item.acquisitionContact.sourcePlatform ? t('platform.' + item.acquisitionContact.sourcePlatform) : item.acquisitionContact.sourcePlatform})` : '—'}</p>
         {item.sale?.customer && (
-          <p><span className="text-roomi-brownLight">{t('table.buyer')}:</span> {item.sale.customer.name}{item.sale.customer.sourcePlatform ? ` (${item.sale.customer.sourcePlatform})` : ''}</p>
+          <p><span className="text-roomi-brownLight">{t('table.buyer')}:</span> {item.sale.customer.name}{item.sale.customer.sourcePlatform ? ` (${t('platform.' + item.sale.customer.sourcePlatform) !== 'platform.' + item.sale.customer.sourcePlatform ? t('platform.' + item.sale.customer.sourcePlatform) : item.sale.customer.sourcePlatform})` : ''}</p>
         )}
-        <p><span className="text-roomi-brownLight">{t('itemDetail.acquisitionLabel')}:</span> {item.acquisitionType} / {Number(item.acquisitionCost)}</p>
+        <p><span className="text-roomi-brownLight">{t('itemDetail.acquisitionLabel')}:</span> {item.acquisitionType === 'free' ? t('input.acquisitionTypeFreeItem') : item.acquisitionType === 'cheap' ? t('input.acquisitionTypeSecondHand') : t('input.acquisitionTypeNewItem')} / {Number(item.acquisitionCost)}</p>
         <p><span className="text-roomi-brownLight">{t('input.originalPrice')}:</span> {item.originalPrice != null ? Number(item.originalPrice).toLocaleString() : '—'}</p>
         {item.status === 'reserved' && activeReservation && (
           <div className="rounded-roomi border border-roomi-peach/60 bg-roomi-cream/40 p-4 space-y-2">

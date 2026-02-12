@@ -24,7 +24,7 @@ ON CONFLICT (name) DO UPDATE SET "nameEn" = EXCLUDED."nameEn", "nameJa" = EXCLUD
 INSERT INTO "SubCategory" (id, "mainCategoryId", name, "nameEn", "nameJa", "createdAt")
 SELECT gen_random_uuid()::text, m.id, s.name, s."nameEn", s."nameJa", now()
 FROM "MainCategory" m,
-LATERAL (VALUES ('bed','bed','bed'),('mattress','mattress','mattress'),('sofa','sofa','sofa'),('chair','chair','chair'),('dining_chair','dining_chair','dining_chair'),('desk','desk','desk'),('table','table','table'),('dining_table','dining_table','dining_table'),('coffee_table','coffee_table','coffee_table'),('shelf','shelf','shelf'),('cabinet','cabinet','cabinet'),('wardrobe','wardrobe','wardrobe'),('drawer','drawer','drawer'),('tv_stand','tv_stand','tv_stand'),('shoe_rack','shoe_rack','shoe_rack'),('futon','futon','futon'),('kotatsu','kotatsu','kotatsu'),('mirror','mirror','mirror'),('curtain','curtain','curtain'),('rug','rug','rug'),('lighting','lighting','lighting'),('other','other','その他')) AS s(name, "nameEn", "nameJa")
+LATERAL (VALUES ('bed','bed','ベッド'),('mattress','mattress','マットレス'),('sofa','sofa','ソファ'),('chair','chair','椅子'),('dining_chair','dining_chair','ダイニングチェア'),('desk','desk','デスク'),('table','table','テーブル'),('dining_table','dining_table','食卓'),('coffee_table','coffee_table','コーヒーテーブル'),('shelf','shelf','棚'),('cabinet','cabinet','キャビネット'),('wardrobe','wardrobe','ワードローブ'),('drawer','drawer','引き出し'),('tv_stand','tv_stand','TV台'),('shoe_rack','shoe_rack','靴棚'),('futon','futon','布団'),('kotatsu','kotatsu','こたつ'),('mirror','mirror','鏡'),('curtain','curtain','カーテン'),('rug','rug','ラグ'),('lighting','lighting','照明'),('other','other','その他')) AS s(name, "nameEn", "nameJa")
 WHERE m.name = 'Furniture'
 ON CONFLICT ("mainCategoryId", name) DO UPDATE SET "nameEn" = EXCLUDED."nameEn", "nameJa" = EXCLUDED."nameJa";
 
@@ -32,7 +32,7 @@ ON CONFLICT ("mainCategoryId", name) DO UPDATE SET "nameEn" = EXCLUDED."nameEn",
 INSERT INTO "SubCategory" (id, "mainCategoryId", name, "nameEn", "nameJa", "createdAt")
 SELECT gen_random_uuid()::text, m.id, s.name, s."nameEn", s."nameJa", now()
 FROM "MainCategory" m,
-LATERAL (VALUES ('fridge','fridge','fridge'),('washing_machine','washing_machine','washing_machine'),('microwave','microwave','microwave'),('tv','tv','tv'),('monitor','monitor','monitor'),('speaker','speaker','speaker'),('headphones','headphones','headphones'),('camera','camera','camera'),('game_console','game_console','game_console'),('router','router','router'),('printer','printer','printer'),('vacuum_robot','vacuum_robot','vacuum_robot'),('other','other','その他')) AS s(name, "nameEn", "nameJa")
+LATERAL (VALUES ('fridge','fridge','冷蔵庫'),('washing_machine','washing_machine','洗濯機'),('microwave','microwave','電子レンジ'),('tv','tv','テレビ'),('monitor','monitor','モニター'),('speaker','speaker','スピーカー'),('headphones','headphones','ヘッドホン'),('camera','camera','カメラ'),('game_console','game_console','ゲーム機'),('router','router','ルーター'),('printer','printer','プリンター'),('vacuum_robot','vacuum_robot','ロボット掃除機'),('other','other','その他')) AS s(name, "nameEn", "nameJa")
 WHERE m.name = 'Electronics'
 ON CONFLICT ("mainCategoryId", name) DO UPDATE SET "nameEn" = EXCLUDED."nameEn", "nameJa" = EXCLUDED."nameJa";
 
@@ -40,7 +40,7 @@ ON CONFLICT ("mainCategoryId", name) DO UPDATE SET "nameEn" = EXCLUDED."nameEn",
 INSERT INTO "SubCategory" (id, "mainCategoryId", name, "nameEn", "nameJa", "createdAt")
 SELECT gen_random_uuid()::text, m.id, s.name, s."nameEn", s."nameJa", now()
 FROM "MainCategory" m,
-LATERAL (VALUES ('rice_cooker','rice_cooker','rice_cooker'),('kettle','kettle','kettle'),('toaster','toaster','toaster'),('blender','blender','blender'),('air_fryer','air_fryer','air_fryer'),('induction_cooker','induction_cooker','induction_cooker'),('heater','heater','heater'),('fan','fan','fan'),('air_purifier','air_purifier','air_purifier'),('dehumidifier','dehumidifier','dehumidifier'),('vacuum','vacuum','vacuum'),('iron','iron','iron'),('hair_dryer','hair_dryer','hair_dryer'),('humidifier','humidifier','humidifier'),('other','other','その他')) AS s(name, "nameEn", "nameJa")
+LATERAL (VALUES ('rice_cooker','rice_cooker','炊飯器'),('kettle','kettle','ケトル'),('toaster','toaster','トースター'),('blender','blender','ブレンダー'),('air_fryer','air_fryer','エアフライヤー'),('induction_cooker','induction_cooker','IH調理器'),('heater','heater','ヒーター'),('fan','fan','扇風機'),('air_purifier','air_purifier','空気清浄機'),('dehumidifier','dehumidifier','除湿機'),('vacuum','vacuum','掃除機'),('iron','iron','アイロン'),('hair_dryer','hair_dryer','ドライヤー'),('humidifier','humidifier','加湿器'),('other','other','その他')) AS s(name, "nameEn", "nameJa")
 WHERE m.name = 'Appliance'
 ON CONFLICT ("mainCategoryId", name) DO UPDATE SET "nameEn" = EXCLUDED."nameEn", "nameJa" = EXCLUDED."nameJa";
 
@@ -48,7 +48,7 @@ ON CONFLICT ("mainCategoryId", name) DO UPDATE SET "nameEn" = EXCLUDED."nameEn",
 INSERT INTO "SubCategory" (id, "mainCategoryId", name, "nameEn", "nameJa", "createdAt")
 SELECT gen_random_uuid()::text, m.id, s.name, s."nameEn", s."nameJa", now()
 FROM "MainCategory" m,
-LATERAL (VALUES ('jacket','jacket','jacket'),('coat','coat','coat'),('hoodie','hoodie','hoodie'),('tshirt','tshirt','tshirt'),('pants','pants','pants'),('jeans','jeans','jeans'),('skirt','skirt','skirt'),('dress','dress','dress'),('bag','bag','bag'),('backpack','backpack','backpack'),('shoes','shoes','shoes'),('sneakers','sneakers','sneakers'),('boots','boots','boots'),('hat','hat','hat'),('accessories','accessories','accessories'),('watch','watch','watch'),('other','other','その他')) AS s(name, "nameEn", "nameJa")
+LATERAL (VALUES ('jacket','jacket','ジャケット'),('coat','coat','コート'),('hoodie','hoodie','パーカー'),('tshirt','tshirt','Tシャツ'),('pants','pants','パンツ'),('jeans','jeans','ジーンズ'),('skirt','skirt','スカート'),('dress','dress','ワンピース'),('bag','bag','バッグ'),('backpack','backpack','リュック'),('shoes','shoes','靴'),('sneakers','sneakers','スニーカー'),('boots','boots','ブーツ'),('hat','hat','帽子'),('accessories','accessories','アクセサリー'),('watch','watch','時計'),('other','other','その他')) AS s(name, "nameEn", "nameJa")
 WHERE m.name = 'Fashion'
 ON CONFLICT ("mainCategoryId", name) DO UPDATE SET "nameEn" = EXCLUDED."nameEn", "nameJa" = EXCLUDED."nameJa";
 
@@ -56,7 +56,7 @@ ON CONFLICT ("mainCategoryId", name) DO UPDATE SET "nameEn" = EXCLUDED."nameEn",
 INSERT INTO "SubCategory" (id, "mainCategoryId", name, "nameEn", "nameJa", "createdAt")
 SELECT gen_random_uuid()::text, m.id, s.name, s."nameEn", s."nameJa", now()
 FROM "MainCategory" m,
-LATERAL (VALUES ('pillow','pillow','pillow'),('blanket','blanket','blanket'),('comforter','comforter','comforter'),('bedsheet','bedsheet','bedsheet'),('duvet','duvet','duvet'),('towel','towel','towel'),('mattress_pad','mattress_pad','mattress_pad'),('curtain','curtain','curtain'),('other','other','その他')) AS s(name, "nameEn", "nameJa")
+LATERAL (VALUES ('pillow','pillow','枕'),('blanket','blanket','毛布'),('comforter','comforter','掛け布団'),('bedsheet','bedsheet','シーツ'),('duvet','duvet','羽毛布団'),('towel','towel','タオル'),('mattress_pad','mattress_pad','マットレスパッド'),('curtain','curtain','カーテン'),('other','other','その他')) AS s(name, "nameEn", "nameJa")
 WHERE m.name = 'Bedding_Textiles'
 ON CONFLICT ("mainCategoryId", name) DO UPDATE SET "nameEn" = EXCLUDED."nameEn", "nameJa" = EXCLUDED."nameJa";
 
@@ -64,7 +64,7 @@ ON CONFLICT ("mainCategoryId", name) DO UPDATE SET "nameEn" = EXCLUDED."nameEn",
 INSERT INTO "SubCategory" (id, "mainCategoryId", name, "nameEn", "nameJa", "createdAt")
 SELECT gen_random_uuid()::text, m.id, s.name, s."nameEn", s."nameJa", now()
 FROM "MainCategory" m,
-LATERAL (VALUES ('pot','pot','pot'),('pan','pan','pan'),('knife','knife','knife'),('cutting_board','cutting_board','cutting_board'),('dish_set','dish_set','dish_set'),('cup','cup','cup'),('glass','glass','glass'),('bento_box','bento_box','bento_box'),('plates','plates','plates'),('bowls','bowls','bowls'),('storage_container','storage_container','storage_container'),('water_bottle','water_bottle','water_bottle'),('other','other','その他')) AS s(name, "nameEn", "nameJa")
+LATERAL (VALUES ('pot','pot','鍋'),('pan','pan','フライパン'),('knife','knife','包丁'),('cutting_board','cutting_board','まな板'),('dish_set','dish_set','食器セット'),('cup','cup','カップ'),('glass','glass','グラス'),('bento_box','bento_box','弁当箱'),('plates','plates','皿'),('bowls','bowls','丼'),('storage_container','storage_container','保存容器'),('water_bottle','water_bottle','水筒'),('other','other','その他')) AS s(name, "nameEn", "nameJa")
 WHERE m.name = 'Kitchenware_Dining'
 ON CONFLICT ("mainCategoryId", name) DO UPDATE SET "nameEn" = EXCLUDED."nameEn", "nameJa" = EXCLUDED."nameJa";
 
@@ -72,7 +72,7 @@ ON CONFLICT ("mainCategoryId", name) DO UPDATE SET "nameEn" = EXCLUDED."nameEn",
 INSERT INTO "SubCategory" (id, "mainCategoryId", name, "nameEn", "nameJa", "createdAt")
 SELECT gen_random_uuid()::text, m.id, s.name, s."nameEn", s."nameJa", now()
 FROM "MainCategory" m,
-LATERAL (VALUES ('detergent','detergent','detergent'),('cleaning_tools','cleaning_tools','cleaning_tools'),('storage_box','storage_box','storage_box'),('hangers','hangers','hangers'),('laundry_rack','laundry_rack','laundry_rack'),('trash_bin','trash_bin','trash_bin'),('bathroom_items','bathroom_items','bathroom_items'),('other','other','その他')) AS s(name, "nameEn", "nameJa")
+LATERAL (VALUES ('detergent','detergent','洗剤'),('cleaning_tools','cleaning_tools','掃除用具'),('storage_box','storage_box','収納ボックス'),('hangers','hangers','ハンガー'),('laundry_rack','laundry_rack','物干し'),('trash_bin','trash_bin','ゴミ箱'),('bathroom_items','bathroom_items','バス用品'),('other','other','その他')) AS s(name, "nameEn", "nameJa")
 WHERE m.name = 'Daily_Necessities'
 ON CONFLICT ("mainCategoryId", name) DO UPDATE SET "nameEn" = EXCLUDED."nameEn", "nameJa" = EXCLUDED."nameJa";
 
@@ -80,7 +80,7 @@ ON CONFLICT ("mainCategoryId", name) DO UPDATE SET "nameEn" = EXCLUDED."nameEn",
 INSERT INTO "SubCategory" (id, "mainCategoryId", name, "nameEn", "nameJa", "createdAt")
 SELECT gen_random_uuid()::text, m.id, s.name, s."nameEn", s."nameJa", now()
 FROM "MainCategory" m,
-LATERAL (VALUES ('stroller','stroller','stroller'),('baby_bed','baby_bed','baby_bed'),('kids_clothes','kids_clothes','kids_clothes'),('toys','toys','toys'),('baby_chair','baby_chair','baby_chair'),('books_kids','books_kids','books_kids'),('other','other','その他')) AS s(name, "nameEn", "nameJa")
+LATERAL (VALUES ('stroller','stroller','ベビーカー'),('baby_bed','baby_bed','ベビーベッド'),('kids_clothes','kids_clothes','キッズ服'),('toys','toys','おもちゃ'),('baby_chair','baby_chair','ベビーチェア'),('books_kids','books_kids','絵本'),('other','other','その他')) AS s(name, "nameEn", "nameJa")
 WHERE m.name = 'Baby_Kids'
 ON CONFLICT ("mainCategoryId", name) DO UPDATE SET "nameEn" = EXCLUDED."nameEn", "nameJa" = EXCLUDED."nameJa";
 
@@ -88,7 +88,7 @@ ON CONFLICT ("mainCategoryId", name) DO UPDATE SET "nameEn" = EXCLUDED."nameEn",
 INSERT INTO "SubCategory" (id, "mainCategoryId", name, "nameEn", "nameJa", "createdAt")
 SELECT gen_random_uuid()::text, m.id, s.name, s."nameEn", s."nameJa", now()
 FROM "MainCategory" m,
-LATERAL (VALUES ('books','books','books'),('manga','manga','manga'),('figures','figures','figures'),('board_games','board_games','board_games'),('musical_instruments','musical_instruments','musical_instruments'),('sports_equipment','sports_equipment','sports_equipment'),('camping_gear','camping_gear','camping_gear'),('bicycle','bicycle','bicycle'),('other','other','その他')) AS s(name, "nameEn", "nameJa")
+LATERAL (VALUES ('books','books','本'),('manga','manga','漫画'),('figures','figures','フィギュア'),('board_games','board_games','ボードゲーム'),('musical_instruments','musical_instruments','楽器'),('sports_equipment','sports_equipment','スポーツ用品'),('camping_gear','camping_gear','キャンプ用品'),('bicycle','bicycle','自転車'),('other','other','その他')) AS s(name, "nameEn", "nameJa")
 WHERE m.name = 'Hobby_Entertainment'
 ON CONFLICT ("mainCategoryId", name) DO UPDATE SET "nameEn" = EXCLUDED."nameEn", "nameJa" = EXCLUDED."nameJa";
 
@@ -96,7 +96,7 @@ ON CONFLICT ("mainCategoryId", name) DO UPDATE SET "nameEn" = EXCLUDED."nameEn",
 INSERT INTO "SubCategory" (id, "mainCategoryId", name, "nameEn", "nameJa", "createdAt")
 SELECT gen_random_uuid()::text, m.id, s.name, s."nameEn", s."nameJa", now()
 FROM "MainCategory" m,
-LATERAL (VALUES ('office_chair','office_chair','office_chair'),('desk_lamp','desk_lamp','desk_lamp'),('stationery','stationery','stationery'),('whiteboard','whiteboard','whiteboard'),('bookshelf','bookshelf','bookshelf'),('monitor_arm','monitor_arm','monitor_arm'),('other','other','その他')) AS s(name, "nameEn", "nameJa")
+LATERAL (VALUES ('office_chair','office_chair','オフィスチェア'),('desk_lamp','desk_lamp','デスクランプ'),('stationery','stationery','文房具'),('whiteboard','whiteboard','ホワイトボード'),('bookshelf','bookshelf','本棚'),('monitor_arm','monitor_arm','モニターアーム'),('other','other','その他')) AS s(name, "nameEn", "nameJa")
 WHERE m.name = 'Office_Study'
 ON CONFLICT ("mainCategoryId", name) DO UPDATE SET "nameEn" = EXCLUDED."nameEn", "nameJa" = EXCLUDED."nameJa";
 
@@ -104,7 +104,7 @@ ON CONFLICT ("mainCategoryId", name) DO UPDATE SET "nameEn" = EXCLUDED."nameEn",
 INSERT INTO "SubCategory" (id, "mainCategoryId", name, "nameEn", "nameJa", "createdAt")
 SELECT gen_random_uuid()::text, m.id, s.name, s."nameEn", s."nameJa", now()
 FROM "MainCategory" m,
-LATERAL (VALUES ('toolbox','toolbox','toolbox'),('drill','drill','drill'),('screwdriver_set','screwdriver_set','screwdriver_set'),('ladder','ladder','ladder'),('measuring_tools','measuring_tools','measuring_tools'),('other','other','その他')) AS s(name, "nameEn", "nameJa")
+LATERAL (VALUES ('toolbox','toolbox','工具箱'),('drill','drill','ドリル'),('screwdriver_set','screwdriver_set','ドライバーセット'),('ladder','ladder','はしご'),('measuring_tools','measuring_tools','計測用具'),('other','other','その他')) AS s(name, "nameEn", "nameJa")
 WHERE m.name = 'Tools_DIY'
 ON CONFLICT ("mainCategoryId", name) DO UPDATE SET "nameEn" = EXCLUDED."nameEn", "nameJa" = EXCLUDED."nameJa";
 
@@ -112,7 +112,7 @@ ON CONFLICT ("mainCategoryId", name) DO UPDATE SET "nameEn" = EXCLUDED."nameEn",
 INSERT INTO "SubCategory" (id, "mainCategoryId", name, "nameEn", "nameJa", "createdAt")
 SELECT gen_random_uuid()::text, m.id, s.name, s."nameEn", s."nameJa", now()
 FROM "MainCategory" m,
-LATERAL (VALUES ('car_accessories','car_accessories','car_accessories'),('bike_accessories','bike_accessories','bike_accessories'),('scooter','scooter','scooter'),('helmet','helmet','helmet'),('child_seat','child_seat','child_seat'),('other','other','その他')) AS s(name, "nameEn", "nameJa")
+LATERAL (VALUES ('car_accessories','car_accessories','カー用品'),('bike_accessories','bike_accessories','バイク用品'),('scooter','scooter','キックボード'),('helmet','helmet','ヘルメット'),('child_seat','child_seat','チャイルドシート'),('other','other','その他')) AS s(name, "nameEn", "nameJa")
 WHERE m.name = 'Car_Mobility'
 ON CONFLICT ("mainCategoryId", name) DO UPDATE SET "nameEn" = EXCLUDED."nameEn", "nameJa" = EXCLUDED."nameJa";
 
@@ -120,6 +120,6 @@ ON CONFLICT ("mainCategoryId", name) DO UPDATE SET "nameEn" = EXCLUDED."nameEn",
 INSERT INTO "SubCategory" (id, "mainCategoryId", name, "nameEn", "nameJa", "createdAt")
 SELECT gen_random_uuid()::text, m.id, s.name, s."nameEn", s."nameJa", now()
 FROM "MainCategory" m,
-LATERAL (VALUES ('starter_pack_kitchen','starter_pack_kitchen','starter_pack_kitchen'),('starter_pack_room','starter_pack_room','starter_pack_room'),('bundle_electronics','bundle_electronics','bundle_electronics'),('bundle_furniture','bundle_furniture','bundle_furniture'),('other','other','その他')) AS s(name, "nameEn", "nameJa")
+LATERAL (VALUES ('starter_pack_kitchen','starter_pack_kitchen','キッチンセット'),('starter_pack_room','starter_pack_room','ルームセット'),('bundle_electronics','bundle_electronics','家電セット'),('bundle_furniture','bundle_furniture','家具セット'),('other','other','その他')) AS s(name, "nameEn", "nameJa")
 WHERE m.name = 'Starter_Packs'
 ON CONFLICT ("mainCategoryId", name) DO UPDATE SET "nameEn" = EXCLUDED."nameEn", "nameJa" = EXCLUDED."nameJa";

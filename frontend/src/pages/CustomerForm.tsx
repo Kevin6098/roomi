@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, type CreateCustomerBody } from '../api/client';
 import { CenteredToast } from '../components/CenteredToast';
-import { PREFECTURES, getCitiesForPrefecture, UNDECIDED } from '../data/locationData';
+import { PREFECTURES, getCitiesForPrefecture, UNDECIDED, getPrefectureDisplayName, getCityDisplayName } from '../data/locationData';
 
 const SOURCE_PLATFORM_OPTIONS = [
   'Facebook', 'WeChat', 'Xiaohongshu', 'LINE', 'Whatsapp', 'Telegram',
@@ -15,7 +15,7 @@ type FormState = CreateCustomerBody & { source_platform_other?: string };
 
 export default function CustomerForm() {
   const { id } = useParams<{ id: string }>();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isEdit = !!id;
@@ -121,7 +121,7 @@ export default function CustomerForm() {
           >
             <option value="">—</option>
             {SOURCE_PLATFORM_OPTIONS.map((opt) => (
-              <option key={opt} value={opt}>{opt === 'Other' ? t('input.sourcePlatformOther') : opt}</option>
+              <option key={opt} value={opt}>{opt === 'Other' ? t('input.sourcePlatformOther') : t('platform.' + opt)}</option>
             ))}
           </select>
           {form.source_platform === 'Other' && (
@@ -161,7 +161,7 @@ export default function CustomerForm() {
                 className="input-field"
               >
                 {PREFECTURES.map((pref) => (
-                  <option key={pref} value={pref}>{pref === UNDECIDED ? t('input.undecided') : pref}</option>
+                  <option key={pref} value={pref}>{pref === UNDECIDED ? t('input.undecided') : getPrefectureDisplayName(pref, i18n.language)}</option>
                 ))}
               </select>
             </div>
@@ -173,7 +173,7 @@ export default function CustomerForm() {
                 className="input-field"
               >
                 {getCitiesForPrefecture(form.prefecture ?? UNDECIDED).map((c) => (
-                  <option key={c} value={c}>{c === UNDECIDED ? t('input.undecided') : c}</option>
+                  <option key={c} value={c}>{c === UNDECIDED ? t('input.undecided') : getCityDisplayName(c, form.prefecture ?? UNDECIDED, i18n.language)}</option>
                 ))}
               </select>
             </div>

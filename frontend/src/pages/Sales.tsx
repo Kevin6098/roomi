@@ -4,13 +4,14 @@ import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { api } from '../api/client';
+import { getMainCategoryDisplayName, getSubCategoryDisplayName } from '../utils/categoryDisplay';
 
 type ChartGroupBy = 'day' | 'month' | 'year';
 
 const PIE_COLORS = ['#D88E4B', '#9ACFC0', '#A67C52', '#F8DB68', '#7AB8A8', '#FCE8DE', '#8B5A2B', '#F0A05A'];
 
 export default function Sales() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>('');
@@ -26,12 +27,12 @@ export default function Sales() {
   const sales = useMemo(() => salesRaw ?? [], [salesRaw]);
 
   const categoryOptions = useMemo(() => {
-    const set = new Set<string>();
+    const map = new Map<string, { name: string; nameEn?: string | null; nameJa?: string | null }>();
     sales.forEach((s) => {
-      const main = s.item?.subCategory?.mainCategory?.name;
-      if (main) set.add(main);
+      const main = s.item?.subCategory?.mainCategory;
+      if (main) map.set(main.name, main);
     });
-    return ['', ...Array.from(set).sort()];
+    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
   }, [sales]);
 
   const filteredSales = useMemo(() => {
@@ -47,11 +48,12 @@ export default function Sales() {
   const pieData = useMemo(() => {
     const byCategory: Record<string, number> = {};
     filteredSales.forEach((s) => {
-      const main = s.item?.subCategory?.mainCategory?.name ?? '—';
-      byCategory[main] = (byCategory[main] ?? 0) + Number(s.salePrice ?? 0);
+      const main = s.item?.subCategory?.mainCategory;
+      const label = main ? getMainCategoryDisplayName(main, i18n.language) : '—';
+      byCategory[label] = (byCategory[label] ?? 0) + Number(s.salePrice ?? 0);
     });
     return Object.entries(byCategory).map(([name, value]) => ({ name, value }));
-  }, [filteredSales]);
+  }, [filteredSales, i18n.language]);
 
   const lineChartData = useMemo(() => {
     const keyFn =
@@ -98,12 +100,7 @@ export default function Sales() {
 
   return (
     <div className="space-y-8 w-full max-w-full min-w-0">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-2xl font-bold text-roomi-brown">{t('nav.sales')}</h1>
-        <Link to="/sales/new" className="btn-primary shrink-0">
-          {t('actions.add')} {t('nav.sales')}
-        </Link>
-      </div>
+      <h1 className="text-2xl font-bold text-roomi-brown">{t('nav.sales')}</h1>
 
       {/* Filters */}
       <div className="rounded-roomiLg border-2 border-roomi-peach bg-white px-4 py-3 shadow-roomi">
@@ -117,8 +114,8 @@ export default function Sales() {
               className="input-field w-full"
             >
               <option value="">{t('salesAnalytics.allCategories')}</option>
-              {categoryOptions.filter(Boolean).map((c) => (
-                <option key={c} value={c}>{c}</option>
+              {categoryOptions.map(([name, main]) => (
+                <option key={name} value={name}>{getMainCategoryDisplayName(main, i18n.language)}</option>
               ))}
             </select>
           </div>
@@ -247,7 +244,7 @@ export default function Sales() {
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-roomi-brown truncate">{s.item?.title ?? s.itemId}</p>
                         <p className="text-xs text-roomi-brownLight">
-                          {(s.saleDate || '').slice(0, 10)} · {s.item?.subCategory?.mainCategory?.name ?? '—'} → {s.item?.displaySubCategory ?? s.item?.subCategory?.name ?? '—'}
+                          {(s.saleDate || '').slice(0, 10)} · {getMainCategoryDisplayName(s.item?.subCategory?.mainCategory, i18n.language)} → {s.item?.customSubCategory ?? getSubCategoryDisplayName(s.item?.subCategory, i18n.language) ?? '—'}
                         </p>
                       </div>
                       <div className="text-right shrink-0 text-sm text-roomi-brown">

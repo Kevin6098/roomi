@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { api, type Item, type ItemListing, type CreateContactBody } from '../api/client';
 import { getDisplayLocation } from '../data/locationData';
 import { getStatusBadgeClass } from '../utils/statusStyles';
+import { getSubCategoryDisplayName } from '../utils/categoryDisplay';
 import { LISTING_PLATFORMS } from '../data/listingPlatforms';
 import { CenteredToast } from '../components/CenteredToast';
 
@@ -33,7 +34,7 @@ const emptyReserveContact = (): {
 });
 
 export default function Items() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const status = searchParams.get('status') ?? '';
@@ -77,19 +78,24 @@ export default function Items() {
     });
   }, [itemsRaw]);
 
-  function getItemCustomerDisplay(item: Item) {
+  function getItemCustomerDisplay(item: Item, t: (key: string) => string) {
+    const platformLabel = (p: string) => {
+      const key = 'platform.' + p;
+      const translated = t(key);
+      return translated === key ? p : translated;
+    };
     if (item.status === 'disposed') return '—';
     if (item.status === 'sold' && item.sale?.customer) {
       const c = item.sale.customer;
-      return `${c.name}${c.sourcePlatform ? ` (${c.sourcePlatform})` : ''}`;
+      return `${c.name}${c.sourcePlatform ? ` (${platformLabel(c.sourcePlatform)})` : ''}`;
     }
     if (item.status === 'rented' && item.rentals?.[0]?.customer) {
       const c = item.rentals[0].customer;
-      return `${c.name}${c.sourcePlatform ? ` (${c.sourcePlatform})` : ''}`;
+      return `${c.name}${c.sourcePlatform ? ` (${platformLabel(c.sourcePlatform)})` : ''}`;
     }
     if (item.acquisitionContact) {
       const c = item.acquisitionContact;
-      return `${c.name}${c.sourcePlatform ? ` (${c.sourcePlatform})` : ''}`;
+      return `${c.name}${c.sourcePlatform ? ` (${platformLabel(c.sourcePlatform)})` : ''}`;
     }
     return '—';
   }
@@ -109,15 +115,15 @@ export default function Items() {
     return typeof d === 'string' ? d.slice(0, 10) : new Date(d).toISOString().slice(0, 10);
   }
 
-  function getItemDisplayLocation(item: Item): string {
+  function getItemDisplayLocation(item: Item, lang?: string): string {
     if (item.status === 'sold' && item.sale) {
-      return getDisplayLocation(item.sale.handoverPrefecture ?? undefined, item.sale.handoverCity ?? undefined);
+      return getDisplayLocation(item.sale.handoverPrefecture ?? undefined, item.sale.handoverCity ?? undefined, lang);
     }
     if (item.status === 'rented' && item.rentals?.[0]) {
       const r = item.rentals[0];
-      return getDisplayLocation(r.handoverPrefecture ?? undefined, r.handoverCity ?? undefined);
+      return getDisplayLocation(r.handoverPrefecture ?? undefined, r.handoverCity ?? undefined, lang);
     }
-    return getDisplayLocation(item.prefecture ?? undefined, item.city ?? undefined);
+    return getDisplayLocation(item.prefecture ?? undefined, item.city ?? undefined, lang);
   }
 
   return (
@@ -183,9 +189,9 @@ export default function Items() {
                     {item.title}
                   </Link>
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-roomi-brownLight">
-                    <span className="truncate min-w-0">{item.displaySubCategory ?? item.subCategory?.name ?? '—'}</span>
+                    <span className="truncate min-w-0">{item.customSubCategory ?? getSubCategoryDisplayName(item.subCategory, i18n.language) ?? '—'}</span>
                     <span>·</span>
-                    <span className={`${getStatusBadgeClass(item.status)} text-xs shrink-0`}>{item.status}</span>
+                    <span className={`${getStatusBadgeClass(item.status)} text-xs shrink-0`}>{t(`status.${item.status}`)}</span>
                     {getItemStatusDate(item) && (
                       <>
                         <span>·</span>
@@ -194,23 +200,29 @@ export default function Items() {
                     )}
                   </div>
                   <div className="text-sm text-roomi-brownLight truncate min-w-0">
-                    {t('table.customer')}: {getItemCustomerDisplay(item)}
+                    {t('table.customer')}: {getItemCustomerDisplay(item, t)}
                   </div>
                   <div className="text-sm text-roomi-brownLight truncate min-w-0">
-                    {t('table.location')}: {getItemDisplayLocation(item) === 'Undecided' ? t('input.undecided') : getItemDisplayLocation(item)}
+                    {t('table.location')}: {getItemDisplayLocation(item, i18n.language)}
                   </div>
                   <div className="flex flex-wrap gap-2 pt-1">
                     {(item.status === 'in_stock' || item.status === 'overdue' || item.status === 'reserved') && (
                       <ListedCheckbox item={item} onOpenModal={() => setListedModalItem(item)} onRefresh={() => queryClient.invalidateQueries({ queryKey: ['items'] })} />
                     )}
                     {(item.status === 'in_stock' || item.status === 'overdue') && (
-                      <button
-                        type="button"
-                        onClick={() => setReserveModalItem(item)}
-                        className="btn-secondary text-sm py-2 px-3 min-h-[40px]"
-                      >
-                        {t('actions.reserve')}
-                      </button>
+                      (item.itemListings?.length ?? 0) > 0 ? (
+                        <button
+                          type="button"
+                          onClick={() => setReserveModalItem(item)}
+                          className="btn-secondary text-sm py-2 px-3 min-h-[40px]"
+                        >
+                          {t('actions.reserve')}
+                        </button>
+                      ) : (
+                        <span className="text-xs text-roomi-brownLight italic" title={t('listings.mustListFirst')}>
+                          {t('listings.mustListFirst')}
+                        </span>
+                      )
                     )}
                   </div>
                 </div>
@@ -241,14 +253,14 @@ export default function Items() {
                       </Link>
                     </td>
                     <td className="px-2 py-3 text-sm text-roomi-brownLight min-w-0 truncate">
-                      {item.displaySubCategory ?? item.subCategory?.name ?? '—'}
+                      {item.customSubCategory ?? getSubCategoryDisplayName(item.subCategory, i18n.language) ?? '—'}
                     </td>
                     <td className="px-2 py-3 text-sm text-roomi-brownLight min-w-0 truncate">
-                      {getItemCustomerDisplay(item)}
+                      {getItemCustomerDisplay(item, t)}
                     </td>
                     <td className="px-2 py-3 min-w-0">
                       <div className="flex flex-col gap-0.5">
-                        <span className={`${getStatusBadgeClass(item.status)} text-xs lg:text-sm w-fit`}>{item.status}</span>
+                        <span className={`${getStatusBadgeClass(item.status)} text-xs lg:text-sm w-fit`}>{t(`status.${item.status}`)}</span>
                         {getItemStatusDate(item) && (
                           <span className="text-xs text-roomi-brownLight">{getItemStatusDate(item)}</span>
                         )}
@@ -262,12 +274,16 @@ export default function Items() {
                         <span className="text-roomi-brownLight">—</span>
                       )}
                     </td>
-                    <td className="px-2 py-3 text-sm text-roomi-brownLight min-w-0 truncate">{getItemDisplayLocation(item) === 'Undecided' ? t('input.undecided') : getItemDisplayLocation(item)}</td>
+                    <td className="px-2 py-3 text-sm text-roomi-brownLight min-w-0 truncate">{getItemDisplayLocation(item, i18n.language)}</td>
                     <td className="px-2 py-3">
                       {(item.status === 'in_stock' || item.status === 'overdue') && (
-                        <button type="button" onClick={() => setReserveModalItem(item)} className="btn-secondary text-xs py-1.5 px-2 min-h-0">
-                          {t('actions.reserve')}
-                        </button>
+                        (item.itemListings?.length ?? 0) > 0 ? (
+                          <button type="button" onClick={() => setReserveModalItem(item)} className="btn-secondary text-xs py-1.5 px-2 min-h-0">
+                            {t('actions.reserve')}
+                          </button>
+                        ) : (
+                          <span className="text-xs text-roomi-brownLight italic" title={t('listings.mustListFirst')}>{t('listings.mustListFirst')}</span>
+                        )
                       )}
                     </td>
                   </tr>
@@ -416,7 +432,7 @@ function ListingsModal({ item, onClose, onSaved }: { item: Item; onClose: () => 
                             className="input-field"
                           >
                             {LISTING_PLATFORMS.map((pl) => (
-                              <option key={pl} value={pl}>{pl}</option>
+                              <option key={pl} value={pl}>{t(`listings.${pl}`)}</option>
                             ))}
                           </select>
                           <input
@@ -441,7 +457,7 @@ function ListingsModal({ item, onClose, onSaved }: { item: Item; onClose: () => 
                       ) : (
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <div className="min-w-0 flex-1">
-                            <p className="font-medium text-roomi-brown">{l.platform}</p>
+                            <p className="font-medium text-roomi-brown">{t(`listings.${l.platform}`)}</p>
                             {l.listingUrl && (
                               <a href={l.listingUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-roomi-orange hover:underline truncate block">{l.listingUrl}</a>
                             )}
@@ -536,7 +552,7 @@ function AddListingsForm({ item, setListedAfterCreate, onSaved, onCancel }: { it
               className="input-field flex-1 min-w-[120px]"
             >
               {LISTING_PLATFORMS.map((pl) => (
-                <option key={pl} value={pl}>{pl}</option>
+                <option key={pl} value={pl}>{t(`listings.${pl}`)}</option>
               ))}
             </select>
             <input
@@ -671,7 +687,7 @@ function ReserveModal({ item, onClose, onSaved }: { item: Item; onClose: () => v
                 >
                   <option value="">—</option>
                   {contacts.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name} ({c.sourcePlatform})</option>
+                    <option key={c.id} value={c.id}>{c.name} ({t('platform.' + c.sourcePlatform) !== 'platform.' + c.sourcePlatform ? t('platform.' + c.sourcePlatform) : c.sourcePlatform})</option>
                   ))}
                 </select>
               </div>
@@ -689,7 +705,7 @@ function ReserveModal({ item, onClose, onSaved }: { item: Item; onClose: () => v
                   >
                     <option value="">—</option>
                     {SOURCE_PLATFORM_OPTIONS.map((opt) => (
-                      <option key={opt} value={opt}>{opt === SOURCE_PLATFORM_OTHER ? t('input.sourcePlatformOther') : opt}</option>
+                      <option key={opt} value={opt}>{opt === SOURCE_PLATFORM_OTHER ? t('input.sourcePlatformOther') : t('platform.' + opt)}</option>
                     ))}
                   </select>
                   {newContact.source_platform === SOURCE_PLATFORM_OTHER_SENTINEL && (

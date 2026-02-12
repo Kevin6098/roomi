@@ -213,7 +213,7 @@ export interface Item {
   acquisitionDate?: string | null;
   createdAt: string;
   updatedAt: string;
-  subCategory?: { id: string; name: string; mainCategory?: { id: string; name: string } };
+  subCategory?: { id: string; name: string; nameEn?: string | null; nameJa?: string | null; mainCategory?: { id: string; name: string; nameEn?: string | null; nameJa?: string | null } };
   acquisitionContact?: Contact | null;
   sale?: Sale | null;
   rentals?: Rental[];

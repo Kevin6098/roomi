@@ -64,19 +64,21 @@ export const itemService = {
     const where: Prisma.ItemWhereInput = {};
 
     if (params.for_use === 'rent') {
-      // For rent: overdue, in_stock OR reserved for rental only
+      // For rent: overdue, in_stock OR reserved for rental only; must be listed (posted somewhere) first
       where.OR = [
         { status: 'overdue' },
         { status: 'in_stock' },
         { status: 'reserved', reservations: { some: { status: 'active', reserveType: 'rental' } } },
       ];
+      where.isListed = true;
     } else if (params.for_use === 'sell') {
-      // For sell: overdue, in_stock OR reserved for sale only
+      // For sell: overdue, in_stock OR reserved for sale only; must be listed first
       where.OR = [
         { status: 'overdue' },
         { status: 'in_stock' },
         { status: 'reserved', reservations: { some: { status: 'active', reserveType: 'sale' } } },
       ];
+      where.isListed = true;
     } else {
       where.status = { in: ['overdue', 'in_stock', 'reserved'] as ItemStatus[] };
     }
@@ -223,6 +225,14 @@ export const itemService = {
       },
       include: itemInclude,
     });
+    // Keep contact location in sync with item location
+    if (acquisitionContactId && (body.prefecture != null || body.city != null || body.exact_location != null)) {
+      await contactService.update(acquisitionContactId, {
+        prefecture: body.prefecture ?? undefined,
+        city: body.city ?? undefined,
+        exact_location: (body.exact_location?.trim() || undefined) ?? undefined,
+      });
+    }
     return withDisplaySubCategory(item);
   },
 

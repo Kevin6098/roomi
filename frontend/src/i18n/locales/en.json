@@ -61,6 +61,22 @@
     "actions": "Actions",
     "notes": "Notes"
   },
+  "platform": {
+    "Facebook": "Facebook",
+    "WeChat": "WeChat",
+    "Xiaohongshu": "Xiaohongshu",
+    "LINE": "LINE",
+    "Whatsapp": "WhatsApp",
+    "Telegram": "Telegram",
+    "Jimoty": "Jimoty",
+    "Mercari": "Mercari",
+    "PayPayFlea": "PayPay Flea",
+    "Rakuma": "Rakuma",
+    "YahooAuction": "Yahoo Auction",
+    "Rednote": "Rednote",
+    "Instagram": "Instagram",
+    "Other": "Other"
+  },
   "listings": {
     "listed": "Listed",
     "removeSnsHint": "Item is sold — remove the post from SNS",
@@ -69,12 +85,21 @@
     "markAllClosed": "Mark all as closed",
     "markClosed": "Mark closed",
     "noListingsYet": "No listings yet. Add where this item is posted.",
+    "mustListFirst": "List this item first (add a platform above) before you can reserve, rent, or sell it.",
     "addPlatforms": "Add listing platforms",
     "addPlatformsHint": "Where is this item posted? Add at least one platform.",
     "urlOptional": "URL (optional)",
     "refIdOptional": "Ref ID (optional)",
     "addPlatform": "+ Add platform",
     "editListing": "Edit",
+    "Facebook": "Facebook",
+    "Jimoty": "Jimoty",
+    "Mercari": "Mercari",
+    "Rednote": "Rednote",
+    "WeChat": "WeChat",
+    "LINE": "LINE",
+    "Instagram": "Instagram",
+    "Other": "Other",
     "statusActive": "Active",
     "statusClosed": "Closed",
     "reserveType": "Reserve for",
@@ -102,6 +127,12 @@
     "upcomingReturns": "Upcoming returns",
     "saleDate": "Sale date",
     "price": "Price"
+  },
+  "condition": {
+    "new": "New",
+    "good": "Good",
+    "fair": "Fair",
+    "poor": "Poor"
   },
   "itemDetail": {
     "missingId": "Missing item ID",
@@ -334,6 +365,10 @@
     "categoriesBody": "Create main + sub (e.g. Furniture → Table). Needed before adding items.",
     "usersTitle": "Users",
     "usersBody": "OWNER only. Add or edit team members (email, role).",
+    "unlistOnSellRentTitle": "Listings when you sell or rent",
+    "unlistOnSellRentBody": "When you record a sale or start a rental, ROOMI automatically marks all listings for that item as closed (unlisted). That way you know to remove or close the actual post on each platform (Mercari, Facebook, Xiaohongshu, etc.). You still need to do that step yourself on the platform.",
+    "mustListFirstTitle": "List before you reserve, rent, or sell",
+    "mustListFirstBody": "You must add at least one listing (post the item on a platform like Mercari, Facebook, etc.) before you can reserve, start a rental, or record a sale for that item. The Reserve button and the sell/rent dropdowns only show listed items.",
     "statusGuideTitle": "What do the statuses mean?",
     "statusGuideIntro": "Each item has a status. Here’s what each one means and what you should do.",
     "statusGuideMeaning": "What it means",
@@ -350,7 +385,7 @@
       },
       "listed": {
         "meaning": "The item is listed on a platform (e.g. Mercari, Jimoty) for sale.",
-        "do": "When someone buys it, record the sale (Records → Sell or from the item). If you remove the listing, edit the item and change status."
+        "do": "When someone buys it, record the sale (Records → Sell or from the item). ROOMI will automatically mark all its listings as closed. Then remove or close the actual post on each platform (Mercari, Facebook, etc.)."
       },
       "reserved": {
         "meaning": "The item is reserved for a specific customer (not yet sold or rented).",
@@ -358,11 +393,11 @@
       },
       "rented": {
         "meaning": "The item is currently out on rental.",
-        "do": "When the customer returns it, go to Rentals and tap End rental for that rental."
+        "do": "When the customer returns it, go to Rentals and tap End rental. (When you started the rental, ROOMI marked all its listings as closed—remove the post from each platform if needed.)"
       },
       "sold": {
         "meaning": "The item was sold and is no longer in your inventory.",
-        "do": "Nothing. It’s recorded in Sales. Remove the listing from the platform if it was listed online."
+        "do": "ROOMI has already marked its listings as closed (unlisted). Remove or close the actual post on each platform (Mercari, Facebook, etc.) if you haven’t already."
       },
       "disposed": {
         "meaning": "The item was disposed (thrown away, donated, or written off).",

@@ -34,6 +34,8 @@ export const saleService = {
     if (!item) throw notFound('Item not found');
     if (item.status === 'sold' || item.sale) throw conflict('Item is already sold');
     if (item.status === 'rented' || item.rentals.length > 0) throw conflict('Item is currently rented');
+    const hasListing = item.itemListings && item.itemListings.length > 0;
+    if (!hasListing) throw validationError('Item must be listed (posted on at least one platform) before you can record a sale.');
 
     let customerId: string;
     const activeReservation = item.reservations[0];
@@ -56,12 +58,11 @@ export const saleService = {
     }
 
     return prisma.$transaction(async (tx) => {
-      if (body.listing_ids?.length) {
-        await tx.itemListing.updateMany({
-          where: { id: { in: body.listing_ids }, itemId: body.item_id },
-          data: { status: 'closed' },
-        });
-      }
+      // When an item is sold, mark all its listings as closed (unlisted) so you know to remove the post on each platform.
+      await tx.itemListing.updateMany({
+        where: { itemId: body.item_id, status: { in: ['active', 'needs_update'] } },
+        data: { status: 'closed' },
+      });
       const sale = await tx.sale.create({
         data: {
           itemId: body.item_id,
@@ -79,7 +80,7 @@ export const saleService = {
       });
       await tx.item.update({
         where: { id: body.item_id },
-        data: { status: 'sold' },
+        data: { status: 'sold', isListed: false },
       });
       if (activeReservation) {
         await tx.reservation.update({

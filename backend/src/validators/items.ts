@@ -11,6 +11,9 @@ const contactPayloadSchema = z.object({
   platform_user_id: z.string().max(120).trim().optional().nullable(),
   phone: z.string().max(40).trim().optional().nullable(),
   email: z.string().email().max(120).trim().optional().nullable(),
+  prefecture: z.string().max(50).trim().optional().nullable(),
+  city: z.string().max(80).trim().optional().nullable(),
+  exact_location: z.string().max(255).trim().optional().nullable(),
   notes: z.string().optional().nullable(),
 });
 
