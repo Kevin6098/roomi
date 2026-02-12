@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { api, type Rental } from '../api/client';
 import { getRentalEarnings } from '../utils/rentalEarnings';
+import { getMainCategoryDisplayName, getSubCategoryDisplayName } from '../utils/categoryDisplay';
 
 function oneMonthFromNow(): Date {
   const d = new Date();
@@ -17,7 +18,7 @@ function isUpcomingReturn(r: Rental): boolean {
 }
 
 export default function Rentals() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const statusParam = searchParams.get('status');
   const [status, setStatus] = useState<string>(statusParam === 'ended' ? 'ended' : 'active');
@@ -57,12 +58,7 @@ export default function Rentals() {
 
   return (
     <div className="space-y-8 w-full max-w-full min-w-0">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-2xl font-bold text-roomi-brown">{t('nav.rentals')}</h1>
-        <Link to="/rentals/new" className="btn-primary shrink-0">
-          {t('form.startRental')}
-        </Link>
-      </div>
+      <h1 className="text-2xl font-bold text-roomi-brown">{t('nav.rentals')}</h1>
 
       <div className="grid grid-cols-2 sm:flex sm:gap-2 gap-2">
         <button
@@ -223,7 +219,7 @@ export default function Rentals() {
                         </div>
 {r.item?.subCategory && (
                             <p className="text-xs text-roomi-brownLight">
-                              {r.item.subCategory.mainCategory?.name} → {r.item.displaySubCategory ?? r.item.subCategory.name}
+                              {getMainCategoryDisplayName(r.item.subCategory.mainCategory, i18n.language)} → {r.item.customSubCategory ?? getSubCategoryDisplayName(r.item.subCategory, i18n.language)}
                             </p>
                           )}
                       </div>

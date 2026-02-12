@@ -228,10 +228,25 @@ export default function Manual() {
         </div>
       </section>
 
+      {/* Listings when you sell or rent — auto unlist + must list first */}
+      <section className="card p-5 sm:p-6 border-l-4 border-roomi-orange/60 bg-roomi-orange/5">
+        <h2 className="text-lg font-semibold text-roomi-brown mb-2 flex items-center gap-2">
+          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-roomi-orange text-white text-sm font-bold">4</span>
+          {t('manual.unlistOnSellRentTitle')}
+        </h2>
+        <p className="text-roomi-brownLight text-sm leading-relaxed mb-4">
+          {t('manual.unlistOnSellRentBody')}
+        </p>
+        <h3 className="text-base font-semibold text-roomi-brown mb-1">{t('manual.mustListFirstTitle')}</h3>
+        <p className="text-roomi-brownLight text-sm leading-relaxed">
+          {t('manual.mustListFirstBody')}
+        </p>
+      </section>
+
       {/* Status guide — what each status means and what to do */}
       <section className="card p-5 sm:p-6 border-l-4 border-roomi-mint bg-roomi-mint/10">
         <h2 className="text-lg font-semibold text-roomi-brown mb-2 flex items-center gap-2">
-          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-roomi-mint text-roomi-brown text-sm font-bold">4</span>
+          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-roomi-mint text-roomi-brown text-sm font-bold">5</span>
           {t('manual.statusGuideTitle')}
         </h2>
         <p className="text-roomi-brownLight text-sm mb-5">

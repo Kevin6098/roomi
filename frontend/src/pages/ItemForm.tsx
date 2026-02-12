@@ -3,7 +3,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, type CreateItemBody } from '../api/client';
-import { PREFECTURES, UNDECIDED, getCitiesForPrefecture } from '../data/locationData';
+import { PREFECTURES, UNDECIDED, getCitiesForPrefecture, getPrefectureDisplayName, getCityDisplayName } from '../data/locationData';
+import { getMainCategoryDisplayName, getSubCategoryDisplayName } from '../utils/categoryDisplay';
 import { CenteredToast } from '../components/CenteredToast';
 
 const STATUS_OPTIONS = ['overdue', 'in_stock', 'reserved', 'rented', 'sold', 'disposed'] as const;
@@ -12,7 +13,7 @@ const ACQUISITION_OPTIONS = ['free', 'cheap', 'bought'] as const;
 
 export default function ItemForm() {
   const { id } = useParams<{ id: string }>();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isEdit = !!id;
@@ -164,7 +165,7 @@ export default function ItemForm() {
             >
               <option value="">—</option>
               {mainCategories.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
+                <option key={c.id} value={c.id}>{getMainCategoryDisplayName(c, i18n.language)}</option>
               ))}
             </select>
             <select
@@ -175,7 +176,7 @@ export default function ItemForm() {
             >
               <option value="">—</option>
               {subCategories.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
+                <option key={c.id} value={c.id}>{getSubCategoryDisplayName(c, i18n.language)}</option>
               ))}
             </select>
           </div>
@@ -197,12 +198,13 @@ export default function ItemForm() {
           <div>
             <label className="label">{t('itemDetail.conditionLabel')}</label>
             <select
-              value={form.condition}
+              value={form.acquisition_type === 'bought' ? 'new' : form.condition}
               onChange={(e) => setForm((f) => ({ ...f, condition: e.target.value as CreateItemBody['condition'] }))}
               className="input-field"
+              disabled={form.acquisition_type === 'bought'}
             >
               {CONDITION_OPTIONS.map((c) => (
-                <option key={c} value={c}>{c}</option>
+                <option key={c} value={c}>{t(`condition.${c}`)}</option>
               ))}
             </select>
           </div>
@@ -224,7 +226,10 @@ export default function ItemForm() {
             <label className="label">{t('itemDetail.acquisitionLabel')}</label>
             <select
               value={form.acquisition_type}
-              onChange={(e) => setForm((f) => ({ ...f, acquisition_type: e.target.value as CreateItemBody['acquisition_type'] }))}
+              onChange={(e) => {
+                const v = e.target.value as CreateItemBody['acquisition_type'];
+                setForm((f) => ({ ...f, acquisition_type: v, ...(v === 'bought' ? { condition: 'new' } : {}) }));
+              }}
               className="input-field"
             >
               {ACQUISITION_OPTIONS.map((a) => (
@@ -274,13 +279,13 @@ export default function ItemForm() {
                     }}
                     className="input-field"
                   >
-                    {PREFECTURES.map((pref) => <option key={pref} value={pref}>{pref === UNDECIDED ? t('input.undecided') : pref}</option>)}
+                    {PREFECTURES.map((pref) => <option key={pref} value={pref}>{pref === UNDECIDED ? t('input.undecided') : getPrefectureDisplayName(pref, i18n.language)}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="label">{t('input.city')}</label>
                   <select value={form.city ?? UNDECIDED} onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))} className="input-field">
-                    {getCitiesForPrefecture(form.prefecture ?? UNDECIDED).map((c) => <option key={c} value={c}>{c === UNDECIDED ? t('input.undecided') : c}</option>)}
+                    {getCitiesForPrefecture(form.prefecture ?? UNDECIDED).map((c) => <option key={c} value={c}>{c === UNDECIDED ? t('input.undecided') : getCityDisplayName(c, form.prefecture ?? UNDECIDED, i18n.language)}</option>)}
                   </select>
                 </div>
               </div>

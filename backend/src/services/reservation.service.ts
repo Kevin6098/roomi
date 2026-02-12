@@ -39,6 +39,8 @@ export const reservationService = {
     if (item.status === 'sold') throw conflict('Item is sold');
     if (item.status === 'rented') throw conflict('Item is rented');
     if (item.reservations.length > 0) throw conflict('Item is already reserved');
+    const activeListings = (item.itemListings ?? []).filter((l) => l.status === 'active' || l.status === 'needs_update');
+    if (activeListings.length === 0) throw validationError('Item must be listed (posted on at least one platform) before you can reserve it.');
 
     const allowedStatuses = ['in_stock', 'overdue'];
     if (!allowedStatuses.includes(item.status)) throw conflict(`Cannot reserve item with status ${item.status}`);

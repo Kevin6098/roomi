@@ -61,6 +61,22 @@
     "actions": "操作",
     "notes": "備考"
   },
+  "platform": {
+    "Facebook": "フェイスブック",
+    "WeChat": "ウィーチャット",
+    "Xiaohongshu": "小红书",
+    "LINE": "ライン",
+    "Whatsapp": "ワッツアップ",
+    "Telegram": "テレグラム",
+    "Jimoty": "ジモティー",
+    "Mercari": "メルカリ",
+    "PayPayFlea": "ペイペイフリマ",
+    "Rakuma": "ラクマ",
+    "YahooAuction": "ヤフオク",
+    "Rednote": "レッドノート",
+    "Instagram": "インスタグラム",
+    "Other": "その他"
+  },
   "listings": {
     "listed": "出品",
     "removeSnsHint": "売却済み — SNSの投稿を削除してください",
@@ -69,12 +85,21 @@
     "markAllClosed": "すべて閉じる",
     "markClosed": "閉じる",
     "noListingsYet": "掲載先がありません。追加してください。",
+    "mustListFirst": "予約・レンタル・売却するには、先に掲載先を追加してください。",
     "addPlatforms": "出品プラットフォームを追加",
     "addPlatformsHint": "この商品をどこに掲載しましたか？1つ以上追加してください。",
     "urlOptional": "URL（任意）",
     "refIdOptional": "Ref ID（任意）",
     "addPlatform": "+ プラットフォーム追加",
     "editListing": "編集",
+    "Facebook": "フェイスブック",
+    "Jimoty": "ジモティー",
+    "Mercari": "メルカリ",
+    "Rednote": "レッドノート",
+    "WeChat": "ウィーチャット",
+    "LINE": "ライン",
+    "Instagram": "インスタグラム",
+    "Other": "その他",
     "statusActive": "掲載中",
     "statusClosed": "閉じた",
     "reserveType": "予約種別",
@@ -102,6 +127,12 @@
     "upcomingReturns": "返却予定",
     "saleDate": "売却日",
     "price": "価格"
+  },
+  "condition": {
+    "new": "新品",
+    "good": "良い",
+    "fair": "普通",
+    "poor": "傷あり"
   },
   "itemDetail": {
     "missingId": "商品IDがありません",
@@ -334,6 +365,10 @@
     "categoriesBody": "大＋サブ作成（例：家具→テーブル）。商品追加前に必要。",
     "usersTitle": "ユーザー",
     "usersBody": "OWNERのみ。チームのユーザーを追加・編集。",
+    "unlistOnSellRentTitle": "売却・レンタル時の掲載について",
+    "unlistOnSellRentBody": "売上を記録したりレンタルを開始すると、ROOMIはその商品のすべての掲載を自動で「閉じた」にします。メルカリ・フェイスブック・小红书など、各サイトで実際の投稿を削除または閉じる必要がある場合は、そちらで手動で行ってください。",
+    "mustListFirstTitle": "予約・レンタル・売却の前に掲載すること",
+    "mustListFirstBody": "予約・レンタル開始・売却記録の前に、その商品を少なくとも1つ以上の掲載先（メルカリ・フェイスブック等）に追加する必要があります。予約ボタンと売却/レンタルの選択肢には、掲載済みの商品だけが表示されます。",
     "statusGuideTitle": "ステータスの意味は？",
     "statusGuideIntro": "商品にはそれぞれステータスがあります。意味と取るべき行動をまとめました。",
     "statusGuideMeaning": "意味",
@@ -350,7 +385,7 @@
       },
       "listed": {
         "meaning": "メルカリなどに出品中です。",
-        "do": "売れたら記録の「売却」または商品から売上を記録。出品をやめる場合は商品を編集してステータスを変更。"
+        "do": "売れたら記録の「売却」または商品から売上を記録。ROOMIが掲載を自動で「閉じた」にします。その後、各サイト（メルカリ・フェイスブック等）で実際の投稿を削除または閉じてください。"
       },
       "reserved": {
         "meaning": "特定の顧客用に予約済み（まだ売却・レンタルではない）。",
@@ -358,11 +393,11 @@
       },
       "rented": {
         "meaning": "現在レンタル中です。",
-        "do": "返却されたらレンタル画面でそのレンタルの「レンタル終了」を押す。"
+        "do": "返却されたらレンタル画面で「レンタル終了」を押す。（レンタル開始時にROOMIが掲載を自動で閉じているので、各サイトで投稿を削除・閉じる必要があれば行う。）"
       },
       "sold": {
         "meaning": "売却済みで在庫から外れています。",
-        "do": "特になし。売上に記録済み。ネットに出品していた場合は掲載を削除する。"
+        "do": "ROOMIでは掲載はすでに「閉じた」になっています。メルカリ・フェイスブック等で実際の投稿がまだなら削除または閉じてください。"
       },
       "disposed": {
         "meaning": "廃棄（処分・寄付・除却）済みです。",

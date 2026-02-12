@@ -11,8 +11,9 @@ import {
   type StartRentalBody,
   type EndRentalBody,
 } from '../api/client';
-import { PREFECTURES, UNDECIDED, getCitiesForPrefecture } from '../data/locationData';
+import { PREFECTURES, UNDECIDED, getCitiesForPrefecture, getPrefectureDisplayName, getCityDisplayName } from '../data/locationData';
 import { getStatusBadgeClass } from '../utils/statusStyles';
+import { getMainCategoryDisplayName, getSubCategoryDisplayName } from '../utils/categoryDisplay';
 import { CenteredToast } from '../components/CenteredToast';
 
 const CONDITION_OPTIONS = ['new', 'good', 'fair', 'poor'] as const;
@@ -42,7 +43,7 @@ const emptyNewContact = (): {
 });
 
 export default function Records() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<'acquire' | 'sell' | 'rent'>('acquire');
   const [error, setError] = useState('');
@@ -67,7 +68,7 @@ export default function Records() {
   const [selectedContactId, setSelectedContactId] = useState('');
   const [newContact, setNewContact] = useState(emptyNewContact());
   const [contactSearch, setContactSearch] = useState('');
-  const [showLocationFields, setShowLocationFields] = useState(false);
+  const [showLocationFields, setShowLocationFields] = useState(true);
 
   const [sellForm, setSellForm] = useState<CreateSaleBody>({
     item_id: '',
@@ -286,6 +287,19 @@ export default function Records() {
     }));
   }, [tab, rentSelectedContactId, customers]);
 
+  // Pre-fill acquire location from contact when selecting an existing contact
+  useEffect(() => {
+    if (tab !== 'acquire' || !selectedContactId || contacts.length === 0) return;
+    const contact = contacts.find((c) => c.id === selectedContactId);
+    if (!contact || (!contact.prefecture && !contact.city && !contact.exactLocation)) return;
+    setAcquireForm((prev) => ({
+      ...prev,
+      prefecture: contact.prefecture ?? prev.prefecture,
+      city: contact.city ?? prev.city,
+      exact_location: contact.exactLocation ?? prev.exact_location,
+    }));
+  }, [tab, selectedContactId, contacts]);
+
   useEffect(() => {
     setRentOriginalPriceEdit('');
   }, [rentForm.item_id]);
@@ -357,11 +371,18 @@ export default function Records() {
       setError(t('input.customSubCategoryRequired'));
       return;
     }
+    const pref = acquireForm.prefecture?.trim();
+    const cityVal = acquireForm.city?.trim();
+    const exact = acquireForm.exact_location?.trim();
+    if (!pref || pref === UNDECIDED || !cityVal || cityVal === UNDECIDED || !exact) {
+      setError(t('output.handoverLocationRequired'));
+      return;
+    }
     const payload: CreateItemBody = {
       ...acquireForm,
       sub_category_id: subId,
       acquisition_type: at,
-      condition: cond,
+      condition: at === 'bought' ? 'new' : cond,
       acquisition_cost: at === 'free' ? 0 : (Number(acquireForm.acquisition_cost) || 0),
       original_price: Number(acquireForm.original_price) ?? 0,
       custom_sub_category: isOtherSub ? (acquireForm.custom_sub_category?.trim() || null) : null,
@@ -378,6 +399,9 @@ export default function Records() {
         platform_user_id: newContact.platform_user_id?.trim() || null,
         phone: newContact.phone?.trim() || null,
         email: newContact.email?.trim() || null,
+        prefecture: pref ?? undefined,
+        city: cityVal ?? undefined,
+        exact_location: exact || undefined,
       };
     }
     acquireMutation.mutate(payload);
@@ -606,7 +630,7 @@ export default function Records() {
                       className="input-field"
                     >
                       <option value="">—</option>
-                      {mainCategories.map((c) => <option key={c.id} value={c.id}>{c.nameEn ?? c.name}</option>)}
+                      {mainCategories.map((c) => <option key={c.id} value={c.id}>{getMainCategoryDisplayName(c, i18n.language)}</option>)}
                     </select>
                     <select
                       value={acquireForm.sub_category_id}
@@ -615,7 +639,7 @@ export default function Records() {
                       required
                     >
                       <option value="">—</option>
-                      {subCategories.map((c) => <option key={c.id} value={c.id}>{c.nameEn ?? c.name}</option>)}
+                      {subCategories.map((c) => <option key={c.id} value={c.id}>{getSubCategoryDisplayName(c, i18n.language)}</option>)}
                     </select>
                   </div>
                   {subCategories.find((c) => c.id === acquireForm.sub_category_id)?.name?.toLowerCase() === 'other' && (
@@ -699,7 +723,7 @@ export default function Records() {
                         >
                           <option value="">—</option>
                           {SOURCE_PLATFORM_OPTIONS.map((opt) => (
-                            <option key={opt} value={opt}>{opt === SOURCE_PLATFORM_OTHER ? t('input.sourcePlatformOther') : opt}</option>
+                            <option key={opt} value={opt}>{opt === SOURCE_PLATFORM_OTHER ? t('input.sourcePlatformOther') : t('platform.' + opt)}</option>
                           ))}
                         </select>
                         {newContact.source_platform === SOURCE_PLATFORM_OTHER_SENTINEL && (
@@ -762,7 +786,12 @@ export default function Records() {
                       value={acquireForm.acquisition_type ?? ''}
                       onChange={(e) => {
                         const v = e.target.value as CreateItemBody['acquisition_type'] | '';
-                        setAcquireForm((f) => ({ ...f, acquisition_type: v, ...(v === 'free' ? { acquisition_cost: 0 } : {}) }));
+                        setAcquireForm((f) => ({
+                          ...f,
+                          acquisition_type: v,
+                          ...(v === 'free' ? { acquisition_cost: 0 } : {}),
+                          ...(v === 'bought' ? { condition: 'new' } : {}),
+                        }));
                       }}
                       className="input-field"
                     >
@@ -802,12 +831,13 @@ export default function Records() {
                   <div>
                     <label className="label">{t('itemDetail.conditionLabel')}</label>
                     <select
-                      value={acquireForm.condition ?? ''}
+                      value={acquireForm.acquisition_type === 'bought' ? 'new' : (acquireForm.condition ?? '')}
                       onChange={(e) => setAcquireForm((f) => ({ ...f, condition: e.target.value as CreateItemBody['condition'] | '' }))}
                       className="input-field"
+                      disabled={acquireForm.acquisition_type === 'bought'}
                     >
                       <option value="">—</option>
-                      {CONDITION_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+                      {CONDITION_OPTIONS.map((c) => <option key={c} value={c}>{t(`condition.${c}`)}</option>)}
                     </select>
                   </div>
                 </div>
@@ -829,7 +859,7 @@ export default function Records() {
                             }}
                             className="input-field"
                           >
-                            {PREFECTURES.map((pref) => <option key={pref} value={pref}>{pref === UNDECIDED ? t('input.undecided') : pref}</option>)}
+                            {PREFECTURES.map((pref) => <option key={pref} value={pref}>{pref === UNDECIDED ? t('input.undecided') : getPrefectureDisplayName(pref, i18n.language)}</option>)}
                           </select>
                         </div>
                         <div>
@@ -839,18 +869,19 @@ export default function Records() {
                             onChange={(e) => setAcquireForm((f) => ({ ...f, city: e.target.value }))}
                             className="input-field"
                           >
-                            {getCitiesForPrefecture(acquireForm.prefecture ?? UNDECIDED).map((c) => <option key={c} value={c}>{c === UNDECIDED ? t('input.undecided') : c}</option>)}
+                            {getCitiesForPrefecture(acquireForm.prefecture ?? UNDECIDED).map((c) => <option key={c} value={c}>{c === UNDECIDED ? t('input.undecided') : getCityDisplayName(c, acquireForm.prefecture ?? UNDECIDED, i18n.language)}</option>)}
                           </select>
                         </div>
                       </div>
                       <div>
-                        <label className="label">{t('input.addExactLocation')}</label>
+                        <label className="label">{t('input.addExactLocationRequired')}</label>
                         <input
                           type="text"
                           value={acquireForm.exact_location ?? ''}
                           onChange={(e) => setAcquireForm((f) => ({ ...f, exact_location: e.target.value.trim() || null }))}
                           className="input-field mt-1"
-                          placeholder={t('input.addExactLocation')}
+                          placeholder={t('input.addExactLocationRequired')}
+                          required
                         />
                       </div>
                     </div>
@@ -881,8 +912,8 @@ export default function Records() {
                   {recentlyAcquired.map((item) => (
                     <li key={item.id} className="py-2">
                       <Link to={`/items/${item.id}`} className="text-roomi-orange hover:underline font-medium">{item.title}</Link>
-                      <span className="ml-2 text-sm text-roomi-brownLight">{item.subCategory?.mainCategory?.name} → {item.displaySubCategory ?? item.subCategory?.name}</span>
-                      <span className={`ml-2 ${getStatusBadgeClass(item.status)}`}>{item.status}</span>
+                      <span className="ml-2 text-sm text-roomi-brownLight">{getMainCategoryDisplayName(item.subCategory?.mainCategory, i18n.language)} → {item.customSubCategory ?? getSubCategoryDisplayName(item.subCategory, i18n.language)}</span>
+                      <span className={`ml-2 ${getStatusBadgeClass(item.status)}`}>{t(`status.${item.status}`)}</span>
                     </li>
                   ))}
                 </ul>
@@ -944,7 +975,7 @@ export default function Records() {
                       <label className="label">{t('input.sourcePlatform')} *</label>
                       <select value={sellNewContact.source_platform === SOURCE_PLATFORM_OTHER_SENTINEL ? SOURCE_PLATFORM_OTHER : sellNewContact.source_platform} onChange={(e) => setSellNewContact((c) => ({ ...c, source_platform: e.target.value === SOURCE_PLATFORM_OTHER ? SOURCE_PLATFORM_OTHER_SENTINEL : e.target.value }))} className="input-field">
                         <option value="">—</option>
-                        {SOURCE_PLATFORM_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt === SOURCE_PLATFORM_OTHER ? t('input.sourcePlatformOther') : opt}</option>)}
+                        {SOURCE_PLATFORM_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt === SOURCE_PLATFORM_OTHER ? t('input.sourcePlatformOther') : t('platform.' + opt)}</option>)}
                       </select>
                       {sellNewContact.source_platform === SOURCE_PLATFORM_OTHER_SENTINEL && <input type="text" value={sellNewContact.source_platform_other} onChange={(e) => setSellNewContact((c) => ({ ...c, source_platform_other: e.target.value }))} className="input-field mt-2" placeholder={t('input.sourcePlatformOther')} />}
                     </div>
@@ -973,8 +1004,8 @@ export default function Records() {
                 <label className="label">{t('input.decideLocation')} *</label>
                 <div className="mt-2 space-y-3">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div><label className="label">{t('input.prefecture')}</label><select value={sellForm.handover_prefecture ?? UNDECIDED} onChange={(e) => { const p = e.target.value; const cities = getCitiesForPrefecture(p); setSellForm((f) => ({ ...f, handover_prefecture: p, handover_city: cities[0] ?? UNDECIDED })); }} className="input-field">{PREFECTURES.map((pref) => <option key={pref} value={pref}>{pref === UNDECIDED ? t('input.undecided') : pref}</option>)}</select></div>
-                    <div><label className="label">{t('input.city')}</label><select value={sellForm.handover_city ?? UNDECIDED} onChange={(e) => setSellForm((f) => ({ ...f, handover_city: e.target.value }))} className="input-field">{getCitiesForPrefecture(sellForm.handover_prefecture ?? UNDECIDED).map((c) => <option key={c} value={c}>{c === UNDECIDED ? t('input.undecided') : c}</option>)}</select></div>
+                    <div><label className="label">{t('input.prefecture')}</label><select value={sellForm.handover_prefecture ?? UNDECIDED} onChange={(e) => { const p = e.target.value; const cities = getCitiesForPrefecture(p); setSellForm((f) => ({ ...f, handover_prefecture: p, handover_city: cities[0] ?? UNDECIDED })); }} className="input-field">{PREFECTURES.map((pref) => <option key={pref} value={pref}>{pref === UNDECIDED ? t('input.undecided') : getPrefectureDisplayName(pref, i18n.language)}</option>)}</select></div>
+                    <div><label className="label">{t('input.city')}</label><select value={sellForm.handover_city ?? UNDECIDED} onChange={(e) => setSellForm((f) => ({ ...f, handover_city: e.target.value }))} className="input-field">{getCitiesForPrefecture(sellForm.handover_prefecture ?? UNDECIDED).map((c) => <option key={c} value={c}>{c === UNDECIDED ? t('input.undecided') : getCityDisplayName(c, sellForm.handover_prefecture ?? UNDECIDED, i18n.language)}</option>)}</select></div>
                   </div>
                   <div><label className="label">{t('input.addExactLocationRequired')}</label><input type="text" value={sellForm.handover_exact_location ?? ''} onChange={(e) => setSellForm((f) => ({ ...f, handover_exact_location: e.target.value.trim() || null }))} className="input-field mt-1" placeholder={t('input.addExactLocationRequired')} required /></div>
                 </div>
@@ -1031,7 +1062,7 @@ export default function Records() {
                     </>
                   ) : (
                     <>
-                      <div><label className="label">{t('input.sourcePlatform')} *</label><select value={rentNewContact.source_platform === SOURCE_PLATFORM_OTHER_SENTINEL ? SOURCE_PLATFORM_OTHER : rentNewContact.source_platform} onChange={(e) => setRentNewContact((c) => ({ ...c, source_platform: e.target.value === SOURCE_PLATFORM_OTHER ? SOURCE_PLATFORM_OTHER_SENTINEL : e.target.value }))} className="input-field"><option value="">—</option>{SOURCE_PLATFORM_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt === SOURCE_PLATFORM_OTHER ? t('input.sourcePlatformOther') : opt}</option>)}</select>{rentNewContact.source_platform === SOURCE_PLATFORM_OTHER_SENTINEL && <input type="text" value={rentNewContact.source_platform_other} onChange={(e) => setRentNewContact((c) => ({ ...c, source_platform_other: e.target.value }))} className="input-field mt-2" placeholder={t('input.sourcePlatformOther')} />}</div>
+                      <div><label className="label">{t('input.sourcePlatform')} *</label><select value={rentNewContact.source_platform === SOURCE_PLATFORM_OTHER_SENTINEL ? SOURCE_PLATFORM_OTHER : rentNewContact.source_platform} onChange={(e) => setRentNewContact((c) => ({ ...c, source_platform: e.target.value === SOURCE_PLATFORM_OTHER ? SOURCE_PLATFORM_OTHER_SENTINEL : e.target.value }))} className="input-field"><option value="">—</option>{SOURCE_PLATFORM_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt === SOURCE_PLATFORM_OTHER ? t('input.sourcePlatformOther') : t('platform.' + opt)}</option>)}</select>{rentNewContact.source_platform === SOURCE_PLATFORM_OTHER_SENTINEL && <input type="text" value={rentNewContact.source_platform_other} onChange={(e) => setRentNewContact((c) => ({ ...c, source_platform_other: e.target.value }))} className="input-field mt-2" placeholder={t('input.sourcePlatformOther')} />}</div>
                       <div><label className="label">{t('table.name')} *</label><input type="text" value={rentNewContact.name} onChange={(e) => setRentNewContact((c) => ({ ...c, name: e.target.value }))} className="input-field" required /></div>
                       <div><label className="label">{t('input.platformId')}</label><input type="text" value={rentNewContact.platform_user_id} onChange={(e) => setRentNewContact((c) => ({ ...c, platform_user_id: e.target.value }))} className="input-field" placeholder={t('input.platformIdPlaceholder')} /></div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label className="label">{t('table.phone')}</label><input type="text" value={rentNewContact.phone} onChange={(e) => setRentNewContact((c) => ({ ...c, phone: e.target.value }))} className="input-field" /></div><div><label className="label">{t('table.email')}</label><input type="email" value={rentNewContact.email} onChange={(e) => setRentNewContact((c) => ({ ...c, email: e.target.value }))} className="input-field" /></div></div>
@@ -1100,8 +1131,8 @@ export default function Records() {
                   <label className="label">{t('input.decideLocation')} *</label>
                   <div className="mt-2 space-y-3">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div><label className="label">{t('input.prefecture')}</label><select value={rentForm.handover_prefecture ?? UNDECIDED} onChange={(e) => { const p = e.target.value; const cities = getCitiesForPrefecture(p); setRentForm((f) => ({ ...f, handover_prefecture: p, handover_city: cities[0] ?? UNDECIDED })); }} className="input-field">{PREFECTURES.map((pref) => <option key={pref} value={pref}>{pref === UNDECIDED ? t('input.undecided') : pref}</option>)}</select></div>
-                      <div><label className="label">{t('input.city')}</label><select value={rentForm.handover_city ?? UNDECIDED} onChange={(e) => setRentForm((f) => ({ ...f, handover_city: e.target.value }))} className="input-field">{getCitiesForPrefecture(rentForm.handover_prefecture ?? UNDECIDED).map((c) => <option key={c} value={c}>{c === UNDECIDED ? t('input.undecided') : c}</option>)}</select></div>
+                      <div><label className="label">{t('input.prefecture')}</label><select value={rentForm.handover_prefecture ?? UNDECIDED} onChange={(e) => { const p = e.target.value; const cities = getCitiesForPrefecture(p); setRentForm((f) => ({ ...f, handover_prefecture: p, handover_city: cities[0] ?? UNDECIDED })); }} className="input-field">{PREFECTURES.map((pref) => <option key={pref} value={pref}>{pref === UNDECIDED ? t('input.undecided') : getPrefectureDisplayName(pref, i18n.language)}</option>)}</select></div>
+                      <div><label className="label">{t('input.city')}</label><select value={rentForm.handover_city ?? UNDECIDED} onChange={(e) => setRentForm((f) => ({ ...f, handover_city: e.target.value }))} className="input-field">{getCitiesForPrefecture(rentForm.handover_prefecture ?? UNDECIDED).map((c) => <option key={c} value={c}>{c === UNDECIDED ? t('input.undecided') : getCityDisplayName(c, rentForm.handover_prefecture ?? UNDECIDED, i18n.language)}</option>)}</select></div>
                     </div>
                     <div><label className="label">{t('input.addExactLocationRequired')}</label><input type="text" value={rentForm.handover_exact_location ?? ''} onChange={(e) => setRentForm((f) => ({ ...f, handover_exact_location: e.target.value.trim() || null }))} className="input-field mt-1" placeholder={t('input.addExactLocationRequired')} required /></div>
                   </div>

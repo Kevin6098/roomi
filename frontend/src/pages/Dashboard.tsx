@@ -3,9 +3,10 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { api } from '../api/client';
 import { getStatusBadgeClass } from '../utils/statusStyles';
+import { getMainCategoryDisplayName, getSubCategoryDisplayName } from '../utils/categoryDisplay';
 
 export default function Dashboard() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { data, isLoading, error } = useQuery({
     queryKey: ['dashboard', 'overview'],
     queryFn: () => api.dashboard.getOverview(),
@@ -102,10 +103,10 @@ export default function Dashboard() {
                 >
                   <span className="text-base truncate min-w-0">{item.title}</span>
                   <span className="text-sm text-roomi-brownLight font-normal truncate min-w-0">
-                    {item.displaySubCategory ?? item.subCategory?.name ?? item.subCategory?.mainCategory?.name ?? ''}
+                    {item.customSubCategory ?? getSubCategoryDisplayName(item.subCategory, i18n.language) ?? getMainCategoryDisplayName(item.subCategory?.mainCategory, i18n.language) ?? ''}
                   </span>
                   <span className={`${getStatusBadgeClass(item.status)} text-xs sm:text-sm inline-flex w-fit shrink-0`}>
-                    {item.status}
+                    {t(`status.${item.status}`)}
                   </span>
                 </Link>
               </li>
