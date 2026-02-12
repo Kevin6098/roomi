@@ -2,8 +2,10 @@ import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { api } from '../api/client';
+
+type ChartGroupBy = 'day' | 'month' | 'year';
 
 const PIE_COLORS = ['#D88E4B', '#9ACFC0', '#A67C52', '#F8DB68', '#7AB8A8', '#FCE8DE', '#8B5A2B', '#F0A05A'];
 
@@ -14,6 +16,7 @@ export default function Sales() {
   const [categoryFilter, setCategoryFilter] = useState<string>('');
   const [dateFrom, setDateFrom] = useState<string>('');
   const [dateTo, setDateTo] = useState<string>('');
+  const [chartGroupBy, setChartGroupBy] = useState<ChartGroupBy>('month');
 
   const { data: salesRaw, isLoading, error } = useQuery({
     queryKey: ['sales'],
@@ -49,6 +52,27 @@ export default function Sales() {
     });
     return Object.entries(byCategory).map(([name, value]) => ({ name, value }));
   }, [filteredSales]);
+
+  const lineChartData = useMemo(() => {
+    const keyFn =
+      chartGroupBy === 'day'
+        ? (d: string) => d.slice(0, 10)
+        : chartGroupBy === 'month'
+          ? (d: string) => d.slice(0, 7)
+          : (d: string) => d.slice(0, 4);
+    const byPeriod: Record<string, { revenue: number; count: number }> = {};
+    filteredSales.forEach((s) => {
+      const raw = (s.saleDate || '').slice(0, 10);
+      if (!raw) return;
+      const key = keyFn(raw);
+      if (!byPeriod[key]) byPeriod[key] = { revenue: 0, count: 0 };
+      byPeriod[key].revenue += Number(s.salePrice ?? 0);
+      byPeriod[key].count += 1;
+    });
+    return Object.entries(byPeriod)
+      .map(([period, { revenue, count }]) => ({ period, revenue, count }))
+      .sort((a, b) => a.period.localeCompare(b.period));
+  }, [filteredSales, chartGroupBy]);
 
   const totals = useMemo(() => {
     let revenue = 0;
@@ -116,6 +140,18 @@ export default function Sales() {
               className="input-field w-full"
             />
           </div>
+          <div className="w-full sm:w-auto min-w-0 sm:min-w-[140px]">
+            <label className="label text-xs">{t('salesAnalytics.groupBy')}</label>
+            <select
+              value={chartGroupBy}
+              onChange={(e) => setChartGroupBy(e.target.value as ChartGroupBy)}
+              className="input-field w-full"
+            >
+              <option value="day">{t('salesAnalytics.byDay')}</option>
+              <option value="month">{t('salesAnalytics.byMonth')}</option>
+              <option value="year">{t('salesAnalytics.byYear')}</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -141,6 +177,29 @@ export default function Sales() {
                 {totals.profit.toLocaleString()}
               </p>
             </div>
+          </div>
+
+          {/* Sales over time line chart */}
+          <div className="card p-4">
+            <h2 className="text-lg font-semibold text-roomi-brown mb-4">{t('salesAnalytics.salesOverTime')}</h2>
+            {lineChartData.length === 0 ? (
+              <p className="text-roomi-brownLight text-sm py-8 text-center">{t('salesAnalytics.noDataForPeriod')}</p>
+            ) : (
+              <div className="h-[280px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={lineChartData} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="period" tick={{ fontSize: 12 }} />
+                    <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => v.toLocaleString()} />
+                    <Tooltip
+                      formatter={(value: number) => value.toLocaleString()}
+                      labelFormatter={(label) => t('salesAnalytics.period') + ': ' + label}
+                    />
+                    <Line type="monotone" dataKey="revenue" name={t('salesAnalytics.revenue')} stroke="#f97316" strokeWidth={2} dot={{ r: 4 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            )}
           </div>
 
           {/* Pie chart + Profit list */}
