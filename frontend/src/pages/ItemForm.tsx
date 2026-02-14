@@ -9,7 +9,6 @@ import { CenteredToast } from '../components/CenteredToast';
 
 const STATUS_OPTIONS = ['overdue', 'in_stock', 'reserved', 'rented', 'sold', 'disposed'] as const;
 const CONDITION_OPTIONS = ['new', 'good', 'fair', 'poor'] as const;
-const ACQUISITION_OPTIONS = ['free', 'cheap', 'bought'] as const;
 
 export default function ItemForm() {
   const { id } = useParams<{ id: string }>();
