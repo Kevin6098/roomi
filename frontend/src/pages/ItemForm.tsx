@@ -232,13 +232,13 @@ export default function ItemForm() {
               }}
               className="input-field"
             >
-              {ACQUISITION_OPTIONS.map((a) => (
-                <option key={a} value={a}>{a}</option>
-              ))}
+              <option value="free">{t('input.acquisitionTypeFreeItem')}</option>
+              <option value="cheap">{t('input.acquisitionTypeSecondHand')}</option>
+              <option value="bought">{t('input.acquisitionTypeNewItem')}</option>
             </select>
           </div>
           <div>
-            <label className="label">Cost</label>
+            <label className="label">{t('input.acquisitionCost')}</label>
             <input
               type="number"
               min={0}
@@ -263,7 +263,7 @@ export default function ItemForm() {
         </div>
         <div>
           <button type="button" onClick={() => setShowLocationFields((v) => !v)} className="text-sm font-semibold text-roomi-orange hover:underline">
-            {showLocationFields ? '− ' : '+ '}{t('input.decideLocation')}
+            {showLocationFields ? '− ' : '+ '}{t('input.decideSellerLocation')}
           </button>
           {showLocationFields && (
             <div className="mt-3 space-y-3">

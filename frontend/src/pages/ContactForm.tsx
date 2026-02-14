@@ -5,11 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, type CreateContactBody } from '../api/client';
 import { CenteredToast } from '../components/CenteredToast';
 import { PREFECTURES, getCitiesForPrefecture, UNDECIDED, getPrefectureDisplayName, getCityDisplayName } from '../data/locationData';
-
-const SOURCE_PLATFORM_OPTIONS = [
-  'Facebook', 'WeChat', 'Xiaohongshu', 'LINE', 'Whatsapp', 'Telegram',
-  'Jimoty', 'Mercari', 'PayPayFlea', 'Rakuma', 'YahooAuction', 'Other',
-];
+import { PLATFORM_OPTIONS as SOURCE_PLATFORM_OPTIONS } from '../data/platforms';
 
 export default function ContactForm() {
   const { id } = useParams<{ id: string }>();
@@ -93,27 +89,37 @@ export default function ContactForm() {
         {t('form.editCustomer')}
       </h1>
       <form onSubmit={handleSubmit} className="card p-6 space-y-4 max-w-xl">
-        <div>
-          <label className="label">{t('input.sourcePlatform')} *</label>
+        <p className="text-sm text-roomi-brownLight mb-4">{t('input.sourcePlatformHint')}</p>
+        <div className="flex flex-wrap gap-2 items-center mb-4">
           <select
             value={form.source_platform === 'Other' ? 'Other' : form.source_platform}
             onChange={(e) => setForm((f) => ({ ...f, source_platform: e.target.value }))}
-            className="input-field"
+            className="input-field flex-1 min-w-[120px]"
+            aria-label={t('input.sourcePlatform')}
           >
             {SOURCE_PLATFORM_OPTIONS.map((opt) => (
               <option key={opt} value={opt}>{opt === 'Other' ? t('input.sourcePlatformOther') : t('platform.' + opt)}</option>
             ))}
           </select>
-          {form.source_platform === 'Other' && (
+          <input
+            type="text"
+            value={form.platform_user_id ?? ''}
+            onChange={(e) => setForm((f) => ({ ...f, platform_user_id: e.target.value || null }))}
+            className="input-field flex-1 min-w-[140px]"
+            placeholder={t('listings.refIdOptional')}
+          />
+        </div>
+        {form.source_platform === 'Other' && (
+          <div className="mb-4">
             <input
               type="text"
               value={form.source_platform_other ?? ''}
               onChange={(e) => setForm((f) => ({ ...f, source_platform_other: e.target.value }))}
-              className="input-field mt-2"
+              className="input-field w-full max-w-xs"
               placeholder={t('input.sourcePlatformOther')}
             />
-          )}
-        </div>
+          </div>
+        )}
         <div>
           <label className="label">{t('table.name')} *</label>
           <input
@@ -185,7 +191,12 @@ export default function ContactForm() {
           <input
             type="text"
             value={form.phone ?? ''}
-            onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value || null }))}
+            onChange={(e) => {
+              const digits = e.target.value.replace(/\D/g, '');
+              setForm((f) => ({ ...f, phone: digits || null }));
+            }}
+            inputMode="numeric"
+            pattern="[0-9]*"
             className="input-field"
           />
         </div>

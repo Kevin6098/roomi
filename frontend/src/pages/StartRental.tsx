@@ -60,7 +60,7 @@ export default function StartRental() {
     e.preventDefault();
     setError('');
     if (isReserved && !paymentReceived) {
-      setError('Please confirm payment/deposit received for this reserved item');
+      setError('Please confirm payment received for this reserved item');
       return;
     }
     if (activeListings.length > 0) {
@@ -130,7 +130,7 @@ export default function StartRental() {
               className="rounded border-roomi-brown/40"
             />
             <label htmlFor="payment_received_rental" className="text-sm font-medium text-roomi-brown">
-              Payment/deposit received?
+              Payment received?
             </label>
           </div>
         )}
@@ -165,17 +165,6 @@ export default function StartRental() {
               step={0.01}
               value={form.rent_price_monthly ?? ''}
               onChange={(e) => setForm((f) => ({ ...f, rent_price_monthly: e.target.value ? Number(e.target.value) : null }))}
-              className="input-field"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Deposit</label>
-            <input
-              type="number"
-              min={0}
-              step={0.01}
-              value={form.deposit ?? ''}
-              onChange={(e) => setForm((f) => ({ ...f, deposit: e.target.value ? Number(e.target.value) : null }))}
               className="input-field"
             />
           </div>

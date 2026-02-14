@@ -117,12 +117,6 @@ export default function ItemDetail() {
             <p className="text-sm text-roomi-brownLight">
               {t('itemDetail.reservedDate')}: {activeReservation.reservedAt ? new Date(activeReservation.reservedAt).toLocaleDateString() : '—'}
             </p>
-            {(activeReservation.depositExpected != null || activeReservation.depositReceived != null) && (
-              <p className="text-sm text-roomi-brownLight">
-                {t('itemDetail.depositStatus')}: {activeReservation.depositReceived ? t('itemDetail.depositReceived') : t('itemDetail.depositPending')}
-                {activeReservation.depositExpected != null && ` (${Number(activeReservation.depositExpected)})`}
-              </p>
-            )}
             {!cancelReservationConfirm ? (
               <button
                 type="button"
@@ -157,7 +151,7 @@ export default function ItemDetail() {
                 <li key={r.id} className="text-roomi-brown text-sm">
                   <span className="text-roomi-brownLight">{t('table.renter')}:</span> {r.customer?.name ?? '—'}
                   {' · '}
-                  <span className="text-roomi-brownLight">{t('itemDetail.rentPeriod')}:</span> {r.startDate} – {r.actualEndDate ?? r.expectedEndDate}
+                  <span className="text-roomi-brownLight">{t('itemDetail.rentPeriod')}:</span> {(r.startDate || '').slice(0, 10)} – {((r.actualEndDate ?? r.expectedEndDate) || '').slice(0, 10)}
                   {r.status && <span className="ml-1">({r.status})</span>}
                 </li>
               ))}

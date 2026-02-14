@@ -426,29 +426,31 @@ function ListingsModal({ item, onClose, onSaved }: { item: Item; onClose: () => 
                     <li key={l.id} className="pt-3 first:pt-0">
                       {editingId === l.id ? (
                         <div className="space-y-2">
-                          <select
-                            value={editForm.platform}
-                            onChange={(e) => setEditForm((f) => ({ ...f, platform: e.target.value }))}
-                            className="input-field"
-                          >
-                            {LISTING_PLATFORMS.map((pl) => (
-                              <option key={pl} value={pl}>{t(`listings.${pl}`)}</option>
-                            ))}
-                          </select>
-                          <input
-                            type="url"
-                            placeholder={t('listings.urlOptional')}
-                            value={editForm.listing_url}
-                            onChange={(e) => setEditForm((f) => ({ ...f, listing_url: e.target.value }))}
-                            className="input-field"
-                          />
-                          <input
-                            type="text"
-                            placeholder={t('listings.refIdOptional')}
-                            value={editForm.listing_ref_id}
-                            onChange={(e) => setEditForm((f) => ({ ...f, listing_ref_id: e.target.value }))}
-                            className="input-field"
-                          />
+                          <div className="flex flex-wrap gap-2 items-center">
+                            <select
+                              value={editForm.platform}
+                              onChange={(e) => setEditForm((f) => ({ ...f, platform: e.target.value }))}
+                              className="input-field flex-1 min-w-[120px]"
+                            >
+                              {LISTING_PLATFORMS.map((pl) => (
+                                <option key={pl} value={pl}>{t('platform.' + pl)}</option>
+                              ))}
+                            </select>
+                            <input
+                              type="url"
+                              placeholder={t('listings.urlOptional')}
+                              value={editForm.listing_url}
+                              onChange={(e) => setEditForm((f) => ({ ...f, listing_url: e.target.value }))}
+                              className="input-field flex-1 min-w-[140px]"
+                            />
+                            <input
+                              type="text"
+                              placeholder={t('listings.refIdOptional')}
+                              value={editForm.listing_ref_id}
+                              onChange={(e) => setEditForm((f) => ({ ...f, listing_ref_id: e.target.value }))}
+                              className="input-field w-24"
+                            />
+                          </div>
                           <div className="flex gap-2">
                             <button type="button" onClick={saveEdit} className="btn-primary text-sm" disabled={updateListingMutation.isPending}>{t('common.save')}</button>
                             <button type="button" onClick={() => setEditingId(null)} className="btn-secondary text-sm">{t('common.cancel')}</button>
@@ -457,7 +459,7 @@ function ListingsModal({ item, onClose, onSaved }: { item: Item; onClose: () => 
                       ) : (
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <div className="min-w-0 flex-1">
-                            <p className="font-medium text-roomi-brown">{t(`listings.${l.platform}`)}</p>
+                            <p className="font-medium text-roomi-brown">{t('platform.' + l.platform)}</p>
                             {l.listingUrl && (
                               <a href={l.listingUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-roomi-orange hover:underline truncate block">{l.listingUrl}</a>
                             )}
@@ -551,9 +553,9 @@ function AddListingsForm({ item, setListedAfterCreate, onSaved, onCancel }: { it
               onChange={(e) => setPlatforms((p) => p.map((r, j) => (j === i ? { ...r, platform: e.target.value } : r)))}
               className="input-field flex-1 min-w-[120px]"
             >
-              {LISTING_PLATFORMS.map((pl) => (
-                <option key={pl} value={pl}>{t(`listings.${pl}`)}</option>
-              ))}
+{LISTING_PLATFORMS.map((pl) => (
+              <option key={pl} value={pl}>{t('platform.' + pl)}</option>
+            ))}
             </select>
             <input
               type="url"
@@ -744,8 +746,10 @@ function ReserveModal({ item, onClose, onSaved }: { item: Item; onClose: () => v
                     <input
                       type="text"
                       value={newContact.phone}
-                      onChange={(e) => setNewContact((c) => ({ ...c, phone: e.target.value }))}
+                      onChange={(e) => setNewContact((c) => ({ ...c, phone: e.target.value.replace(/\D/g, '') }))}
                       className="input-field"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                     />
                   </div>
                   <div>

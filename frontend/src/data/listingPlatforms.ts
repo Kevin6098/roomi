@@ -1,13 +1,3 @@
-/** Common SNS/platforms for listing items */
-export const LISTING_PLATFORMS = [
-  'Facebook',
-  'Jimoty',
-  'Mercari',
-  'Rednote',
-  'WeChat',
-  'LINE',
-  'Instagram',
-  'Other',
-] as const;
-
-export type ListingPlatform = (typeof LISTING_PLATFORMS)[number];
+/** Re-export shared platforms so listing and customer details use the same list */
+export { PLATFORM_OPTIONS as LISTING_PLATFORMS } from './platforms';
+export type { PlatformOption as ListingPlatform } from './platforms';

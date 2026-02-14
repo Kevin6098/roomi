@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, type Contact, type Customer } from '../api/client';
+import { PLATFORM_OPTIONS, PLATFORM_OTHER } from '../data/platforms';
 
 type ListRow = { id: string; name: string; platform: string; type: 'contact' | 'customer' };
 
@@ -45,16 +46,13 @@ export default function Customers() {
     return [...fromContacts, ...fromCustomers].sort((a, b) => a.name.localeCompare(b.name));
   }, [contacts, customers]);
 
-  const platformOptions = useMemo(() => {
-    const set = new Set<string>(fullList.map((r) => r.platform).filter((p) => p && p !== '—'));
-    return [ALL_PLATFORMS, ...Array.from(set).sort()];
-  }, [fullList]);
-
   const list = useMemo(() => {
     const q = search.trim().toLowerCase();
     const byPlatform = platformFilter === ALL_PLATFORMS
       ? fullList
-      : fullList.filter((r) => r.platform === platformFilter);
+      : platformFilter === PLATFORM_OTHER
+        ? fullList.filter((r) => r.platform === PLATFORM_OTHER || (r.platform !== '—' && !(PLATFORM_OPTIONS as readonly string[]).includes(r.platform)))
+        : fullList.filter((r) => r.platform === platformFilter);
     if (!q) return byPlatform;
     return byPlatform.filter(
       (r) =>
@@ -142,8 +140,10 @@ export default function Customers() {
               className="w-full sm:w-auto sm:min-w-[180px] rounded-roomi border-2 border-roomi-brown/25 bg-roomi-cream/80 px-3 py-2.5 text-sm font-medium text-roomi-brown focus:border-roomi-orange focus:bg-white focus:outline-none focus:ring-2 focus:ring-roomi-orange/30 appearance-none cursor-pointer"
             >
               <option value={ALL_PLATFORMS}>{t('customers.allPlatforms')}</option>
-              {platformOptions.filter((p) => p !== ALL_PLATFORMS).map((platform) => (
-                <option key={platform} value={platform}>{platform}</option>
+              {PLATFORM_OPTIONS.map((platform) => (
+                <option key={platform} value={platform}>
+                  {platform === PLATFORM_OTHER ? t('input.sourcePlatformOther') : t('platform.' + platform)}
+                </option>
               ))}
             </select>
           </div>
@@ -179,7 +179,13 @@ export default function Customers() {
                     {row.name}
                   </p>
                   <span className="inline-block mt-1.5 text-xs font-medium text-roomi-brownLight bg-roomi-peach/50 rounded-full px-2.5 py-1">
-                    {row.platform}
+                    {row.platform === '—' || !row.platform
+                      ? '—'
+                      : row.platform === PLATFORM_OTHER
+                        ? t('input.sourcePlatformOther')
+                        : (PLATFORM_OPTIONS as readonly string[]).includes(row.platform)
+                          ? t('platform.' + row.platform)
+                          : row.platform}
                   </span>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">

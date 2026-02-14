@@ -9,21 +9,15 @@ import {
   type CreateItemBody,
   type CreateSaleBody,
   type StartRentalBody,
-  type EndRentalBody,
 } from '../api/client';
 import { PREFECTURES, UNDECIDED, getCitiesForPrefecture, getPrefectureDisplayName, getCityDisplayName } from '../data/locationData';
 import { getStatusBadgeClass } from '../utils/statusStyles';
 import { getMainCategoryDisplayName, getSubCategoryDisplayName } from '../utils/categoryDisplay';
+import { PLATFORM_OPTIONS as SOURCE_PLATFORM_OPTIONS, PLATFORM_OTHER as SOURCE_PLATFORM_OTHER, PLATFORM_OTHER_SENTINEL as SOURCE_PLATFORM_OTHER_SENTINEL } from '../data/platforms';
 import { CenteredToast } from '../components/CenteredToast';
 
 const CONDITION_OPTIONS = ['new', 'good', 'fair', 'poor'] as const;
 const ACQUISITION_OPTIONS = ['free', 'cheap', 'bought'] as const;
-const SOURCE_PLATFORM_OPTIONS = [
-  'Facebook', 'WeChat', 'Xiaohongshu', 'LINE', 'Whatsapp', 'Telegram',
-  'Jimoty', 'Mercari', 'PayPayFlea', 'Rakuma', 'YahooAuction', 'Other',
-] as const;
-const SOURCE_PLATFORM_OTHER = 'Other';
-const SOURCE_PLATFORM_OTHER_SENTINEL = '__other__';
 const today = () => new Date().toISOString().slice(0, 10);
 
 const emptyNewContact = (): {
@@ -68,7 +62,6 @@ export default function Records() {
   const [selectedContactId, setSelectedContactId] = useState('');
   const [newContact, setNewContact] = useState(emptyNewContact());
   const [contactSearch, setContactSearch] = useState('');
-  const [showLocationFields, setShowLocationFields] = useState(true);
 
   const [sellForm, setSellForm] = useState<CreateSaleBody>({
     item_id: '',
@@ -89,7 +82,6 @@ export default function Records() {
     rent_period: 'monthly',
     rent_price_monthly: null,
     rent_price_annually: null,
-    deposit: null,
     start_date: today(),
     expected_end_date: '',
     handover_prefecture: null,
@@ -159,12 +151,6 @@ export default function Records() {
     queryFn: () => api.items.getReservation(rentForm.item_id),
     enabled: tab === 'rent' && !!rentForm.item_id,
   });
-  const { data: rentals = [] } = useQuery({
-    queryKey: ['rentals', { status: 'active' }],
-    queryFn: () => api.rentals.getMany({ status: 'active' }),
-    enabled: tab === 'rent',
-  });
-
   const acquireMutation = useMutation({
     mutationFn: (body: CreateItemBody) => api.items.create(body),
     onSuccess: () => {
@@ -187,7 +173,6 @@ export default function Records() {
       setSelectedContactId('');
       setNewContact(emptyNewContact());
       setContactSearch('');
-      setShowLocationFields(false);
       queryClient.invalidateQueries({ queryKey: ['items'] });
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
       setTimeout(() => setToast(''), 3000);
@@ -214,7 +199,7 @@ export default function Records() {
     mutationFn: (body: StartRentalBody) => api.rentals.start(body),
     onSuccess: () => {
       setToast(t('output.rentalSaved'));
-      setRentForm({ item_id: '', rent_period: 'monthly', rent_price_monthly: null, rent_price_annually: null, deposit: null, start_date: today(), expected_end_date: '', handover_prefecture: null, handover_city: null, handover_exact_location: null });
+      setRentForm({ item_id: '', rent_period: 'monthly', rent_price_monthly: null, rent_price_annually: null, start_date: today(), expected_end_date: '', handover_prefecture: null, handover_city: null, handover_exact_location: null });
       setRentContactMode('new');
       setRentSelectedContactId('');
       setRentNewContact(emptyNewContact());
@@ -311,21 +296,6 @@ export default function Records() {
       queryClient.invalidateQueries({ queryKey: ['items', 'available', 'rent'] });
       queryClient.invalidateQueries({ queryKey: ['items'] });
       setRentOriginalPriceEdit('');
-    },
-    onError: (e) => setError((e as Error).message),
-  });
-
-  const [endRentalId, setEndRentalId] = useState<string | null>(null);
-  const [endForm, setEndForm] = useState<EndRentalBody>({ next_item_status: 'in_stock' });
-  const endRentalMutation = useMutation({
-    mutationFn: ({ id, body }: { id: string; body: EndRentalBody }) =>
-      api.rentals.end(id, body),
-    onSuccess: () => {
-      setToast(t('output.rentalEnded'));
-      setEndRentalId(null);
-      queryClient.invalidateQueries({ queryKey: ['rentals'] });
-      queryClient.invalidateQueries({ queryKey: ['items'] });
-      setTimeout(() => setToast(''), 3000);
     },
     onError: (e) => setError((e as Error).message),
   });
@@ -498,7 +468,6 @@ export default function Records() {
       rent_period: rentForm.rent_period ?? 'monthly',
       rent_price_monthly: rentForm.rent_period === 'monthly' ? (rentForm.rent_price_monthly ?? undefined) : undefined,
       rent_price_annually: rentForm.rent_period === 'annually' ? (rentForm.rent_price_annually ?? undefined) : undefined,
-      deposit: rentForm.deposit ?? undefined,
       start_date: rentForm.start_date,
       expected_end_date: rentForm.expected_end_date,
       handover_prefecture: rentForm.handover_prefecture ?? undefined,
@@ -520,13 +489,6 @@ export default function Records() {
       };
     }
     rentMutation.mutate(payload);
-  }
-
-  function handleEndRentalSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!endRentalId) return;
-    setError('');
-    endRentalMutation.mutate({ id: endRentalId, body: endForm });
   }
 
   return (
@@ -711,31 +673,41 @@ export default function Records() {
                     </div>
                   ) : (
                     <>
-                      <div>
-                        <label className="label">{t('input.sourcePlatform')} *</label>
+                      <p className="text-sm text-roomi-brownLight mb-4">{t('input.sourcePlatformHint')}</p>
+                      <div className="flex flex-wrap gap-2 items-center mb-4">
                         <select
                           value={newContact.source_platform === SOURCE_PLATFORM_OTHER_SENTINEL ? SOURCE_PLATFORM_OTHER : newContact.source_platform}
                           onChange={(e) => {
                             const v = e.target.value;
                             setNewContact((c) => ({ ...c, source_platform: v === SOURCE_PLATFORM_OTHER ? SOURCE_PLATFORM_OTHER_SENTINEL : v }));
                           }}
-                          className="input-field"
+                          className="input-field flex-1 min-w-[120px]"
+                          aria-label={t('input.sourcePlatform')}
                         >
                           <option value="">—</option>
                           {SOURCE_PLATFORM_OPTIONS.map((opt) => (
                             <option key={opt} value={opt}>{opt === SOURCE_PLATFORM_OTHER ? t('input.sourcePlatformOther') : t('platform.' + opt)}</option>
                           ))}
                         </select>
-                        {newContact.source_platform === SOURCE_PLATFORM_OTHER_SENTINEL && (
+                        <input
+                          type="text"
+                          value={newContact.platform_user_id ?? ''}
+                          onChange={(e) => setNewContact((c) => ({ ...c, platform_user_id: e.target.value }))}
+                          className="input-field flex-1 min-w-[140px]"
+                          placeholder={t('listings.refIdOptional')}
+                        />
+                      </div>
+                      {newContact.source_platform === SOURCE_PLATFORM_OTHER_SENTINEL && (
+                        <div className="mb-4">
                           <input
                             type="text"
                             value={newContact.source_platform_other}
                             onChange={(e) => setNewContact((c) => ({ ...c, source_platform_other: e.target.value }))}
-                            className="input-field mt-2"
+                            className="input-field w-full max-w-xs"
                             placeholder={t('input.sourcePlatformOther')}
                           />
-                        )}
-                      </div>
+                        </div>
+                      )}
                       <div>
                         <label className="label">{t('table.name')} *</label>
                         <input
@@ -746,24 +718,16 @@ export default function Records() {
                           required
                         />
                       </div>
-                      <div>
-                        <label className="label">{t('input.platformId')}</label>
-                        <input
-                          type="text"
-                          value={newContact.platform_user_id}
-                          onChange={(e) => setNewContact((c) => ({ ...c, platform_user_id: e.target.value }))}
-                          className="input-field"
-                          placeholder={t('input.platformIdPlaceholder')}
-                        />
-                      </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="label">{t('table.phone')}</label>
                           <input
                             type="text"
                             value={newContact.phone}
-                            onChange={(e) => setNewContact((c) => ({ ...c, phone: e.target.value }))}
+                            onChange={(e) => setNewContact((c) => ({ ...c, phone: e.target.value.replace(/\D/g, '') }))}
                             className="input-field"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
                           />
                         </div>
                         <div>
@@ -842,50 +806,14 @@ export default function Records() {
                   </div>
                 </div>
                 <div>
-                  <button type="button" onClick={() => setShowLocationFields((v) => !v)} className="text-sm font-medium text-roomi-orange hover:underline">
-                    {showLocationFields ? '− ' : '+ '}{t('input.decideLocation')}
-                  </button>
-                  {showLocationFields && (
-                    <div className="mt-3 space-y-3">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                          <label className="label">{t('input.prefecture')}</label>
-                          <select
-                            value={acquireForm.prefecture ?? UNDECIDED}
-                            onChange={(e) => {
-                              const p = e.target.value;
-                              const cities = getCitiesForPrefecture(p);
-                              setAcquireForm((f) => ({ ...f, prefecture: p, city: cities[0] ?? UNDECIDED }));
-                            }}
-                            className="input-field"
-                          >
-                            {PREFECTURES.map((pref) => <option key={pref} value={pref}>{pref === UNDECIDED ? t('input.undecided') : getPrefectureDisplayName(pref, i18n.language)}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="label">{t('input.city')}</label>
-                          <select
-                            value={acquireForm.city ?? UNDECIDED}
-                            onChange={(e) => setAcquireForm((f) => ({ ...f, city: e.target.value }))}
-                            className="input-field"
-                          >
-                            {getCitiesForPrefecture(acquireForm.prefecture ?? UNDECIDED).map((c) => <option key={c} value={c}>{c === UNDECIDED ? t('input.undecided') : getCityDisplayName(c, acquireForm.prefecture ?? UNDECIDED, i18n.language)}</option>)}
-                          </select>
-                        </div>
-                      </div>
-                      <div>
-                        <label className="label">{t('input.addExactLocationRequired')}</label>
-                        <input
-                          type="text"
-                          value={acquireForm.exact_location ?? ''}
-                          onChange={(e) => setAcquireForm((f) => ({ ...f, exact_location: e.target.value.trim() || null }))}
-                          className="input-field mt-1"
-                          placeholder={t('input.addExactLocationRequired')}
-                          required
-                        />
-                      </div>
+                  <label className="label">{t('input.decideSellerLocation')} *</label>
+                  <div className="mt-2 space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div><label className="label">{t('input.prefecture')}</label><select value={acquireForm.prefecture ?? UNDECIDED} onChange={(e) => { const p = e.target.value; const cities = getCitiesForPrefecture(p); setAcquireForm((f) => ({ ...f, prefecture: p, city: cities[0] ?? UNDECIDED })); }} className="input-field">{PREFECTURES.map((pref) => <option key={pref} value={pref}>{pref === UNDECIDED ? t('input.undecided') : getPrefectureDisplayName(pref, i18n.language)}</option>)}</select></div>
+                      <div><label className="label">{t('input.city')}</label><select value={acquireForm.city ?? UNDECIDED} onChange={(e) => setAcquireForm((f) => ({ ...f, city: e.target.value }))} className="input-field">{getCitiesForPrefecture(acquireForm.prefecture ?? UNDECIDED).map((c) => <option key={c} value={c}>{c === UNDECIDED ? t('input.undecided') : getCityDisplayName(c, acquireForm.prefecture ?? UNDECIDED, i18n.language)}</option>)}</select></div>
                     </div>
-                  )}
+                    <div><label className="label">{t('input.addExactLocationRequired')}</label><input type="text" value={acquireForm.exact_location ?? ''} onChange={(e) => setAcquireForm((f) => ({ ...f, exact_location: e.target.value.trim() || null }))} className="input-field mt-1" placeholder={t('input.addExactLocationRequired')} required /></div>
+                  </div>
                 </div>
                 <div>
                   <label className="label">{t('itemDetail.notesLabel')}</label>
@@ -971,18 +899,18 @@ export default function Records() {
                   </>
                 ) : (
                   <>
-                    <div>
-                      <label className="label">{t('input.sourcePlatform')} *</label>
-                      <select value={sellNewContact.source_platform === SOURCE_PLATFORM_OTHER_SENTINEL ? SOURCE_PLATFORM_OTHER : sellNewContact.source_platform} onChange={(e) => setSellNewContact((c) => ({ ...c, source_platform: e.target.value === SOURCE_PLATFORM_OTHER ? SOURCE_PLATFORM_OTHER_SENTINEL : e.target.value }))} className="input-field">
+                    <p className="text-sm text-roomi-brownLight mb-4">{t('input.sourcePlatformHint')}</p>
+                    <div className="flex flex-wrap gap-2 items-center mb-4">
+                      <select value={sellNewContact.source_platform === SOURCE_PLATFORM_OTHER_SENTINEL ? SOURCE_PLATFORM_OTHER : sellNewContact.source_platform} onChange={(e) => setSellNewContact((c) => ({ ...c, source_platform: e.target.value === SOURCE_PLATFORM_OTHER ? SOURCE_PLATFORM_OTHER_SENTINEL : e.target.value }))} className="input-field flex-1 min-w-[120px]" aria-label={t('input.sourcePlatform')}>
                         <option value="">—</option>
                         {SOURCE_PLATFORM_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt === SOURCE_PLATFORM_OTHER ? t('input.sourcePlatformOther') : t('platform.' + opt)}</option>)}
                       </select>
-                      {sellNewContact.source_platform === SOURCE_PLATFORM_OTHER_SENTINEL && <input type="text" value={sellNewContact.source_platform_other} onChange={(e) => setSellNewContact((c) => ({ ...c, source_platform_other: e.target.value }))} className="input-field mt-2" placeholder={t('input.sourcePlatformOther')} />}
+                      <input type="text" value={sellNewContact.platform_user_id ?? ''} onChange={(e) => setSellNewContact((c) => ({ ...c, platform_user_id: e.target.value }))} className="input-field flex-1 min-w-[140px]" placeholder={t('listings.refIdOptional')} />
                     </div>
+                    {sellNewContact.source_platform === SOURCE_PLATFORM_OTHER_SENTINEL && <div className="mb-4"><input type="text" value={sellNewContact.source_platform_other} onChange={(e) => setSellNewContact((c) => ({ ...c, source_platform_other: e.target.value }))} className="input-field w-full max-w-xs" placeholder={t('input.sourcePlatformOther')} /></div>}
                     <div><label className="label">{t('table.name')} *</label><input type="text" value={sellNewContact.name} onChange={(e) => setSellNewContact((c) => ({ ...c, name: e.target.value }))} className="input-field" required /></div>
-                    <div><label className="label">{t('input.platformId')}</label><input type="text" value={sellNewContact.platform_user_id} onChange={(e) => setSellNewContact((c) => ({ ...c, platform_user_id: e.target.value }))} className="input-field" placeholder={t('input.platformIdPlaceholder')} /></div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div><label className="label">{t('table.phone')}</label><input type="text" value={sellNewContact.phone} onChange={(e) => setSellNewContact((c) => ({ ...c, phone: e.target.value }))} className="input-field" /></div>
+                      <div><label className="label">{t('table.phone')}</label><input type="text" value={sellNewContact.phone} onChange={(e) => setSellNewContact((c) => ({ ...c, phone: e.target.value.replace(/\D/g, '') }))} className="input-field" inputMode="numeric" pattern="[0-9]*" /></div>
                       <div><label className="label">{t('table.email')}</label><input type="email" value={sellNewContact.email} onChange={(e) => setSellNewContact((c) => ({ ...c, email: e.target.value }))} className="input-field" /></div>
                     </div>
                   </>
@@ -1001,7 +929,7 @@ export default function Records() {
                 })()}
               </div>
               <div>
-                <label className="label">{t('input.decideLocation')} *</label>
+                <label className="label">{t('input.decideBuyerLocation')} *</label>
                 <div className="mt-2 space-y-3">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div><label className="label">{t('input.prefecture')}</label><select value={sellForm.handover_prefecture ?? UNDECIDED} onChange={(e) => { const p = e.target.value; const cities = getCitiesForPrefecture(p); setSellForm((f) => ({ ...f, handover_prefecture: p, handover_city: cities[0] ?? UNDECIDED })); }} className="input-field">{PREFECTURES.map((pref) => <option key={pref} value={pref}>{pref === UNDECIDED ? t('input.undecided') : getPrefectureDisplayName(pref, i18n.language)}</option>)}</select></div>
@@ -1062,10 +990,14 @@ export default function Records() {
                     </>
                   ) : (
                     <>
-                      <div><label className="label">{t('input.sourcePlatform')} *</label><select value={rentNewContact.source_platform === SOURCE_PLATFORM_OTHER_SENTINEL ? SOURCE_PLATFORM_OTHER : rentNewContact.source_platform} onChange={(e) => setRentNewContact((c) => ({ ...c, source_platform: e.target.value === SOURCE_PLATFORM_OTHER ? SOURCE_PLATFORM_OTHER_SENTINEL : e.target.value }))} className="input-field"><option value="">—</option>{SOURCE_PLATFORM_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt === SOURCE_PLATFORM_OTHER ? t('input.sourcePlatformOther') : t('platform.' + opt)}</option>)}</select>{rentNewContact.source_platform === SOURCE_PLATFORM_OTHER_SENTINEL && <input type="text" value={rentNewContact.source_platform_other} onChange={(e) => setRentNewContact((c) => ({ ...c, source_platform_other: e.target.value }))} className="input-field mt-2" placeholder={t('input.sourcePlatformOther')} />}</div>
+                      <p className="text-sm text-roomi-brownLight mb-4">{t('input.sourcePlatformHint')}</p>
+                      <div className="flex flex-wrap gap-2 items-center mb-4">
+                        <select value={rentNewContact.source_platform === SOURCE_PLATFORM_OTHER_SENTINEL ? SOURCE_PLATFORM_OTHER : rentNewContact.source_platform} onChange={(e) => setRentNewContact((c) => ({ ...c, source_platform: e.target.value === SOURCE_PLATFORM_OTHER ? SOURCE_PLATFORM_OTHER_SENTINEL : e.target.value }))} className="input-field flex-1 min-w-[120px]" aria-label={t('input.sourcePlatform')}><option value="">—</option>{SOURCE_PLATFORM_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt === SOURCE_PLATFORM_OTHER ? t('input.sourcePlatformOther') : t('platform.' + opt)}</option>)}</select>
+                        <input type="text" value={rentNewContact.platform_user_id ?? ''} onChange={(e) => setRentNewContact((c) => ({ ...c, platform_user_id: e.target.value }))} className="input-field flex-1 min-w-[140px]" placeholder={t('listings.refIdOptional')} />
+                      </div>
+                      {rentNewContact.source_platform === SOURCE_PLATFORM_OTHER_SENTINEL && <div className="mb-4"><input type="text" value={rentNewContact.source_platform_other} onChange={(e) => setRentNewContact((c) => ({ ...c, source_platform_other: e.target.value }))} className="input-field w-full max-w-xs" placeholder={t('input.sourcePlatformOther')} /></div>}
                       <div><label className="label">{t('table.name')} *</label><input type="text" value={rentNewContact.name} onChange={(e) => setRentNewContact((c) => ({ ...c, name: e.target.value }))} className="input-field" required /></div>
-                      <div><label className="label">{t('input.platformId')}</label><input type="text" value={rentNewContact.platform_user_id} onChange={(e) => setRentNewContact((c) => ({ ...c, platform_user_id: e.target.value }))} className="input-field" placeholder={t('input.platformIdPlaceholder')} /></div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label className="label">{t('table.phone')}</label><input type="text" value={rentNewContact.phone} onChange={(e) => setRentNewContact((c) => ({ ...c, phone: e.target.value }))} className="input-field" /></div><div><label className="label">{t('table.email')}</label><input type="email" value={rentNewContact.email} onChange={(e) => setRentNewContact((c) => ({ ...c, email: e.target.value }))} className="input-field" /></div></div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label className="label">{t('table.phone')}</label><input type="text" value={rentNewContact.phone} onChange={(e) => setRentNewContact((c) => ({ ...c, phone: e.target.value.replace(/\D/g, '') }))} className="input-field" inputMode="numeric" pattern="[0-9]*" /></div><div><label className="label">{t('table.email')}</label><input type="email" value={rentNewContact.email} onChange={(e) => setRentNewContact((c) => ({ ...c, email: e.target.value }))} className="input-field" /></div></div>
                     </>
                   )}
                 </div>
@@ -1084,7 +1016,6 @@ export default function Records() {
                     })()}
                   </div>
                 </div>
-                <div><label className="label">{t('output.deposit')}</label><input type="number" min={0} step={0.01} value={rentForm.deposit ?? ''} onChange={(e) => setRentForm((f) => ({ ...f, deposit: e.target.value ? Number(e.target.value) : null }))} className="input-field" placeholder={t('output.depositPlaceholder')} /></div>
                 {rentForm.item_id && (() => {
                   const item = availableItems.find((i) => i.id === rentForm.item_id);
                   if (!item) return null;
@@ -1092,9 +1023,9 @@ export default function Records() {
                   const hasOriginalPrice = originalPrice > 0;
                   return (
                     <div className="rounded-roomi border border-roomi-peach/50 bg-roomi-cream/40 p-3 space-y-2">
-                      <p className="text-sm font-medium text-roomi-brown">{t('output.originalPriceForDeposit')}</p>
+                      <p className="text-sm font-medium text-roomi-brown">{t('input.originalPrice')}</p>
                       {hasOriginalPrice ? (
-                        <p className="text-roomi-brownLight text-sm">{t('input.originalPrice')}: {originalPrice.toLocaleString()}</p>
+                        <p className="text-roomi-brownLight text-sm">{originalPrice.toLocaleString()}</p>
                       ) : (
                         <div className="flex flex-wrap items-center gap-2">
                           <input
@@ -1128,7 +1059,7 @@ export default function Records() {
                   <div><label className="label">{t('table.expectedEnd')} *</label><input type="date" value={rentForm.expected_end_date} onChange={(e) => setRentForm((f) => ({ ...f, expected_end_date: e.target.value }))} className="input-field" required /></div>
                 </div>
                 <div>
-                  <label className="label">{t('input.decideLocation')} *</label>
+                  <label className="label">{t('input.decideBuyerLocation')} *</label>
                   <div className="mt-2 space-y-3">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div><label className="label">{t('input.prefecture')}</label><select value={rentForm.handover_prefecture ?? UNDECIDED} onChange={(e) => { const p = e.target.value; const cities = getCitiesForPrefecture(p); setRentForm((f) => ({ ...f, handover_prefecture: p, handover_city: cities[0] ?? UNDECIDED })); }} className="input-field">{PREFECTURES.map((pref) => <option key={pref} value={pref}>{pref === UNDECIDED ? t('input.undecided') : getPrefectureDisplayName(pref, i18n.language)}</option>)}</select></div>
@@ -1139,30 +1070,6 @@ export default function Records() {
                 </div>
                 <button type="submit" disabled={rentMutation.isPending} className="btn-primary">{t('output.startRentalBtn')}</button>
               </form>
-            </section>
-            <section className="rounded-xl border border-roomi-peach/60 bg-white p-6 mt-6">
-              <h2 className="text-lg font-semibold text-roomi-brown mb-4">{t('output.endRentalBtn')}</h2>
-              {rentals.length === 0 ? <p className="text-roomi-brownLight text-sm">{t('output.noActiveRentals')}</p> : (
-                <ul className="space-y-3">
-                  {rentals.map((r) => (
-                    <li key={r.id} className="flex items-center justify-between py-2 border-b border-roomi-peach/60">
-                      <span>{r.item?.title} — {r.customer?.name} (start: {r.startDate})</span>
-                      {endRentalId === r.id ? (
-                        <form onSubmit={handleEndRentalSubmit} className="flex gap-2 items-center">
-                          <select value={endForm.next_item_status} onChange={(e) => setEndForm((f) => ({ ...f, next_item_status: e.target.value as 'in_stock' | 'disposed' }))} className="input-field py-1 px-2 text-sm inline-block">
-                            <option value="in_stock">in_stock</option>
-                            <option value="disposed">disposed</option>
-                          </select>
-                          <button type="submit" disabled={endRentalMutation.isPending} className="btn-primary py-1.5 px-3 text-sm">End</button>
-                          <button type="button" onClick={() => setEndRentalId(null)} className="btn-ghost py-1 px-3 text-sm">{t('common.cancel')}</button>
-                        </form>
-                      ) : (
-                        <button type="button" onClick={() => setEndRentalId(r.id)} className="btn-primary py-1.5 px-3 text-sm">{t('output.endRentalBtn')}</button>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
             </section>
           </>
         )}
